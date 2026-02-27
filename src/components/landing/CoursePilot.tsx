@@ -30,11 +30,11 @@ const courses = [
 
 export default function CoursePilot() {
   return (
-    <section className="py-20 px-6 lg:px-12 bg-[#F1F5F9]">
+    <section className="snap-section py-12 px-6 lg:px-12 bg-[#F1F5F9] flex flex-col justify-center">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-12 gap-4">
-          <h2 className="text-3xl md:text-4xl font-bold text-[#1A2B3D]">
+          <h2 className="text-3xl md:text-4xl font-normal text-[#1A2B3D]">
             Grade 4 English Language Arts Pilot
           </h2>
           <Button variant="dark">
@@ -78,7 +78,7 @@ function CourseCard({
       </div>
 
       <div className="p-6">
-        <h3 className="text-lg font-bold text-[#1A2B3D] mb-1">{title}</h3>
+        <h3 className="text-lg font-normal text-[#1A2B3D] mb-1">{title}</h3>
         <p className="text-sm text-[#6B7280] mb-4">{instructor}</p>
 
         {/* Meta info */}
@@ -128,7 +128,7 @@ function CourseCard({
           </div>
         </div>
 
-        <button className="w-full py-3 rounded-full border border-[#1A2B3D] text-[#1A2B3D] text-sm font-medium hover:bg-gray-50 transition-colors cursor-pointer">
+        <button className="w-full py-3 rounded-full border border-[#1A2B3D] text-[#1A2B3D] text-sm font-normal hover:bg-gray-50 transition-colors cursor-pointer">
           View Module
         </button>
       </div>

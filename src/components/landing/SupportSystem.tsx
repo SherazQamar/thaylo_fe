@@ -4,10 +4,10 @@ import SectionLabel from "@/components/ui/SectionLabel";
 
 export default function SupportSystem() {
   return (
-    <section id="learning-model" className="py-20 px-6 lg:px-12 bg-white">
+    <section id="learning-model" className="snap-section py-12 px-6 lg:px-12 bg-white flex flex-col justify-center">
       <div className="max-w-[1320px] mx-auto">
         <SectionLabel text="WHY US" />
-        <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-center mt-4 mb-16 text-[#1A2B3D]">
+        <h2 className="text-3xl md:text-4xl lg:text-5xl font-normal text-center mt-4 mb-16 text-[#1A2B3D]">
           The Thaylo Learning Support System
         </h2>
 
@@ -33,7 +33,7 @@ export default function SupportSystem() {
                   <circle cx="12" cy="10" r="2" />
                 </svg>
               </div>
-              <h3 className="text-lg font-bold text-[#1A2B3D] mb-2">
+              <h3 className="text-lg font-normal text-[#1A2B3D] mb-2">
                 AI Instructor
               </h3>
               <p className="text-sm text-[#6B7280] leading-relaxed">
@@ -61,7 +61,7 @@ export default function SupportSystem() {
                   <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-bold text-[#1A2B3D] mb-2">
+              <h3 className="text-lg font-normal text-[#1A2B3D] mb-2">
                 Calyx, Your Bloom Buddy
               </h3>
               <p className="text-sm text-[#6B7280] leading-relaxed">
@@ -103,7 +103,7 @@ export default function SupportSystem() {
                   <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                 </svg>
               </div>
-              <h3 className="text-lg font-bold text-[#1A2B3D] mb-2">
+              <h3 className="text-lg font-normal text-[#1A2B3D] mb-2">
                 Wayfinder Support
               </h3>
               <p className="text-sm text-[#6B7280] leading-relaxed">

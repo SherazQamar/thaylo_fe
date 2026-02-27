@@ -50,13 +50,13 @@ export default function FAQ() {
   const [openIndex, setOpenIndex] = useState<number>(0);
 
   return (
-    <section className="py-20 px-6 lg:px-12 bg-white">
+    <section className="snap-section py-12 px-6 lg:px-12 bg-white flex flex-col justify-center">
       <div className="max-w-7xl mx-auto">
         <div className="grid lg:grid-cols-[300px_1fr] gap-12">
           {/* Left Column */}
           <div>
             <SectionLabel text="FAQS" className="!justify-start" />
-            <h2 className="text-3xl md:text-4xl font-bold text-[#1A2B3D] mt-4 mb-8 leading-tight">
+            <h2 className="text-3xl md:text-4xl font-normal text-[#1A2B3D] mt-4 mb-8 leading-tight">
               Questions
               <br />
               Parents Ask
@@ -67,7 +67,7 @@ export default function FAQ() {
               <div className="mb-6">
                 <p className="text-xs text-[#6B7280] mb-1">24/7 Support</p>
                 <div className="flex items-center justify-between">
-                  <p className="text-lg font-bold text-[#1A2B3D]">
+                  <p className="text-lg font-normal text-[#1A2B3D]">
                     (252) 769-4545
                   </p>
                   <div className="w-10 h-10 rounded-full bg-[#E0F2FE] flex items-center justify-center">
@@ -92,7 +92,7 @@ export default function FAQ() {
                   Technical Support
                 </p>
                 <div className="flex items-center justify-between">
-                  <p className="text-base font-bold text-[#1A2B3D]">
+                  <p className="text-base font-normal text-[#1A2B3D]">
                     info@thayloglobal.com
                   </p>
                   <div className="w-10 h-10 rounded-full bg-[#E0F2FE] flex items-center justify-center">
@@ -125,7 +125,7 @@ export default function FAQ() {
                     setOpenIndex(openIndex === index ? -1 : index)
                   }
                 >
-                  <span className="text-base md:text-lg font-semibold text-[#1A2B3D] pr-4">
+                  <span className="text-base md:text-lg font-normal text-[#1A2B3D] pr-4">
                     {faq.question}
                   </span>
                   <span className="text-xl text-[#1A2B3D] flex-shrink-0">

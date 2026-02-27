@@ -15,6 +15,13 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-snap-type: y mandatory;
+}
+
+/* Snap scroll sections */
+.snap-section {
+  scroll-snap-align: start;
+  min-height: 100vh;
 }
 
 body {

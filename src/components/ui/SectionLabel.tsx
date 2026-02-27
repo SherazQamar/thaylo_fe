@@ -12,7 +12,7 @@ export default function SectionLabel({
   return (
     <div className={`flex items-center justify-center gap-2 ${className}`}>
       <span className="w-2.5 h-2.5 rounded-sm bg-[#14B8A6]" />
-      <span className="text-sm font-semibold tracking-widest text-[#14B8A6] uppercase">
+      <span className="text-sm font-normal tracking-widest text-[#14B8A6] uppercase">
         {text}
       </span>
     </div>

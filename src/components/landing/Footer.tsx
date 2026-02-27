@@ -17,7 +17,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
           {/* Contact */}
           <div>
-            <h4 className="text-sm font-semibold text-[#6B7280] mb-4">
+            <h4 className="text-sm font-normal text-[#6B7280] mb-4">
               Contact
             </h4>
             <p className="text-sm text-[#1A2B3D] mb-1">
@@ -28,7 +28,7 @@ export default function Footer() {
 
           {/* Business Address */}
           <div>
-            <h4 className="text-sm font-semibold text-[#6B7280] mb-4">
+            <h4 className="text-sm font-normal text-[#6B7280] mb-4">
               Business Address
             </h4>
             <p className="text-sm text-[#1A2B3D]">Las Vegas, NV 89107</p>
@@ -36,7 +36,7 @@ export default function Footer() {
 
           {/* Main Pages */}
           <div>
-            <h4 className="text-sm font-semibold text-[#6B7280] mb-4">
+            <h4 className="text-sm font-normal text-[#6B7280] mb-4">
               Main Pages
             </h4>
             <ul className="space-y-2">
@@ -55,7 +55,7 @@ export default function Footer() {
 
           {/* Newsletter */}
           <div>
-            <h4 className="text-sm font-semibold text-[#6B7280] mb-4">
+            <h4 className="text-sm font-normal text-[#6B7280] mb-4">
               Stay Updated as Thaylo Grows
             </h4>
             <p className="text-sm text-[#6B7280] mb-4 leading-relaxed">
@@ -68,7 +68,7 @@ export default function Footer() {
                 placeholder="Enter your Email"
                 className="flex-1 px-4 py-2.5 rounded-l-full border border-gray-200 text-sm bg-white outline-none focus:border-[#14B8A6]"
               />
-              <button className="px-5 py-2.5 rounded-r-full bg-[#14B8A6] text-white text-sm font-medium hover:bg-[#0D9488] transition-colors cursor-pointer">
+              <button className="px-5 py-2.5 rounded-r-full bg-[#14B8A6] text-white text-sm font-normal hover:bg-[#0D9488] transition-colors cursor-pointer">
                 Send
               </button>
             </div>
@@ -77,7 +77,7 @@ export default function Footer() {
 
         {/* Big Logo */}
         <div className="mb-8">
-          <h2 className="text-5xl md:text-7xl lg:text-8xl font-bold text-[#0B1D2E] tracking-[0.15em]">
+          <h2 className="text-5xl md:text-7xl lg:text-8xl font-normal text-[#0B1D2E] tracking-[0.15em]">
             THAYLO
           </h2>
         </div>

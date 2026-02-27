@@ -54,10 +54,10 @@ const plans = [
 
 export default function Pricing() {
   return (
-    <section className="py-20 px-6 lg:px-12 bg-white">
+    <section className="snap-section py-12 px-6 lg:px-12 bg-white flex flex-col justify-center">
       <div className="max-w-7xl mx-auto">
         <SectionLabel text="MEMBERSHIP" />
-        <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-center mt-4 mb-2 text-[#1A2B3D]">
+        <h2 className="text-3xl md:text-4xl lg:text-5xl font-normal text-center mt-4 mb-2 text-[#1A2B3D]">
           Enrollment Options for the Academic Year
         </h2>
         <p className="text-center text-sm text-[#6B7280] tracking-widest uppercase mb-16">
@@ -101,7 +101,7 @@ function PricingCard({
           : "bg-[#F1F5F9] text-[#1A2B3D]"
       }`}
     >
-      <h3 className="text-lg font-bold mb-1">{name}</h3>
+      <h3 className="text-lg font-normal mb-1">{name}</h3>
       <p
         className={`text-sm mb-6 ${
           featured ? "text-white/60" : "text-[#6B7280]"
@@ -112,7 +112,7 @@ function PricingCard({
 
       {/* Price */}
       <div className="text-center py-6 mb-6 border-t border-b border-dashed border-gray-500/30">
-        <div className="text-3xl md:text-4xl font-bold">{price}</div>
+        <div className="text-3xl md:text-4xl font-normal">{price}</div>
         <p
           className={`text-sm mt-1 ${
             featured ? "text-white/60" : "text-[#6B7280]"
@@ -124,14 +124,14 @@ function PricingCard({
 
       {/* CTA Button */}
       <button
-        className={`w-full py-3 rounded-full text-sm font-medium transition-colors cursor-pointer mb-8 ${buttonStyle}`}
+        className={`w-full py-3 rounded-full text-sm font-normal transition-colors cursor-pointer mb-8 ${buttonStyle}`}
       >
         {buttonText}
       </button>
 
       {/* Features */}
       <div>
-        <p className="text-sm font-bold mb-4">What&apos;s Included</p>
+        <p className="text-sm font-normal mb-4">What&apos;s Included</p>
         <ul className="space-y-3">
           {features.map((feature, i) => (
             <li key={i} className="flex items-start gap-2 text-sm">

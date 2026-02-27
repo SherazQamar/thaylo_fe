@@ -28,7 +28,7 @@ export default function Navbar() {
             className="w-10 h-10 lg:w-12 lg:h-12 object-contain"
           />
           <div className="text-white hidden sm:block">
-            <span className="text-lg font-bold tracking-[0.12em] leading-none block">
+            <span className="text-lg font-normal tracking-[0.12em] leading-none block">
               THAYLO
             </span>
             <span className="block text-[9px] tracking-[0.18em] text-[#60D624]/80 uppercase mt-0.5">
@@ -43,7 +43,7 @@ export default function Navbar() {
             <a
               key={link.label}
               href={link.href}
-              className={`px-5 xl:px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 whitespace-nowrap ${
+              className={`px-5 xl:px-6 py-2.5 rounded-full text-sm font-normal transition-all duration-300 whitespace-nowrap ${
                 link.active
                   ? "bg-[#2ECC40] text-white shadow-lg shadow-green-500/20"
                   : "text-white/70 hover:text-white hover:bg-white/8"
@@ -56,7 +56,7 @@ export default function Navbar() {
 
         {/* CTA Button */}
         <div className="hidden lg:block flex-shrink-0">
-          <Button variant="primary" className="px-8 py-3 text-sm font-semibold shadow-lg shadow-green-500/25">
+          <Button variant="primary" className="px-8 py-3 text-sm font-normal shadow-lg shadow-green-500/25">
             Join The Pilot
           </Button>
         </div>
@@ -88,7 +88,7 @@ export default function Navbar() {
                 key={link.label}
                 href={link.href}
                 onClick={() => setMobileOpen(false)}
-                className={`px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                className={`px-4 py-3 rounded-xl text-sm font-normal transition-all ${
                   link.active
                     ? "bg-[#2ECC40] text-white"
                     : "text-white/80 hover:text-white hover:bg-white/10"

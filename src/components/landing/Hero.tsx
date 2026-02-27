@@ -5,7 +5,7 @@ export default function Hero() {
   return (
     <section
       id="home"
-      className="relative h-screen bg-[#0B1D2E] overflow-hidden"
+      className="snap-section relative h-screen bg-[#0B1D2E] overflow-hidden"
     >
       {/* Background glow effects */}
       <div className="absolute inset-0 pointer-events-none">
@@ -55,10 +55,10 @@ export default function Hero() {
           </h1>
 
           <div className="flex flex-wrap gap-5">
-            <Button variant="primary" className="px-8 py-4 text-[15px] font-semibold shadow-lg shadow-green-500/25">
+            <Button variant="primary" className="px-8 py-4 text-[15px] font-normal shadow-lg shadow-green-500/25">
               See How Thaylo Works
             </Button>
-            <Button variant="outline" className="px-8 py-4 text-[15px] font-semibold">
+            <Button variant="outline" className="px-8 py-4 text-[15px] font-normal">
               Explore The 4th Grade Pilot
             </Button>
           </div>
@@ -70,7 +70,7 @@ export default function Hero() {
               <div className="w-11 h-11 rounded-full bg-gradient-to-br from-rose-400 to-rose-600 border-[2.5px] border-[#0B1D2E]" />
               <div className="w-11 h-11 rounded-full bg-gradient-to-br from-violet-400 to-violet-600 border-[2.5px] border-[#0B1D2E]" />
             </div>
-            <span className="text-white/70 text-sm font-medium">
+            <span className="text-white/70 text-sm font-normal">
               Personalized for Every Learner
             </span>
           </div>
@@ -83,7 +83,7 @@ export default function Hero() {
 function FloatingBadge({ text }: { text: string }) {
   return (
     <div className="px-5 py-3 rounded-[20px] bg-white/[0.07] border border-white/[0.12] backdrop-blur-xl shadow-lg">
-      <span className="text-white/90 text-xs sm:text-sm font-medium whitespace-nowrap">
+      <span className="text-white/90 text-xs sm:text-sm font-normal whitespace-nowrap">
         {text}
       </span>
     </div>

@@ -15,7 +15,9 @@
       "Bash(npx next dev --port 3002)",
       "Bash(curl -s http://localhost:3000)",
       "mcp__playwright__browser_resize",
-      "mcp__playwright__browser_evaluate"
+      "mcp__playwright__browser_evaluate",
+      "mcp__playwright__browser_press_key",
+      "mcp__playwright__browser_click"
     ]
   }
 }

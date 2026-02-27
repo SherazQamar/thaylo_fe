@@ -29,7 +29,7 @@ export default function Button({
 }: ButtonProps) {
   return (
     <button
-      className={`px-6 py-3 rounded-full font-medium text-sm transition-all duration-300 cursor-pointer ${variantStyles[variant]} ${className}`}
+      className={`px-6 py-3 rounded-full font-normal text-sm transition-all duration-300 cursor-pointer ${variantStyles[variant]} ${className}`}
       {...props}
     >
       {children}

@@ -5,10 +5,10 @@ import Button from "@/components/ui/Button";
 
 export default function OurStory() {
   return (
-    <section id="about" className="pt-8 lg:pt-10 pb-6 lg:pb-8 px-6 lg:px-12 bg-white">
+    <section id="about" className="snap-section pt-8 lg:pt-10 pb-6 lg:pb-8 px-6 lg:px-12 bg-white flex flex-col justify-center">
       <div className="max-w-7xl mx-auto">
         <SectionLabel text="OUR STORY" />
-        <h2 className="text-2xl md:text-3xl lg:text-[2.5rem] font-bold text-center mt-2 mb-6 max-w-3xl mx-auto leading-tight text-[#1A2B3D]">
+        <h2 className="text-2xl md:text-3xl lg:text-[2.5rem] font-normal text-center mt-2 mb-6 max-w-3xl mx-auto leading-tight text-[#1A2B3D]">
           Mastery-based learning powered by AI, guided by human pedagogy--so
           students move forward only when they truly understand
         </h2>
@@ -17,7 +17,7 @@ export default function OurStory() {
         <div className="grid md:grid-cols-3 md:grid-rows-[1fr_auto] gap-3 lg:gap-4">
           {/* Card 1 - How Learning Works (top-left) */}
           <div className="bg-[#F1F5F9] rounded-2xl p-4 lg:p-5 flex flex-col">
-            <h3 className="text-sm lg:text-base font-bold text-[#1A2B3D] mb-1">
+            <h3 className="text-sm lg:text-base font-normal text-[#1A2B3D] mb-1">
               How Learning Works at Thaylo
             </h3>
             <p className="text-xs lg:text-sm text-[#6B7280] leading-relaxed mb-2">
@@ -31,13 +31,13 @@ export default function OurStory() {
                 </svg>
               </div>
               <div className="absolute bottom-0 left-0 right-0 p-2 flex flex-wrap gap-1.5">
-                <span className="px-2 py-0.5 rounded-full bg-[#0B1D2E]/80 text-white text-[10px] font-medium backdrop-blur-sm">
+                <span className="px-2 py-0.5 rounded-full bg-[#0B1D2E]/80 text-white text-[10px] font-normal backdrop-blur-sm">
                   TRENDS
                 </span>
-                <span className="px-2 py-0.5 rounded-full bg-[#0B1D2E]/80 text-white text-[10px] font-medium backdrop-blur-sm">
+                <span className="px-2 py-0.5 rounded-full bg-[#0B1D2E]/80 text-white text-[10px] font-normal backdrop-blur-sm">
                   TECH EDUCATION
                 </span>
-                <span className="px-2 py-0.5 rounded-full bg-[#0B1D2E]/80 text-white text-[10px] font-medium backdrop-blur-sm">
+                <span className="px-2 py-0.5 rounded-full bg-[#0B1D2E]/80 text-white text-[10px] font-normal backdrop-blur-sm">
                   SMART LEARNING
                 </span>
               </div>
@@ -46,7 +46,7 @@ export default function OurStory() {
 
           {/* Card 2 - AI Instructor (top-middle) */}
           <div className="bg-[#F1F5F9] rounded-2xl p-4 lg:p-5 flex flex-col">
-            <h3 className="text-sm lg:text-base font-bold text-[#1A2B3D] mb-1">
+            <h3 className="text-sm lg:text-base font-normal text-[#1A2B3D] mb-1">
               AI Instructor, Guided by Human Pedagogy
             </h3>
             <p className="text-xs lg:text-sm text-[#6B7280] leading-relaxed mb-2">
@@ -77,7 +77,7 @@ export default function OurStory() {
 
           {/* Card 3 - Mastery-Based Progression (right, spans 2 rows) */}
           <div className="bg-[#F1F5F9] rounded-2xl p-4 lg:p-5 flex flex-col md:row-span-2">
-            <h3 className="text-sm lg:text-base font-bold text-[#1A2B3D] mb-1">
+            <h3 className="text-sm lg:text-base font-normal text-[#1A2B3D] mb-1">
               Mastery-Based Progression:
             </h3>
             <p className="text-xs lg:text-sm text-[#6B7280] leading-relaxed mb-2">
@@ -117,7 +117,7 @@ export default function OurStory() {
           {/* Learning That Grows - bottom-left, spans 2 columns */}
           <div className="bg-[#F1F5F9] rounded-2xl p-5 lg:p-6 md:col-span-2 grid sm:grid-cols-2 gap-4 items-center">
             <div className="space-y-2">
-              <h2 className="text-lg md:text-xl font-bold text-[#1A2B3D] leading-tight">
+              <h2 className="text-lg md:text-xl font-normal text-[#1A2B3D] leading-tight">
                 Learning That Grows With Your Child
               </h2>
               <p className="text-[#6B7280] text-xs lg:text-sm leading-relaxed">
