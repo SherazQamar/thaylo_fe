@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-instrument-sans);
+  --color-primary-green: #60D624;
+  --color-primary-teal: #00696B;
+  --color-accent-teal: #14B8A6;
+  --color-dark-bg: #0B1D2E;
+  --color-dark-card: #111B27;
+  --color-light-bg: #F1F5F9;
+  --color-dark-text: #1A2B3D;
+  --color-gray-text: #6B7280;
+  --color-border-light: #E2E8F0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-instrument-sans), sans-serif;
+  color: var(--color-dark-text);
+  background: #ffffff;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+
+/* Floating badge animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+@keyframes float-delayed {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+.animate-float-delayed {
+  animation: float-delayed 5s ease-in-out infinite 1s;
+}
+.animate-float-slow {
+  animation: float-slow 6s ease-in-out infinite 0.5s;
+}
