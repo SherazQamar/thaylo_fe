@@ -1,4 +1,5 @@
 import React from "react";
+import Image from "next/image";
 import SectionLabel from "@/components/ui/SectionLabel";
 
 export default function SuccessStories() {
@@ -7,33 +8,49 @@ export default function SuccessStories() {
       <div className="max-w-7xl mx-auto">
         <SectionLabel text="SUCCESS STORIES" />
         <h2 className="text-3xl md:text-4xl lg:text-5xl font-normal text-center mt-4 mb-16 text-[#1A2B3D]">
-          What We&apos;re Measuring
+          Real Growth. Real Confidence.
         </h2>
 
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-[25%_1fr] gap-6 items-stretch">
           {/* Metrics Image Card */}
-          <div className="relative rounded-2xl overflow-hidden min-h-[260px] bg-gradient-to-br from-blue-200 to-blue-300">
-            {/* Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-r from-[#0B1D2E]/80 to-transparent" />
-            <div className="relative z-10 p-8 flex flex-col justify-start h-full">
-              <div className="bg-[#14B8A6] text-white text-sm font-normal px-4 py-2 rounded-lg inline-block max-w-fit">
-                Pilot metrics will be shared
+          <div className="relative rounded-2xl overflow-hidden bg-[#0B1D2E] h-[320px] flex flex-col">
+            {/* Background pattern */}
+            <Image
+              src="/assets/testimonial-bg-pattern.png"
+              alt=""
+              fill
+              className="object-cover opacity-70"
+            />
+            {/* Text */}
+            <div className="relative z-10 px-5 pt-6 pb-4 text-center">
+              <p className="text-white text-xl font-medium leading-tight">
+                90% of Students Succeed
                 <br />
-                as data becomes available
-              </div>
+                Thanks to AI Learning
+              </p>
+            </div>
+            {/* Photo */}
+            <div className="relative z-10 flex-1 mx-4 mb-4 rounded-xl overflow-hidden">
+              <Image
+                src="/assets/four-diverse-young-adults.png"
+                alt="Diverse young adults celebrating"
+                fill
+                className="object-cover"
+              />
             </div>
           </div>
 
           {/* Design Principles Card */}
-          <div className="bg-[#F1F5F9] rounded-2xl p-8 flex flex-col justify-center">
-            <h3 className="text-xl font-normal text-[#1A2B3D] mb-4">
-              From Our Design Principles
-            </h3>
-            <p className="text-[#6B7280] leading-relaxed">
-              Thaylo is designed to balance rigor with flexibility—so students
-              can engage deeply with learning at times and in places that work
-              for their families, without lowering expectations.&quot;
+          <div className="bg-[#F1F5F9] rounded-2xl p-10 lg:p-12 flex flex-col justify-center h-[320px]">
+            <p className="text-[#1A2B3D] text-lg md:text-xl leading-relaxed font-normal font-[family-name:var(--font-inter)] mb-6">
+              My child feels more confident and actually enjoys learning now. The AI tutor
+              feels supportive, not stressful.
             </p>
+            <div className="flex items-center gap-3 mt-auto">
+              <p className="text-sm text-[#6B7280] font-[family-name:var(--font-inter)]">
+                Parent of a Grade 4 Learner
+              </p>
+            </div>
           </div>
         </div>
       </div>

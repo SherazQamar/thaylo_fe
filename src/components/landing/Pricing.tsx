@@ -1,53 +1,48 @@
 import React from "react";
+import Image from "next/image";
 import SectionLabel from "@/components/ui/SectionLabel";
 
 const plans = [
   {
-    name: "Explore Thaylo Before You Commit",
+    name: "Trial Plan",
     subtitle: "Newbies Building AI Skills",
-    price: "$0 for 7 Days",
+    price: "Free 7-Day Trial",
     priceNote: "Fresh Minds & AI Learners",
-    buttonText: "Start Trial",
+    buttonText: "Start Now",
     buttonStyle: "border border-[#1A2B3D] text-[#1A2B3D] hover:bg-gray-50",
     featured: false,
     features: [
-      "Full access to selected core coursework",
-      "AI Instructor-led lessons",
-      "Check-Ins with Calyx",
-      "Your Bloom Buddy",
-      "Parent Dashboard Preview",
+      "Personalised AI lessons",
+      "Personalised AI lessons",
+      "Personalised AI lessons",
     ],
   },
   {
-    name: "Core Enrollment (Primary Offer)",
-    subtitle: "Academic Year Enrollment",
-    price: "$7,500/year",
-    priceNote: "paid monthly or annually",
+    name: "Family Plan",
+    subtitle: "For's Most Improving AI Expertise",
+    price: "$29/month",
+    priceNote: "Career Minds & AI Specialists",
     buttonText: "Enroll Now",
     buttonStyle: "bg-[#14B8A6] text-white hover:bg-[#0D9488]",
     featured: true,
     features: [
-      "Full academic-year course load (core + electives)",
-      "Mastery-based progression",
-      "AI Instructor-led instruction",
-      "Calyx Bloom Buddy support",
-      "Parent dashboard & reports",
+      "Personalised AI lessons",
+      "Personalised AI lessons",
+      "Personalised AI lessons",
     ],
   },
   {
-    name: "Founding Family Program",
-    subtitle: "Early Adopter Program",
-    price: "$5,500/year",
-    priceNote: "limited to first 200 students",
-    buttonText: "Apply For Founding Family",
+    name: "Founding Family Plan",
+    subtitle: "Senior AI Practitioners",
+    price: "$24/month",
+    priceNote: "Expert Minds & AI Leaders",
+    buttonText: "Enroll Now",
     buttonStyle: "border border-[#1A2B3D] text-[#1A2B3D] hover:bg-gray-50",
     featured: false,
     features: [
-      "Full academic-year enrollment",
-      "Priority access to new features",
-      "Roadmap feedback & voting rights",
-      "Dedicated Wayfinder onboarding support",
-      "Founding Family recognition badge",
+      "Personalised AI lessons",
+      "Personalised AI lessons",
+      "Personalised AI lessons",
     ],
   },
 ];
@@ -57,12 +52,9 @@ export default function Pricing() {
     <section className="snap-section py-12 px-6 lg:px-12 bg-white flex flex-col justify-center">
       <div className="max-w-7xl mx-auto">
         <SectionLabel text="MEMBERSHIP" />
-        <h2 className="text-3xl md:text-4xl lg:text-5xl font-normal text-center mt-4 mb-2 text-[#1A2B3D]">
-          Enrollment Options for the Academic Year
+        <h2 className="text-3xl md:text-4xl lg:text-5xl font-normal text-center mt-4 mb-16 text-[#1A2B3D]">
+          Simple Plans for Growing Minds
         </h2>
-        <p className="text-center text-sm text-[#6B7280] tracking-widest uppercase mb-16">
-          ONE FULL ACADEMIC YEAR. FLEXIBLE PAYMENT OPTIONS.
-        </p>
 
         <div className="grid md:grid-cols-3 gap-6 items-start">
           {plans.map((plan, index) => (
@@ -95,15 +87,23 @@ function PricingCard({
 }) {
   return (
     <div
-      className={`rounded-2xl p-8 ${
+      className={`rounded-2xl p-8 relative overflow-hidden ${
         featured
           ? "bg-[#0B1D2E] text-white scale-[1.02] shadow-2xl"
           : "bg-[#F1F5F9] text-[#1A2B3D]"
       }`}
     >
-      <h3 className="text-lg font-normal mb-1">{name}</h3>
+      {featured && (
+        <Image
+          src="/assets/testimonial-bg-pattern.png"
+          alt=""
+          fill
+          className="object-cover object-right-top"
+        />
+      )}
+      <h3 className="text-lg font-normal mb-1 relative z-10">{name}</h3>
       <p
-        className={`text-sm mb-6 ${
+        className={`text-sm mb-6 relative z-10 ${
           featured ? "text-white/60" : "text-[#6B7280]"
         }`}
       >
@@ -111,7 +111,7 @@ function PricingCard({
       </p>
 
       {/* Price */}
-      <div className="text-center py-6 mb-6 border-t border-b border-dashed border-gray-500/30">
+      <div className="text-center py-6 mb-6 border-t border-b border-dashed border-gray-500/30 relative z-10">
         <div className="text-3xl md:text-4xl font-normal">{price}</div>
         <p
           className={`text-sm mt-1 ${
@@ -124,14 +124,14 @@ function PricingCard({
 
       {/* CTA Button */}
       <button
-        className={`w-full py-3 rounded-full text-sm font-normal transition-colors cursor-pointer mb-8 ${buttonStyle}`}
+        className={`w-full py-3 rounded-full text-sm font-normal transition-colors cursor-pointer mb-8 relative z-10 ${buttonStyle}`}
       >
         {buttonText}
       </button>
 
       {/* Features */}
-      <div>
-        <p className="text-sm font-normal mb-4">What&apos;s Included</p>
+      <div className="relative z-10">
+        <p className="text-sm font-normal mb-4">What You Get</p>
         <ul className="space-y-3">
           {features.map((feature, i) => (
             <li key={i} className="flex items-start gap-2 text-sm">

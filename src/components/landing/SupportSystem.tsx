@@ -16,22 +16,8 @@ export default function SupportSystem() {
           <div className="space-y-12">
             {/* AI Instructor */}
             <div>
-              <div className="w-12 h-12 rounded-xl bg-[#E0F2FE] flex items-center justify-center mb-4">
-                <svg
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#14B8A6"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <rect x="2" y="3" width="20" height="14" rx="2" />
-                  <path d="M8 21h8" />
-                  <path d="M12 17v4" />
-                  <circle cx="12" cy="10" r="2" />
-                </svg>
+              <div className="w-12 h-12 rounded-xl  flex items-center justify-center mb-4">
+                <Image src="/assets/certificate-symbol.png" alt="AI Instructor" width={28} height={28} className="w-7 h-7 object-contain" />
               </div>
               <h3 className="text-lg font-normal text-[#1A2B3D] mb-2">
                 AI Instructor
@@ -47,19 +33,8 @@ export default function SupportSystem() {
 
             {/* Calyx */}
             <div className="pt-4 border-t border-gray-100">
-              <div className="w-12 h-12 rounded-xl bg-[#E0F2FE] flex items-center justify-center mb-4">
-                <svg
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#14B8A6"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                </svg>
+              <div className="w-12 h-12 rounded-xl  flex items-center justify-center mb-4">
+                <Image src="/assets/handshake-symbol.png" alt="Bloom Buddy" width={28} height={28} className="w-7 h-7 object-contain" />
               </div>
               <h3 className="text-lg font-normal text-[#1A2B3D] mb-2">
                 Calyx, Your Bloom Buddy
@@ -86,22 +61,8 @@ export default function SupportSystem() {
           {/* Right Column */}
           <div className="flex flex-col items-end text-right">
             <div>
-              <div className="w-12 h-12 rounded-xl bg-[#E0F2FE] flex items-center justify-center mb-4 ml-auto">
-                <svg
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#14B8A6"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                  <circle cx="9" cy="7" r="4" />
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                </svg>
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 ml-auto">
+                <Image src="/assets/wayfinder-symbol.png" alt="Wayfinder Support" width={32} height={32} className="w-7 h-7 object-contain" />
               </div>
               <h3 className="text-lg font-normal text-[#1A2B3D] mb-2">
                 Wayfinder Support
