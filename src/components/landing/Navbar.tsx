@@ -1,19 +1,22 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 import Button from "@/components/ui/Button";
 
 const navLinks = [
-  { label: "Home", href: "#home", active: true },
-  { label: "About Us", href: "#about" },
-  { label: "How Learning Works", href: "#how-learning-works" },
-  { label: "Learning Model", href: "#learning-model" },
-  { label: "Contact Us", href: "#contact" },
+  { label: "Home", href: "/" },
+  { label: "About Us", href: "/about" },
+  { label: "Learning Approach", href: "/learning-approach" },
+  { label: "Personalised Learning", href: "/personalised-learning" },
+  { label: "Contact Us", href: "/contact" },
 ];
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = usePathname();
 
   return (
     <nav className="absolute top-0 left-0 right-0 z-50 px-6 sm:px-8 lg:px-12 xl:px-16 py-5">
@@ -40,17 +43,17 @@ export default function Navbar() {
         {/* Desktop Nav Links */}
         <div className="hidden lg:flex items-center gap-1 xl:gap-2">
           {navLinks.map((link) => (
-            <a
+            <Link
               key={link.label}
               href={link.href}
               className={`px-5 xl:px-6 py-2.5 rounded-full text-sm font-normal transition-all duration-300 whitespace-nowrap ${
-                link.active
+                pathname === link.href
                   ? "bg-[#2ECC40] text-white shadow-lg shadow-green-500/20"
                   : "text-white/70 hover:text-white hover:bg-white/8"
               }`}
             >
               {link.label}
-            </a>
+            </Link>
           ))}
         </div>
 
@@ -84,18 +87,18 @@ export default function Navbar() {
         <div className="lg:hidden mt-4 bg-[#0B1D2E]/95 backdrop-blur-xl rounded-2xl p-6 border border-white/10 shadow-2xl">
           <div className="flex flex-col gap-1">
             {navLinks.map((link) => (
-              <a
+              <Link
                 key={link.label}
                 href={link.href}
                 onClick={() => setMobileOpen(false)}
                 className={`px-4 py-3 rounded-xl text-sm font-normal transition-all ${
-                  link.active
+                  pathname === link.href
                     ? "bg-[#2ECC40] text-white"
                     : "text-white/80 hover:text-white hover:bg-white/10"
                 }`}
               >
                 {link.label}
-              </a>
+              </Link>
             ))}
             <Button variant="primary" className="mt-4 w-full">
               Join The Pilot

@@ -2,11 +2,11 @@ import React from "react";
 import Image from "next/image";
 
 const mainPages = [
-  { label: "Home", href: "#home" },
-  { label: "Learning Approach", href: "#about" },
-  { label: "How Learning Works", href: "#how-learning-works" },
-  { label: "Learning Model", href: "#learning-model" },
-  { label: "Contact Us", href: "#contact" },
+  { label: "Home", href: "/" },
+  { label: "About Us", href: "/about" },
+  { label: "Learning Approach", href: "/learning-approach" },
+  { label: "Personalised Learning", href: "/personalised-learning" },
+  { label: "Contact Us", href: "/contact" },
 ];
 
 export default function Footer() {
