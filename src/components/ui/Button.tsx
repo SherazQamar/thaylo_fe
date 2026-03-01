@@ -16,7 +16,7 @@ const variantStyles: Record<ButtonVariant, string> = {
   outline:
     "border border-white/50 text-white bg-white/10 hover:bg-white/20",
   teal: "bg-[#14B8A6] text-white hover:bg-[#0D9488]",
-  dark: "bg-[#0B1D2E] text-white hover:bg-[#162A3E]",
+  dark: "bg-[#111023] text-white hover:bg-[#1a1938]",
   "outline-dark":
     "border border-[#1A2B3D] text-[#1A2B3D] bg-transparent hover:bg-gray-50",
 };

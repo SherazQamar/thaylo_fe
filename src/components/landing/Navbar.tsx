@@ -8,9 +8,9 @@ import Button from "@/components/ui/Button";
 
 const navLinks = [
   { label: "Home", href: "/" },
-  { label: "About Us", href: "/about" },
-  { label: "Learning Approach", href: "/learning-approach" },
-  { label: "Personalised Learning", href: "/personalised-learning" },
+  { label: "About us", href: "/about" },
+  { label: "How Learning Works", href: "/learning-approach" },
+  { label: "Learning Model", href: "/personalised-learning" },
   { label: "Contact Us", href: "/contact" },
 ];
 
@@ -41,14 +41,14 @@ export default function Navbar() {
         </div>
 
         {/* Desktop Nav Links */}
-        <div className="hidden lg:flex items-center gap-1 xl:gap-2">
+        <div className="hidden lg:flex items-center gap-1 xl:gap-1.5 bg-[#090F15] border border-white/10 rounded-full px-2 py-1.5">
           {navLinks.map((link) => (
             <Link
               key={link.label}
               href={link.href}
               className={`px-5 xl:px-6 py-2.5 rounded-full text-sm font-normal transition-all duration-300 whitespace-nowrap ${
                 pathname === link.href
-                  ? "bg-[#2ECC40] text-white shadow-lg shadow-green-500/20"
+                  ? "bg-gradient-to-r from-[#60D624] to-[#00696B] text-white shadow-lg shadow-green-500/25"
                   : "text-white/70 hover:text-white hover:bg-white/8"
               }`}
             >
@@ -59,8 +59,8 @@ export default function Navbar() {
 
         {/* CTA Button */}
         <div className="hidden lg:block flex-shrink-0">
-          <Button variant="primary" className="px-8 py-3 text-sm font-normal shadow-lg shadow-green-500/25">
-            Join The Pilot
+          <Button variant="primary" className="!rounded-xl px-8 py-3 text-sm font-normal shadow-lg shadow-green-500/25">
+            {pathname === "/" ? "Join The Pilot" : "Sign Up"}
           </Button>
         </div>
 

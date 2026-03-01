@@ -4,6 +4,10 @@ import CTABanner from "@/components/landing/CTABanner";
 import Footer from "@/components/landing/Footer";
 import SectionLabel from "@/components/ui/SectionLabel";
 import Button from "@/components/ui/Button";
+import aboutBg from "@/app/assets/aboutbg.png";
+import foundedImage from "@/app/assets/founded-image.jpg";
+import empowerImage from "@/app/assets/empower-image.png";
+import teachingImage from "@/app/assets/teaching-image.png";
 
 /* ---------- data ---------- */
 
@@ -18,21 +22,20 @@ const milestones = [
   {
     year: "2020",
     title: "Founded Innovative AI Course For Beginners",
-    image: "/assets/our-story-classroom.png",
-    bg: "bg-gradient-to-br from-[#94A3B8] to-[#64748B]",
+    image: foundedImage,
+    highlight: false,
   },
   {
     year: "2023",
     title: "Empower Global Students Through AI",
-    image: "/assets/four-diverse-young-adults.png",
-    bg: "bg-gradient-to-br from-[#14B8A6] to-[#0D7377]",
+    image: empowerImage,
     highlight: true,
   },
   {
     year: "2025",
     title: "Teaching AI to 10,000 Students Worldwide",
-    image: "/assets/container-hero.png",
-    bg: "bg-gradient-to-br from-[#94A3B8] to-[#64748B]",
+    image: teachingImage,
+    highlight: false,
   },
 ];
 
@@ -56,13 +59,13 @@ const principles = [
       "Thoughtful learning environments reduce unnecessary distractions so students can concentrate.",
   },
   {
-    number: "04",
+    number: "03",
     title: "Technology should support, not dominate",
     description:
       "Tools are used intentionally to enhance instruction, not to remove responsibility or human judgment.",
   },
   {
-    number: "05",
+    number: "04",
     title: "Adults remain accountable",
     description:
       "Educators are ultimately responsible for oversight, decisions, and partnership with families.",
@@ -72,17 +75,17 @@ const principles = [
 const trainers = [
   {
     name: "Prof. David Lee",
-    title: "ML Specialist",
+    title: "Monitor student progress and engagement",
     gradient: "from-sky-400 to-indigo-500",
   },
   {
     name: "Dr. Sarah Johnson",
-    title: "Vision Analyst",
+    title: "Step in when learning slows or stalls",
     gradient: "from-rose-400 to-pink-500",
   },
   {
     name: "Prof. Robert Chen",
-    title: "AI Engineer",
+    title: "Review concerns raised through the platform",
     gradient: "from-emerald-400 to-teal-500",
   },
 ];
@@ -93,13 +96,15 @@ export default function AboutPage() {
   return (
     <main>
       {/* ===== HERO ===== */}
-      <section className="snap-section relative min-h-[60vh] lg:min-h-[70vh] bg-[#0B1D2E] overflow-hidden flex flex-col">
-        {/* Background glow effects */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-[-100px] left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-[#00696B]/8 rounded-full blur-[150px]" />
-          <div className="absolute bottom-[-50px] right-[-100px] w-[500px] h-[500px] bg-[#60D624]/5 rounded-full blur-[120px]" />
-          <div className="absolute top-[40%] left-[-100px] w-[300px] h-[300px] bg-[#14B8A6]/5 rounded-full blur-[100px]" />
-        </div>
+      <section className="snap-section relative min-h-[60vh] lg:min-h-[70vh] bg-[#111023] overflow-hidden flex flex-col">
+        {/* Background image */}
+        <Image
+          src={aboutBg}
+          alt=""
+          fill
+          className="object-cover mix-blend-screen"
+          priority
+        />
 
         <Navbar />
 
@@ -107,10 +112,12 @@ export default function AboutPage() {
         <div className="relative z-10 flex-1 flex items-center justify-center px-6">
           <div className="text-center max-w-3xl">
             <SectionLabel text="ABOUT US" />
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[56px] xl:text-[64px] font-normal text-white leading-[1.15] tracking-[-0.64px] mt-5">
-              Driven by Knowledge
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[48px] xl:text-[56px] font-normal text-white leading-[1.2] tracking-[-0.64px] mt-5">
+              Who built this, and is there
               <br />
-              Focused on You
+              real educational thinking and
+              <br />
+              leadership behind it?
             </h1>
           </div>
         </div>
@@ -120,42 +127,36 @@ export default function AboutPage() {
       <section className="snap-section bg-white px-6 lg:px-12 py-16 lg:py-24 flex flex-col justify-center">
         <div className="max-w-[1320px] mx-auto w-full">
           <div className="grid md:grid-cols-2 gap-10 lg:gap-16 items-center">
-            {/* Image */}
-            <div className="relative rounded-2xl overflow-hidden min-h-[320px] lg:min-h-[420px]">
-              <Image
-                src="/assets/our-story-classroom.png"
-                alt="AI and human collaboration"
-                fill
-                className="object-cover"
-              />
-            </div>
+            {/* Image placeholder */}
+            <div className="relative rounded-2xl overflow-hidden min-h-[320px] lg:min-h-[420px] bg-[#F1F5F9]" />
 
             {/* Text */}
             <div className="space-y-6">
-              <SectionLabel text="WHO WE ARE" className="justify-start" />
-              <h2 className="text-2xl md:text-3xl lg:text-[2.5rem] font-normal leading-tight text-[#1A2B3D]">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#14B8A6]" />
+                <span className="text-[18px] font-normal uppercase tracking-[-0.48px] text-[#606B68] leading-[27px]" style={{ fontFamily: 'Inter, sans-serif' }}>WHO WE ARE</span>
+              </div>
+              <h2 className="text-2xl md:text-3xl lg:text-[56px] font-normal leading-[1.2] tracking-[-0.64px] text-[#1A2B3D]">
                 Journey Across the
                 <br />
                 Start of Our Vision
               </h2>
-              <p className="text-[#6B7280] text-sm lg:text-base leading-relaxed">
-                Future talent begins here as you master industry-ready AI skills
-                designed to help you grow faster than the market, empowering real
-                innovation through practical, career-focused learning
-                experiences.
+              <p className="text-[#6B7280] text-lg leading-[27px] tracking-[-0.48px] font-normal" style={{ fontFamily: 'Inter, sans-serif' }}>
+                Thaylo is a U.S.-based learning program designed to function as
+                a flexible, personalized, full-course alternative to traditional
+                schooling—delivering mastery-based instruction through an AI
+                Instructor with human oversight, beginning with a Grade 4
+                English Language Arts pilot and expanding by subject and grade
+                level into a complete academic program.
               </p>
-              <Button variant="teal" className="text-sm px-6 py-3">
+              <Button variant="primary" className="!rounded-xl text-sm px-6 py-3">
                 Join Now
               </Button>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* ===== STATS BAR ===== */}
-      <section className="bg-white border-t border-[#E2E8F0]">
-        <div className="max-w-[1320px] mx-auto px-6 lg:px-12 py-12 lg:py-16">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-0">
+          {/* Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-0 mt-16 lg:mt-20">
             {stats.map((stat, idx) => (
               <div
                 key={stat.label}
@@ -163,10 +164,10 @@ export default function AboutPage() {
                   idx > 0 ? "lg:border-l lg:border-[#E2E8F0]" : ""
                 }`}
               >
-                <p className="text-3xl lg:text-5xl font-medium text-[#1A2B3D] mb-2">
+                <p className="text-[62.53px] lg:text-[62.53px] font-normal text-[#111023] mb-2 leading-[75.04px] tracking-[-0.71px]">
                   {stat.value}
                 </p>
-                <p className="text-sm lg:text-base text-[#6B7280] font-normal">
+                <p className="text-[20px] text-[#606B68] font-normal leading-[30.15px] tracking-[-0.54px]" style={{ fontFamily: 'Inter, sans-serif' }}>
                   {stat.label}
                 </p>
               </div>
@@ -197,15 +198,18 @@ export default function AboutPage() {
               >
                 <div className="p-5 lg:p-6">
                   <p
-                    className={`text-sm mb-2 ${
+                    className={`text-[18px] leading-[27px] tracking-[-0.48px] font-normal mb-2 ${
                       milestone.highlight
-                        ? "text-[#14B8A6]"
-                        : "text-[#6B7280]"
+                        ? "text-[#606B68]"
+                        : "text-[#606B68]"
                     }`}
+                    style={{ fontFamily: 'Inter, sans-serif' }}
                   >
                     {milestone.year}
                   </p>
-                  <h3 className="text-base lg:text-lg font-medium leading-snug">
+                  <h3 className={`text-[26px] font-medium leading-[31.2px] tracking-[-0.64px] ${
+                    milestone.highlight ? "text-white" : "text-[#111023]"
+                  }`}>
                     {milestone.title}
                   </h3>
                 </div>
@@ -232,11 +236,14 @@ export default function AboutPage() {
         </div>
 
         <div className="relative z-10 max-w-[1320px] mx-auto w-full">
-          <SectionLabel text="ETHICAL STANDARDS" />
+          <div className="flex items-center justify-center gap-2">
+            <span className="w-2 h-2 rounded-[3px] bg-[#14B8A6]" />
+            <span className="text-sm font-normal tracking-widest text-white/50 uppercase">ETHICAL STANDARDS</span>
+          </div>
           <h2 className="text-2xl md:text-3xl lg:text-[2.5rem] font-normal text-center mt-3 mb-4 max-w-3xl mx-auto leading-tight text-white">
             Our Guiding Principles
           </h2>
-          <p className="text-white/60 text-sm lg:text-base leading-relaxed text-center max-w-2xl mx-auto mb-12 lg:mb-16">
+          <p className="text-white/60 text-sm lg:text-base leading-relaxed font-normal text-center max-w-3xl mx-auto mb-12 lg:mb-16" style={{ fontFamily: 'Inter, sans-serif' }}>
             Thaylo is guided by a clear set of educational principles rooted in
             responsibility, structure, and respect for how students learn. Every
             decision—from pacing to technology use—is shaped by the belief that
@@ -246,16 +253,16 @@ export default function AboutPage() {
           {/* Principles grid: 1 + 2 + 2 layout */}
           <div className="space-y-4 lg:space-y-6">
             {/* Row 1 - Full width card */}
-            <div className="bg-[#1A1A2E]/60 border border-white/10 rounded-2xl p-6 lg:p-8">
-              <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center mb-5">
-                <span className="text-white text-sm font-medium">
+            <div className="bg-white/5 backdrop-blur-[19.54px] rounded-[16.75px] p-[33.5px]">
+              <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center mb-[88.6px]">
+                <span className="text-black text-sm font-medium">
                   {principles[0].number}
                 </span>
               </div>
-              <h3 className="text-lg lg:text-xl font-semibold text-white mb-3">
+              <h3 className="text-[29.03px] font-medium text-white mb-2 leading-[34.84px] tracking-[-0.71px]">
                 {principles[0].title}
               </h3>
-              <p className="text-sm lg:text-base text-white/60 leading-relaxed max-w-xl">
+              <p className="text-[20.1px] text-white/70 leading-[30.15px] tracking-[-0.54px] font-normal max-w-xl">
                 {principles[0].description}
               </p>
             </div>
@@ -265,17 +272,17 @@ export default function AboutPage() {
               {principles.slice(1, 3).map((item) => (
                 <div
                   key={item.number}
-                  className="bg-[#1A1A2E]/60 border border-white/10 rounded-2xl p-6 lg:p-8"
+                  className="bg-white/5 backdrop-blur-[19.54px] rounded-[16.75px] p-[33.5px]"
                 >
-                  <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center mb-5">
-                    <span className="text-white text-sm font-medium">
+                  <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center mb-[88.6px]">
+                    <span className="text-black text-sm font-medium">
                       {item.number}
                     </span>
                   </div>
-                  <h3 className="text-lg lg:text-xl font-semibold text-white mb-3">
+                  <h3 className="text-[29.03px] font-medium text-white mb-2 leading-[34.84px] tracking-[-0.71px]">
                     {item.title}
                   </h3>
-                  <p className="text-sm lg:text-base text-white/60 leading-relaxed">
+                  <p className="text-[20.1px] text-white/70 leading-[30.15px] tracking-[-0.54px] font-normal">
                     {item.description}
                   </p>
                 </div>
@@ -287,17 +294,17 @@ export default function AboutPage() {
               {principles.slice(3, 5).map((item) => (
                 <div
                   key={item.number}
-                  className="bg-[#1A1A2E]/60 border border-white/10 rounded-2xl p-6 lg:p-8"
+                  className="bg-white/5 backdrop-blur-[19.54px] rounded-[16.75px] p-[33.5px]"
                 >
-                  <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center mb-5">
-                    <span className="text-white text-sm font-medium">
+                  <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center mb-[88.6px]">
+                    <span className="text-black text-sm font-medium">
                       {item.number}
                     </span>
                   </div>
-                  <h3 className="text-lg lg:text-xl font-semibold text-white mb-3">
+                  <h3 className="text-[29.03px] font-medium text-white mb-2 leading-[34.84px] tracking-[-0.71px]">
                     {item.title}
                   </h3>
-                  <p className="text-sm lg:text-base text-white/60 leading-relaxed">
+                  <p className="text-[20.1px] text-white/70 leading-[30.15px] tracking-[-0.54px] font-normal">
                     {item.description}
                   </p>
                 </div>
@@ -305,27 +312,22 @@ export default function AboutPage() {
             </div>
           </div>
 
-          {/* Sub-heading below cards */}
-          <h3 className="text-2xl md:text-3xl lg:text-[2.5rem] font-normal text-center mt-16 lg:mt-20 text-white leading-tight">
-            Shaped by Skills,
-            <br />
-            Guided by Purpose
-          </h3>
         </div>
       </section>
 
       {/* ===== TRAINERS ===== */}
       <section className="snap-section bg-white px-6 lg:px-12 py-16 lg:py-24 flex flex-col justify-center">
         <div className="max-w-[1320px] mx-auto w-full">
-          <SectionLabel text="TRAINERS" className="justify-start" />
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-sm bg-[#14B8A6]" />
+            <span className="text-sm font-normal tracking-widest text-[#14B8A6] uppercase">TRAINERS</span>
+          </div>
 
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mt-3 mb-12 lg:mb-16">
             <h2 className="text-2xl md:text-3xl lg:text-[2.5rem] font-normal leading-tight text-[#1A2B3D]">
-              Meet Our Expert Trainers
-              <br />
-              Today Online
+              Educators Behind Thaylo
             </h2>
-            <Button variant="dark" className="text-sm px-6 py-3 self-start md:self-auto">
+            <Button variant="dark" className="!rounded-xl text-sm px-6 py-3 self-start md:self-auto">
               Explore More
             </Button>
           </div>
@@ -355,10 +357,10 @@ export default function AboutPage() {
                   </div>
                 </div>
                 <div className="pt-4 pb-2">
-                  <h3 className="text-base lg:text-lg font-medium text-[#1A2B3D] mb-1">
+                  <h3 className="text-[29.03px] font-medium text-[#111023] leading-[34.84px] tracking-[-0.54px]">
                     {trainer.name}
                   </h3>
-                  <p className="text-sm text-[#6B7280] font-normal">
+                  <p className="text-[20.1px] text-[#606B68] font-normal leading-[30.15px] tracking-[-0.54px]" style={{ fontFamily: 'Inter, sans-serif' }}>
                     {trainer.title}
                   </p>
                 </div>

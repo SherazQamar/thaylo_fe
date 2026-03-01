@@ -14,12 +14,6 @@ export default function Hero() {
         <div className="absolute top-[40%] left-[-100px] w-[300px] h-[300px] bg-[#14B8A6]/5 rounded-full blur-[100px]" />
       </div>
 
-      {/* Outer border glow */}
-      <div className="absolute inset-3 sm:inset-4 md:inset-6 rounded-[24px] border border-[#14B8A6]/15 pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[200px] h-[1px] bg-gradient-to-r from-transparent via-[#14B8A6]/30 to-transparent" />
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[300px] h-[1px] bg-gradient-to-r from-transparent via-[#14B8A6]/20 to-transparent" />
-      </div>
-
       {/* Character - absolute positioned, large, clipped at bottom */}
       <div className="absolute right-0 lg:right-[5%] xl:right-[8%] top-[5%] bottom-0 w-[50%] lg:w-[45%] z-[5] flex justify-center">
         <Image
