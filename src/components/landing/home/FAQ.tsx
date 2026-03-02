@@ -50,13 +50,13 @@ export default function FAQ() {
   const [openIndex, setOpenIndex] = useState<number>(0);
 
   return (
-    <section className="snap-section py-12 px-6 lg:px-12 bg-white flex flex-col justify-center">
+    <section className="snap-section py-12 px-4 sm:px-6 lg:px-12 bg-white flex flex-col justify-center">
       <div className="max-w-7xl mx-auto">
-        <div className="grid lg:grid-cols-[300px_1fr] gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-8 lg:gap-12">
           {/* Left Column */}
           <div>
             <SectionLabel text="FAQS" className="!justify-start" />
-            <h2 className="text-3xl md:text-4xl font-normal text-[#1A2B3D] mt-4 mb-8 leading-tight">
+            <h2 className="text-2xl md:text-4xl font-normal text-[#1A2B3D] mt-4 mb-8 leading-tight">
               Questions
               <br />
               Parents Ask

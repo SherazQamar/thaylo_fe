@@ -30,20 +30,26 @@ const courses = [
 
 export default function CoursePilot() {
   return (
-    <section className="snap-section py-12 px-8 lg:px-16 bg-[#F1F5F9] flex flex-col justify-center rounded-4xl">
+    <section className="snap-section py-12 px-4 sm:px-6 lg:px-16 bg-[#F1F5F9] flex flex-col justify-center rounded-4xl">
       <div className="w-full">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-12 gap-4">
-          <h2 className="text-3xl md:text-4xl font-normal text-[#1A2B3D]">
-            Grade 4 English Language Arts Pilot
-          </h2>
-          <Button variant="dark" className="rounded-xl px-8 py-3.5 font-medium">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 sm:mb-12 gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="w-2.5 h-2.5 rounded-sm bg-[#14B8A6]" />
+              <span className="text-xs font-normal tracking-widest text-[#14B8A6] uppercase">FEATURED CLASS</span>
+            </div>
+            <h2 className="text-xl sm:text-2xl md:text-4xl font-normal text-[#1A2B3D]">
+              Grade 4 English Language Arts Pilot
+            </h2>
+          </div>
+          <Button variant="dark" className="hidden sm:inline-flex rounded-xl px-8 py-3.5 font-medium">
             More Courses
           </Button>
         </div>
 
         {/* Course Cards */}
-        <div className="grid md:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-5">
           {courses.map((course, index) => (
             <CourseCard key={index} {...course} />
           ))}

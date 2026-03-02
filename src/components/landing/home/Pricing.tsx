@@ -60,10 +60,10 @@ const plans = [
 
 export default function Pricing() {
   return (
-    <section className="snap-section py-16 lg:py-24 px-6 lg:px-12 bg-white flex flex-col justify-center">
+    <section className="snap-section py-12 lg:py-24 px-4 sm:px-6 lg:px-12 bg-white flex flex-col justify-center">
       <div className="max-w-[1320px] mx-auto w-full">
         <SectionLabel text="MEMBERSHIP" />
-        <h2 className="text-3xl md:text-4xl lg:text-[48px] font-normal text-center mt-4 mb-3 text-[#111023] leading-tight tracking-[-0.64px]">
+        <h2 className="text-xl sm:text-2xl md:text-4xl lg:text-[48px] font-normal text-center mt-4 mb-3 text-[#111023] leading-tight tracking-[-0.64px]">
           Enrollment Options for the Academic Year
         </h2>
         <p
@@ -73,7 +73,7 @@ export default function Pricing() {
           ONE FULL ACADEMIC YEAR.&nbsp; FLEXIBLE PAYMENT OPTIONS.
         </p>
 
-        <div className="grid md:grid-cols-3 gap-5 items-start max-w-[1330px] mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-5 items-start max-w-[1330px] mx-auto">
           {plans.map((plan, index) => (
             <PricingCard key={index} {...plan} />
           ))}

@@ -1,8 +1,8 @@
 import React from "react";
 import Image from "next/image";
-import Navbar from "@/components/landing/Navbar";
-import CTABanner from "@/components/landing/CTABanner";
-import Footer from "@/components/landing/Footer";
+import Navbar from "@/components/landing/shared/Navbar";
+import CTABanner from "@/components/landing/shared/CTABanner";
+import Footer from "@/components/landing/shared/Footer";
 import SectionLabel from "@/components/ui/SectionLabel";
 import Button from "@/components/ui/Button";
 

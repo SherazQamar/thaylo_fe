@@ -1,19 +1,18 @@
-import React from "react";
 import Image from "next/image";
 import SectionLabel from "@/components/ui/SectionLabel";
 
 export default function SuccessStories() {
   return (
-    <section className="snap-section py-12 px-6 lg:px-12 bg-white flex flex-col justify-center">
+    <section className="snap-section py-12 px-4 sm:px-6 lg:px-12 bg-white flex flex-col justify-center">
       <div className="max-w-7xl mx-auto">
         <SectionLabel text="SUCCESS STORIES" />
-        <h2 className="text-3xl md:text-4xl lg:text-5xl font-normal text-center mt-4 mb-16 text-[#1A2B3D]">
+        <h2 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-normal text-center mt-4 mb-10 sm:mb-16 text-[#1A2B3D]">
           Real Growth. Real Confidence.
         </h2>
 
-        <div className="grid md:grid-cols-[25%_1fr] gap-6 items-stretch">
+        <div className="grid grid-cols-1 md:grid-cols-[25%_1fr] gap-6 items-stretch">
           {/* Metrics Image Card */}
-          <div className="relative rounded-2xl overflow-hidden bg-[#0B1D2E] h-[320px] flex flex-col">
+          <div className="relative rounded-2xl overflow-hidden bg-[#0B1D2E] min-h-[280px] md:h-[320px] flex flex-col">
             {/* Background pattern */}
             <Image
               src="/assets/testimonial-bg-pattern.png"
@@ -23,14 +22,14 @@ export default function SuccessStories() {
             />
             {/* Text */}
             <div className="relative z-10 px-5 pt-6 pb-4 text-center">
-              <p className="text-white text-xl font-medium leading-tight">
+              <p className="text-white text-lg sm:text-xl font-medium leading-tight">
                 90% of Students Succeed
                 <br />
                 Thanks to AI Learning
               </p>
             </div>
             {/* Photo */}
-            <div className="relative z-10 flex-1 mx-4 mb-4 rounded-xl overflow-hidden">
+            <div className="relative z-10 flex-1 mx-4 mb-4 rounded-xl overflow-hidden min-h-[120px]">
               <Image
                 src="/assets/four-diverse-young-adults.png"
                 alt="Diverse young adults celebrating"
@@ -41,8 +40,8 @@ export default function SuccessStories() {
           </div>
 
           {/* Design Principles Card */}
-          <div className="bg-[#F1F5F9] rounded-2xl p-10 lg:p-12 flex flex-col justify-center h-[320px]">
-            <p className="text-[#1A2B3D] text-lg md:text-xl leading-relaxed font-normal font-[family-name:var(--font-inter)] mb-6">
+          <div className="bg-[#F1F5F9] rounded-2xl p-6 sm:p-10 lg:p-12 flex flex-col justify-center min-h-[240px] md:h-[320px]">
+            <p className="text-[#1A2B3D] text-base sm:text-lg md:text-xl leading-relaxed font-normal font-[family-name:var(--font-inter)] mb-6">
               My child feels more confident and actually enjoys learning now. The AI tutor
               feels supportive, not stressful.
             </p>

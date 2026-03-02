@@ -1,22 +1,21 @@
-import React from "react";
 import Image from "next/image";
 import SectionLabel from "@/components/ui/SectionLabel";
 
 export default function SupportSystem() {
   return (
-    <section id="learning-model" className="snap-section py-12 px-6 lg:px-12 bg-white flex flex-col justify-center">
+    <section id="learning-model" className="snap-section py-12 px-4 sm:px-6 lg:px-12 bg-white flex flex-col justify-center">
       <div className="max-w-[1320px] mx-auto">
         <SectionLabel text="WHY US" />
-        <h2 className="text-3xl md:text-4xl lg:text-5xl font-normal text-center mt-4 mb-16 text-[#1A2B3D]">
+        <h2 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-normal text-center mt-4 mb-10 sm:mb-16 text-[#1A2B3D]">
           The Thaylo Learning Support System
         </h2>
 
-        <div className="grid lg:grid-cols-3 gap-8 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
           {/* Left Column */}
-          <div className="space-y-12">
+          <div className="space-y-8 lg:space-y-12">
             {/* AI Instructor */}
-            <div>
-              <div className="w-12 h-12 rounded-xl  flex items-center justify-center mb-4">
+            <div className="text-center lg:text-left">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 mx-auto lg:mx-0">
                 <Image src="/assets/certificate-symbol.png" alt="AI Instructor" width={28} height={28} className="w-7 h-7 object-contain" />
               </div>
               <h3 className="text-lg font-normal text-[#1A2B3D] mb-2">
@@ -32,8 +31,8 @@ export default function SupportSystem() {
             </div>
 
             {/* Calyx */}
-            <div className="pt-4 border-t border-gray-100">
-              <div className="w-12 h-12 rounded-xl  flex items-center justify-center mb-4">
+            <div className="pt-4 border-t border-gray-100 text-center lg:text-left">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 mx-auto lg:mx-0">
                 <Image src="/assets/handshake-symbol.png" alt="Bloom Buddy" width={28} height={28} className="w-7 h-7 object-contain" />
               </div>
               <h3 className="text-lg font-normal text-[#1A2B3D] mb-2">
@@ -48,20 +47,20 @@ export default function SupportSystem() {
           </div>
 
           {/* Center - Character */}
-          <div className="flex justify-center items-center">
+          <div className="flex justify-center items-center order-first lg:order-none">
             <Image
               src="/assets/character-jumping.png"
               alt="Thaylo Character"
               width={400}
               height={450}
-              className="w-[280px] lg:w-[340px] h-auto object-contain drop-shadow-xl"
+              className="w-[200px] sm:w-[240px] lg:w-[340px] h-auto object-contain drop-shadow-xl"
             />
           </div>
 
           {/* Right Column */}
-          <div className="flex flex-col items-end text-right">
+          <div className="text-center lg:text-right">
             <div>
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 ml-auto">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 mx-auto lg:ml-auto lg:mr-0">
                 <Image src="/assets/wayfinder-symbol.png" alt="Wayfinder Support" width={32} height={32} className="w-7 h-7 object-contain" />
               </div>
               <h3 className="text-lg font-normal text-[#1A2B3D] mb-2">

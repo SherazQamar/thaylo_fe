@@ -17,7 +17,9 @@
       "mcp__playwright__browser_resize",
       "mcp__playwright__browser_evaluate",
       "mcp__playwright__browser_press_key",
-      "mcp__playwright__browser_click"
+      "mcp__playwright__browser_click",
+      "Bash(npm run build)",
+      "Bash(ls -la \"d:/GitHub/thaylo_fe/src/app/\\(landing-flow\\)/assets/\")"
     ]
   }
 }

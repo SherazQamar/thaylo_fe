@@ -5,16 +5,15 @@ import Button from "@/components/ui/Button";
 
 export default function OurStory() {
   return (
-    <section id="about" className="snap-section pt-8 lg:pt-10 pb-6 lg:pb-8 px-6 lg:px-12 bg-white flex flex-col justify-center">
+    <section id="about" className="snap-section pt-8 lg:pt-10 pb-6 lg:pb-8 px-4 sm:px-6 lg:px-12 bg-white flex flex-col justify-center">
       <div className="max-w-7xl mx-auto">
         <SectionLabel text="OUR STORY" />
-        <h2 className="text-2xl md:text-3xl lg:text-[2.5rem] font-normal text-center mt-2 mb-6 max-w-3xl mx-auto leading-tight text-[#1A2B3D]">
-          Mastery-based learning powered by AI, guided by human pedagogy--so
-          students move forward only when they truly understand
+        <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-[2.5rem] font-normal text-center mt-2 mb-6 max-w-3xl mx-auto leading-tight text-[#1A2B3D]">
+          Global AI School for Real World Brilliance
         </h2>
 
         {/* Bento Grid */}
-        <div className="grid md:grid-cols-3 md:grid-rows-[1fr_auto] gap-3 lg:gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 md:grid-rows-[1fr_auto] gap-3 lg:gap-4">
           {/* Card 1 - How Learning Works (top-left) */}
           <div className="bg-[#F1F5F9] rounded-2xl p-4 lg:p-5 flex flex-col">
             <h3 className="text-sm lg:text-base font-normal text-[#1A2B3D] mb-1">
@@ -115,7 +114,7 @@ export default function OurStory() {
           </div>
 
           {/* Learning That Grows - bottom-left, spans 2 columns */}
-          <div className="bg-[#F1F5F9] rounded-2xl p-5 lg:p-6 md:col-span-2 grid sm:grid-cols-2 gap-4 items-center">
+          <div className="bg-[#F1F5F9] rounded-2xl p-4 lg:p-6 md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
             <div className="space-y-2">
               <h2 className="text-lg md:text-xl font-normal text-[#1A2B3D] leading-tight">
                 Learning That Grows With Your Child

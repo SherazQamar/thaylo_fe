@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, FormEvent } from "react";
-import Navbar from "@/components/landing/Navbar";
-import Footer from "@/components/landing/Footer";
+import Navbar from "@/components/landing/shared/Navbar";
+import Footer from "@/components/landing/shared/Footer";
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
