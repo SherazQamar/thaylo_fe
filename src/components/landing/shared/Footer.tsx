@@ -62,13 +62,13 @@ export default function Footer() {
               Occasional updates on learning, pilots, and new offerings as well
               as what the latest learning science research suggests.
             </p>
-            <div className="flex">
+            <div className="flex items-center bg-white rounded-xl border border-gray-200 p-1.5">
               <input
                 type="email"
                 placeholder="Enter your Email"
-                className="flex-1 px-4 py-2.5 rounded-l-full border border-gray-200 text-sm bg-white outline-none focus:border-[#14B8A6]"
+                className="flex-1 px-4 py-2 text-sm bg-transparent outline-none text-[#1A2B3D] placeholder:text-[#9CA3AF] min-w-0"
               />
-              <button className="px-5 py-2.5 rounded-r-full bg-[#14B8A6] text-white text-sm font-normal hover:bg-[#0D9488] transition-colors cursor-pointer">
+              <button className="px-5 py-2 rounded-lg bg-gradient-to-r from-[#00696B] to-[#60D624] text-white text-sm font-medium hover:from-[#005A5C] hover:to-[#55C01F] transition-all cursor-pointer shrink-0">
                 Send
               </button>
             </div>
