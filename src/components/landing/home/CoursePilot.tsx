@@ -30,7 +30,7 @@ const courses = [
 
 export default function CoursePilot() {
   return (
-    <section className="snap-section py-12 px-4 sm:px-6 lg:px-16 bg-[#F1F5F9] flex flex-col justify-center rounded-4xl">
+    <section className="py-12 px-4 sm:px-6 lg:px-16 bg-[#F1F5F9] flex flex-col justify-center rounded-4xl">
       <div className="w-full">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 sm:mb-12 gap-4">

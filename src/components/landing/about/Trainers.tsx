@@ -1,26 +1,27 @@
+import Image from "next/image";
 import Button from "@/components/ui/Button";
 
 const trainers = [
   {
     name: "Prof. David Lee",
     title: "Monitor student progress and engagement",
-    gradient: "from-sky-400 to-indigo-500",
+    image: "/assets/david.png",
   },
   {
     name: "Dr. Sarah Johnson",
     title: "Step in when learning slows or stalls",
-    gradient: "from-rose-400 to-pink-500",
+    image: "/assets/sara.png",
   },
   {
     name: "Prof. Robert Chen",
     title: "Review concerns raised through the platform",
-    gradient: "from-emerald-400 to-teal-500",
+    image: "/assets/robert.png",
   },
 ];
 
 export default function Trainers() {
   return (
-    <section className="snap-section bg-white px-4 sm:px-6 lg:px-12 py-12 lg:py-24 flex flex-col justify-center">
+    <section className="bg-white px-4 sm:px-6 lg:px-12 py-12 lg:py-24 flex flex-col justify-center">
       <div className="max-w-[1320px] mx-auto w-full">
         <div className="flex items-center gap-2">
           <span className="w-2.5 h-2.5 rounded-sm bg-[#14B8A6]" />
@@ -41,27 +42,19 @@ export default function Trainers() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6 max-w-[280px] sm:max-w-none mx-auto sm:mx-0">
           {trainers.map((trainer, idx) => (
             <div
               key={`${trainer.name}-${idx}`}
               className="rounded-2xl overflow-hidden"
             >
-              <div className="relative h-[220px] sm:h-[280px] lg:h-[360px] bg-[#E8F4F2]">
-                <div
-                  className={`absolute inset-0 bg-gradient-to-br ${trainer.gradient} opacity-20`}
+              <div className="relative h-[280px] sm:h-[340px] lg:h-[440px] bg-[#E8F4F2] rounded-2xl overflow-hidden">
+                <Image
+                  src={trainer.image}
+                  alt={trainer.name}
+                  fill
+                  className="object-cover object-top"
                 />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <svg
-                    width="120"
-                    height="120"
-                    viewBox="0 0 24 24"
-                    fill="#94A3B8"
-                    opacity="0.4"
-                  >
-                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                  </svg>
-                </div>
               </div>
               <div className="pt-4 pb-2">
                 <h3 className="text-[22px] sm:text-[29.03px] font-medium text-[#111023] leading-[1.2] sm:leading-[34.84px] tracking-[-0.54px]">

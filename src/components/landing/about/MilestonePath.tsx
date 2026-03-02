@@ -27,7 +27,7 @@ const milestones = [
 
 export default function MilestonePath() {
   return (
-    <section className="snap-section bg-[#F1F5F9] px-4 sm:px-6 lg:px-12 py-12 lg:py-24 flex flex-col justify-center">
+    <section className="bg-[#F1F5F9] px-4 sm:px-6 lg:px-12 py-12 lg:py-24 flex flex-col justify-center">
       <div className="max-w-[1320px] mx-auto w-full">
         <SectionLabel text="MILESTONE PATH" />
         <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-[2.5rem] font-normal text-center mt-3 mb-8 lg:mb-16 max-w-3xl mx-auto leading-tight text-[#1A2B3D]">
@@ -36,7 +36,7 @@ export default function MilestonePath() {
           Driving Real Growth
         </h2>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 lg:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6 max-w-[280px] sm:max-w-none mx-auto sm:mx-0">
           {milestones.map((milestone) => (
             <div
               key={milestone.year}

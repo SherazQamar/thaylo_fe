@@ -3,7 +3,7 @@ import SectionLabel from "@/components/ui/SectionLabel";
 
 export default function SuccessStories() {
   return (
-    <section className="snap-section py-12 px-4 sm:px-6 lg:px-12 bg-white flex flex-col justify-center">
+    <section className="py-12 px-4 sm:px-6 lg:px-12 bg-white flex flex-col justify-center">
       <div className="max-w-7xl mx-auto">
         <SectionLabel text="SUCCESS STORIES" />
         <h2 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-normal text-center mt-4 mb-10 sm:mb-16 text-[#1A2B3D]">

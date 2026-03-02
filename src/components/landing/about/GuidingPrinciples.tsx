@@ -38,13 +38,13 @@ function PrincipleCard({
 }) {
   return (
     <div className="bg-white/5 backdrop-blur-[19.54px] rounded-[16.75px] p-5 sm:p-[33.5px]">
-      <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center mb-10 sm:mb-[88.6px]">
+      <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center mb-4 sm:mb-[88.6px]">
         <span className="text-black text-sm font-medium">{item.number}</span>
       </div>
-      <h3 className="text-[20px] sm:text-[29.03px] font-medium text-white mb-2 leading-[1.2] sm:leading-[34.84px] tracking-[-0.71px]">
+      <h3 className="text-[22px] sm:text-[29.03px] font-medium text-white mb-2 leading-[1.25] sm:leading-[34.84px] tracking-[-0.71px]">
         {item.title}
       </h3>
-      <p className="text-[15px] sm:text-[20.1px] text-white/70 leading-[1.5] sm:leading-[30.15px] tracking-[-0.54px] font-normal max-w-xl">
+      <p className="text-[14px] sm:text-[20.1px] text-white/70 leading-[1.6] sm:leading-[30.15px] tracking-[-0.54px] font-normal">
         {item.description}
       </p>
     </div>
@@ -53,7 +53,7 @@ function PrincipleCard({
 
 export default function GuidingPrinciples() {
   return (
-    <section className="snap-section relative bg-[#0B1D2E] px-4 sm:px-6 lg:px-12 py-12 lg:py-24 flex flex-col justify-center overflow-hidden">
+    <section className="relative bg-[#0B1D2E] px-4 sm:px-6 lg:px-12 py-12 lg:py-24 flex flex-col justify-center overflow-hidden">
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-[-100px] left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-[#00696B]/8 rounded-full blur-[150px]" />
         <div className="absolute bottom-[-50px] right-[-100px] w-[400px] h-[400px] bg-[#60D624]/5 rounded-full blur-[120px]" />
@@ -66,11 +66,11 @@ export default function GuidingPrinciples() {
             ETHICAL STANDARDS
           </span>
         </div>
-        <h2 className="text-2xl md:text-3xl lg:text-[2.5rem] font-normal text-center mt-3 mb-4 max-w-3xl mx-auto leading-tight text-white">
+        <h2 className="text-xl md:text-3xl lg:text-[2.5rem] font-normal text-center mt-3 mb-4 max-w-3xl mx-auto leading-tight text-white">
           Our Guiding Principles
         </h2>
         <p
-          className="text-white/60 text-sm lg:text-base leading-relaxed font-normal text-center max-w-3xl mx-auto mb-12 lg:mb-16"
+          className="text-white/70 text-[13px] sm:text-sm lg:text-base leading-[1.6] font-normal text-center max-w-md sm:max-w-3xl mx-auto mb-8 lg:mb-16"
           style={{ fontFamily: "Inter, sans-serif" }}
         >
           Thaylo is guided by a clear set of educational principles rooted in

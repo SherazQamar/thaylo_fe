@@ -60,7 +60,7 @@ const plans = [
 
 export default function Pricing() {
   return (
-    <section className="snap-section py-12 lg:py-24 px-4 sm:px-6 lg:px-12 bg-white flex flex-col justify-center">
+    <section className="py-12 lg:py-24 px-4 sm:px-6 lg:px-12 bg-white flex flex-col justify-center">
       <div className="max-w-[1320px] mx-auto w-full">
         <SectionLabel text="MEMBERSHIP" />
         <h2 className="text-xl sm:text-2xl md:text-4xl lg:text-[48px] font-normal text-center mt-4 mb-3 text-[#111023] leading-tight tracking-[-0.64px]">

@@ -5,7 +5,7 @@ export default function Hero() {
   return (
     <section
       id="home"
-      className="snap-section relative min-h-screen lg:h-screen bg-[#0B1D2E] overflow-hidden"
+      className="relative min-h-screen lg:h-screen bg-[#0B1D2E] overflow-hidden"
     >
       {/* Background glow effects */}
       <div className="absolute inset-0 pointer-events-none">

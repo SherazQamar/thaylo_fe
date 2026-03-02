@@ -88,7 +88,7 @@ export default function PersonalisedLearning() {
       <Navbar />
 
       {/* Hero Section */}
-      <section className="snap-section relative min-h-screen bg-[#0B1D2E] overflow-hidden flex items-center">
+      <section className="relative min-h-screen bg-[#0B1D2E] overflow-hidden flex items-center">
         {/* Background glow effects */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-[-100px] left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-[#00696B]/8 rounded-full blur-[150px]" />
@@ -201,7 +201,7 @@ export default function PersonalisedLearning() {
       </section>
 
       {/* Feature / Approach Section */}
-      <section className="snap-section py-12 px-6 lg:px-12 bg-white flex flex-col justify-center">
+      <section className="py-12 px-6 lg:px-12 bg-white flex flex-col justify-center">
         <div className="max-w-[1320px] mx-auto">
           <SectionLabel text="OUR APPROACH" />
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-normal text-center mt-4 mb-6 text-[#1A2B3D]">
@@ -371,7 +371,7 @@ export default function PersonalisedLearning() {
       </section>
 
       {/* How THAYLO Personalizes Learning - Steps */}
-      <section className="snap-section py-12 px-6 lg:px-12 bg-[#F1F5F9] flex flex-col justify-center">
+      <section className="py-12 px-6 lg:px-12 bg-[#F1F5F9] flex flex-col justify-center">
         <div className="max-w-[1320px] mx-auto">
           <SectionLabel text="HOW IT WORKS" />
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-normal text-center mt-4 mb-6 text-[#1A2B3D]">
@@ -430,7 +430,7 @@ export default function PersonalisedLearning() {
       </section>
 
       {/* AI Instructors Section */}
-      <section className="snap-section py-12 px-6 lg:px-12 bg-white flex flex-col justify-center">
+      <section className="py-12 px-6 lg:px-12 bg-white flex flex-col justify-center">
         <div className="max-w-[1320px] mx-auto">
           <SectionLabel text="AI INSTRUCTORS" />
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-normal text-center mt-4 mb-6 text-[#1A2B3D]">

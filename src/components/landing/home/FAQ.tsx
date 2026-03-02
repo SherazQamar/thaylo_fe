@@ -50,7 +50,7 @@ export default function FAQ() {
   const [openIndex, setOpenIndex] = useState<number>(0);
 
   return (
-    <section className="snap-section py-12 px-4 sm:px-6 lg:px-12 bg-white flex flex-col justify-center">
+    <section className="py-12 px-4 sm:px-6 lg:px-12 bg-white flex flex-col justify-center">
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-8 lg:gap-12">
           {/* Left Column */}

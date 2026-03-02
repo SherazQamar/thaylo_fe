@@ -5,7 +5,7 @@ import aboutBg from "@/app/(landing-flow)/assets/aboutbg.png";
 
 export default function AboutHero() {
   return (
-    <section className="snap-section relative min-h-[60vh] sm:min-h-[60vh] lg:min-h-[70vh] bg-[#111023] overflow-hidden flex flex-col">
+    <section className="relative bg-[#111023] overflow-hidden flex flex-col">
       <Image
         src={aboutBg}
         alt=""
@@ -16,7 +16,7 @@ export default function AboutHero() {
 
       <Navbar />
 
-      <div className="relative z-10 flex-1 flex items-center justify-center px-4 sm:px-6 pt-20 pb-12 sm:pt-24 sm:pb-16 lg:pt-0 lg:pb-0">
+      <div className="relative z-10 flex items-center justify-center px-4 sm:px-6 pt-8 pb-12 sm:pt-12 sm:pb-16 lg:pt-16 lg:pb-20">
         <div className="text-center max-w-3xl">
           <SectionLabel text="ABOUT US" />
           <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-[48px] xl:text-[56px] font-normal text-white leading-[1.2] tracking-[-0.64px] mt-5">

@@ -10,10 +10,10 @@ const stats = [
 
 export default function WhoWeAre() {
   return (
-    <section className="snap-section bg-white px-4 sm:px-6 lg:px-12 py-12 lg:py-24 flex flex-col justify-center">
+    <section className="bg-white px-4 sm:px-6 lg:px-12 py-12 lg:py-24 flex flex-col justify-center">
       <div className="max-w-[1320px] mx-auto w-full">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-16 items-center">
-          <div className="hidden md:block relative rounded-2xl overflow-hidden min-h-[320px] lg:min-h-[420px] bg-[#F1F5F9]">
+          <div className="relative rounded-2xl overflow-hidden min-h-[220px] sm:min-h-[320px] lg:min-h-[420px] bg-[#F1F5F9]">
             <Image
               src="/assets/Human robot handshake.png"
               alt="Human robot handshake"

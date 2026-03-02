@@ -5,7 +5,7 @@ import Button from "@/components/ui/Button";
 
 export default function OurStory() {
   return (
-    <section id="about" className="snap-section pt-8 lg:pt-10 pb-6 lg:pb-8 px-4 sm:px-6 lg:px-12 bg-white flex flex-col justify-center">
+    <section id="about" className="pt-8 lg:pt-10 pb-6 lg:pb-8 px-4 sm:px-6 lg:px-12 bg-white flex flex-col justify-center">
       <div className="max-w-7xl mx-auto">
         <SectionLabel text="OUR STORY" />
         <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-[2.5rem] font-normal text-center mt-2 mb-6 max-w-3xl mx-auto leading-tight text-[#1A2B3D]">

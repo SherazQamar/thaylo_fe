@@ -2,7 +2,7 @@ import Image from "next/image";
 
 export default function CTABanner() {
   return (
-    <section className="snap-section px-4 sm:px-6 lg:px-12 flex flex-col justify-center">
+    <section className="px-4 sm:px-6 lg:px-12 flex flex-col justify-center">
       <div className="max-w-[1320px] mx-auto w-full">
         <div className="relative rounded-2xl sm:rounded-3xl bg-[#0B1D2E] min-h-[280px] lg:min-h-[360px]">
           {/* Background glow */}
