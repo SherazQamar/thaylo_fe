@@ -7,21 +7,25 @@ import SectionLabel from "@/components/ui/SectionLabel";
 export default function LearningApproach() {
   return (
     <main>
-      <Navbar />
-
       {/* Hero Section */}
       <section className="relative bg-[#0B1D2E] overflow-hidden">
         {/* Background glow effects */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-[-100px] left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-[#00696B]/8 rounded-full blur-[150px]" />
-          <div className="absolute bottom-[-50px] right-[-100px] w-[500px] h-[500px] bg-[#60D624]/5 rounded-full blur-[120px]" />
-          <div className="absolute top-[40%] left-[-100px] w-[300px] h-[300px] bg-[#14B8A6]/5 rounded-full blur-[100px]" />
+          <div className="absolute top-[-80px] left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-[#00696B]/8 rounded-full blur-[150px]" />
+          <div className="absolute bottom-[-40px] right-[-80px] w-[400px] h-[400px] bg-[#60D624]/5 rounded-full blur-[120px]" />
+          <div className="absolute top-[40%] left-[-80px] w-[250px] h-[250px] bg-[#14B8A6]/5 rounded-full blur-[100px]" />
         </div>
 
+        <Navbar />
 
-        <div className="relative z-10 max-w-[1320px] mx-auto px-4 sm:px-6 lg:px-12 pt-24 pb-12 sm:pt-28 sm:pb-16 lg:pt-32 lg:pb-20 text-center">
-          <SectionLabel text="LEARNING APPROACH" />
-          <h1 className="text-4xl sm:text-5xl lg:text-[60px] xl:text-[72px] font-normal text-white leading-[1.15] tracking-[-0.64px] mt-6 max-w-4xl mx-auto">
+        <div className="relative z-10 max-w-[1400px] mx-auto px-6 sm:px-8 lg:px-12 xl:px-16 pt-20 sm:pt-24 pb-16 sm:pb-20 text-center">
+          <div className="flex items-center justify-center gap-2 mb-6">
+            <span className="w-2.5 h-2.5 rounded-sm bg-[#14B8A6]" />
+            <span className="text-sm font-normal tracking-widest text-[#14B8A6] uppercase">
+              Learning Approach
+            </span>
+          </div>
+          <h1 className="text-3xl sm:text-4xl lg:text-[52px] font-normal text-white leading-[1.2] tracking-[-0.64px] max-w-4xl mx-auto">
             Why and how this approach works for kids
           </h1>
         </div>
@@ -32,7 +36,7 @@ export default function LearningApproach() {
         <div className="max-w-[1320px] mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
             {/* Left - Image */}
-            <div className="relative rounded-2xl overflow-hidden min-h-[250px] sm:min-h-[360px] lg:min-h-[440px] bg-[#F1F5F9]">
+            <div className="relative rounded-2xl overflow-hidden min-h-[220px] sm:min-h-[300px] lg:min-h-[380px] bg-[#F1F5F9]">
               <Image
                 src="/assets/learning approach.png"
                 alt="Learning approach"
@@ -169,9 +173,9 @@ export default function LearningApproach() {
             challenges are introduced naturally.
           </p>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">
             {/* Left - Image */}
-            <div className="relative rounded-2xl overflow-hidden min-h-[250px] sm:min-h-[360px] lg:min-h-[480px] bg-white">
+            <div className="relative rounded-2xl overflow-hidden min-h-[220px] sm:min-h-[300px] lg:min-h-[380px] bg-white">
               <Image
                 src="/assets/personalize learning.png"
                 alt="Personalized learning"
@@ -209,6 +213,57 @@ export default function LearningApproach() {
                   that feels supportive rather than instructional.
                 </p>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Building strong learning foundations */}
+      <section className="py-12 lg:py-24 px-4 sm:px-6 lg:px-12 bg-white flex flex-col justify-center">
+        <div className="max-w-[1320px] mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+            {/* Left - Text */}
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#14B8A6]" />
+                <span className="text-sm font-normal tracking-widest text-[#6B7280] uppercase">
+                  Personalized Learning
+                </span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-[42px] font-normal leading-tight text-[#1A2B3D] mb-4">
+                Building strong learning
+                <br />
+                foundations
+              </h2>
+              <p className="text-sm sm:text-base text-[#6B7280] leading-relaxed mb-6" style={{ fontFamily: "Inter, sans-serif" }}>
+                Early learning shapes how children think, solve problems, and build confidence
+                in the future. By personalizing learning early, THAYLO helps children develop:
+              </p>
+              <ul className="space-y-4">
+                {[
+                  "Strong fundamentals",
+                  "Positive learning habits",
+                  "Confidence to explore new ideas",
+                  "A healthy relationship with learning",
+                ].map((item) => (
+                  <li key={item} className="flex items-center gap-3">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#14B8A6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    <span className="text-[18px] leading-[27px] text-[#606B68] font-normal" style={{ fontFamily: "Inter, sans-serif" }}>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Right - Image */}
+            <div className="relative rounded-2xl overflow-hidden min-h-[220px] sm:min-h-[300px] lg:min-h-[380px]">
+              <Image
+                src="/assets/personalize learning.png"
+                alt="Building strong learning foundations"
+                fill
+                className="object-cover"
+              />
             </div>
           </div>
         </div>

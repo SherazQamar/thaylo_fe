@@ -5,22 +5,22 @@ import SectionLabel from "@/components/ui/SectionLabel";
 
 const faqs = [
   {
-    question: "Do I need prior experience to enroll?",
+    question: "Do I need prior experience to join the course?",
     answer:
-      "No prior experience is required. Thaylo's current pilot is designed for Grade 4 learners and begins with foundational instruction that adapts based on each student's understanding. As Thaylo expands, the same mastery-based approach will support learners across additional grade levels.",
+      "No experience is needed. The course starts with the basics and guides you step by step. You will learn through practical exercises and hands-on projects. By the end, you'll be confident using AI tools in real scenarios.",
   },
   {
-    question: "How long are daily lessons?",
+    question: "How long are daily lessons ?",
     answer:
       "Daily lessons are designed to be completed in approximately 45-60 minutes, with flexibility built in to accommodate different learning paces.",
   },
   {
-    question: "How does the AI Instructor work?",
+    question: "How does the AI tutor work ?",
     answer:
       "The AI Instructor delivers structured lessons using proven instructional strategies, adapting in real time while staying aligned to human-designed curriculum and learning goals.",
   },
   {
-    question: "How does Bloom Buddy support emotional wellbeing?",
+    question: "How does Bloom Buddy support emotional wellbeing ?",
     answer:
       "Calyx, your Bloom Buddy, supports focus and reflection through simple check-ins that help students notice how they're feeling so they can fully engage with learning.",
   },
@@ -46,13 +46,14 @@ const faqs = [
   },
 ];
 
-export default function FAQ() {
+export default function FAQ({ maxItems }: { maxItems?: number } = {}) {
   const [openIndex, setOpenIndex] = useState<number>(0);
+  const displayFaqs = maxItems ? faqs.slice(0, maxItems) : faqs;
 
   return (
-    <section className="py-12 px-4 sm:px-6 lg:px-12 bg-white flex flex-col justify-center">
-      <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-8 lg:gap-12">
+    <section className="py-16 lg:py-24 px-4 sm:px-6 lg:px-12 bg-white flex flex-col justify-center">
+      <div className="max-w-[1320px] mx-auto w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-8 lg:gap-20">
           {/* Left Column */}
           <div>
             <SectionLabel text="FAQS" className="!justify-start" />
@@ -117,15 +118,13 @@ export default function FAQ() {
 
           {/* Right Column - Accordion */}
           <div className="divide-y divide-gray-200">
-            {faqs.map((faq, index) => (
-              <div key={index} className="py-5">
+            {displayFaqs.map((faq, index) => (
+              <div key={index} className="py-7">
                 <button
                   className="w-full flex items-center justify-between text-left cursor-pointer"
-                  onClick={() =>
-                    setOpenIndex(openIndex === index ? -1 : index)
-                  }
+                  onClick={() => setOpenIndex(index)}
                 >
-                  <span className="text-base md:text-lg font-normal text-[#1A2B3D] pr-4">
+                  <span className="text-lg md:text-xl font-normal text-[#1A2B3D] pr-4">
                     {faq.question}
                   </span>
                   <span className="text-xl text-[#1A2B3D] flex-shrink-0">
