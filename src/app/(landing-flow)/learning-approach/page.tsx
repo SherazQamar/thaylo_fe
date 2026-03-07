@@ -34,7 +34,7 @@ export default function LearningApproach() {
       {/* Learning is not one size fits all */}
       <section className="py-16 lg:py-24 px-4 sm:px-6 lg:px-12 bg-white flex flex-col justify-center">
         <div className="max-w-[1320px] mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-16 items-center">
             {/* Left - Image */}
             <div className="relative rounded-2xl overflow-hidden min-h-[220px] sm:min-h-[300px] lg:min-h-[380px] bg-[#F1F5F9]">
               <Image
@@ -56,14 +56,12 @@ export default function LearningApproach() {
                   WHO WE ARE
                 </span>
               </div>
-              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-normal leading-tight text-[#1A2B3D]">
-                Learning is not
-                <br />
-                one size fits all
+              <h2 className="text-[22px] sm:text-3xl md:text-4xl lg:text-5xl font-normal leading-[1.2] text-[#1A2B3D]">
+                Learning is not one size fits all
               </h2>
               <p
-                className="text-[#6B7280] text-sm sm:text-base lg:text-lg leading-[24px] sm:leading-[27px] tracking-[-0.48px] font-normal"
-                style={{ fontFamily: "Inter, sans-serif" }}
+                className="text-[#606B68] font-normal"
+                style={{ fontFamily: "Inter, sans-serif", fontSize: "18px", lineHeight: "27px", letterSpacing: "0px" }}
               >
                 Every child learns in a different way. Some children need more
                 time. Some learn faster with visuals. Others understand better
@@ -91,24 +89,24 @@ export default function LearningApproach() {
             <div className="space-y-8 lg:space-y-12">
               <div className="text-center lg:text-left">
                 <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 mx-auto lg:mx-0">
-                  <Image src="/assets/adapts-pace-icon.png" alt="" width={28} height={28} className="w-7 h-7 object-contain" />
+                  <Image src="/assets/certificate-symbol.png" alt="" width={28} height={28} className="w-12 h-12 object-contain" />
                 </div>
-                <h3 className="text-lg font-normal text-[#1A2B3D] mb-2">
+                <h3 className="font-medium text-[#111023] mb-2" style={{ fontSize: "26px", lineHeight: "31.2px", letterSpacing: "-0.64px" }}>
                   Adapts Pace
                 </h3>
-                <p className="text-sm text-[#6B7280] leading-relaxed">
+                <p className="text-[#606B68] font-normal" style={{ fontFamily: "Inter, sans-serif", fontSize: "18px", lineHeight: "27px", letterSpacing: "-0.48px" }}>
                   Adapts to their pace and understanding
                 </p>
               </div>
 
-              <div className="pt-4 border-t border-gray-200 text-center lg:text-left">
+              <div className="pt-4 border-t border-[#9CA3AF] text-center lg:text-left">
                 <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 mx-auto lg:mx-0">
-                  <Image src="/assets/adjust-lessons-icon.png" alt="" width={28} height={28} className="w-7 h-7 object-contain" />
+                  <Image src="/assets/handshake-symbol.png" alt="" width={28} height={28} className="w-12 h-12 object-contain" />
                 </div>
-                <h3 className="text-lg font-normal text-[#1A2B3D] mb-2">
+                <h3 className="font-medium text-[#111023] mb-2" style={{ fontSize: "26px", lineHeight: "31.2px", letterSpacing: "-0.64px" }}>
                   Adjust Lessons
                 </h3>
-                <p className="text-sm text-[#6B7280] leading-relaxed">
+                <p className="text-[#606B68] font-normal" style={{ fontFamily: "Inter, sans-serif", fontSize: "18px", lineHeight: "27px", letterSpacing: "-0.48px" }}>
                   Adjusts lessons based on progress
                 </p>
               </div>
@@ -129,24 +127,24 @@ export default function LearningApproach() {
             <div className="space-y-8 lg:space-y-12">
               <div className="text-center lg:text-right">
                 <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 mx-auto lg:ml-auto lg:mr-0">
-                  <Image src="/assets/curiosity-icon.png" alt="" width={28} height={28} className="w-7 h-7 object-contain" />
+                  <Image src="/assets/wayfinder-symbol.png" alt="" width={28} height={28} className="w-12 h-12 object-contain" />
                 </div>
-                <h3 className="text-lg font-normal text-[#1A2B3D] mb-2">
+                <h3 className="font-medium text-[#111023] mb-2" style={{ fontSize: "26px", lineHeight: "31.2px", letterSpacing: "-0.64px" }}>
                   Encourages curiosity
                 </h3>
-                <p className="text-sm text-[#6B7280] leading-relaxed">
+                <p className="text-[#606B68] font-normal" style={{ fontFamily: "Inter, sans-serif", fontSize: "18px", lineHeight: "27px", letterSpacing: "-0.48px" }}>
                   Encourages curiosity without pressure
                 </p>
               </div>
 
-              <div className="pt-4 border-t border-gray-200 text-center lg:text-right">
+              <div className="pt-4 border-t border-[#9CA3AF] text-center lg:text-right">
                 <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 mx-auto lg:ml-auto lg:mr-0">
-                  <Image src="/assets/treats-mistakes-icon.png" alt="" width={28} height={28} className="w-7 h-7 object-contain" />
+                  <Image src="/assets/treat.png" alt="" width={28} height={28} className="w-12 h-12 object-contain" />
                 </div>
-                <h3 className="text-lg font-normal text-[#1A2B3D] mb-2">
+                <h3 className="font-medium text-[#111023] mb-2" style={{ fontSize: "26px", lineHeight: "31.2px", letterSpacing: "-0.64px" }}>
                   Treats mistakes
                 </h3>
-                <p className="text-sm text-[#6B7280] leading-relaxed">
+                <p className="text-[#606B68] font-normal" style={{ fontFamily: "Inter, sans-serif", fontSize: "18px", lineHeight: "27px", letterSpacing: "-0.48px" }}>
                   Treats mistakes as part of learning
                 </p>
               </div>
@@ -159,14 +157,14 @@ export default function LearningApproach() {
       <section className="py-12 lg:py-24 px-4 sm:px-6 lg:px-12 bg-[#EBEEF2] flex flex-col justify-center">
         <div className="max-w-[1320px] mx-auto">
           <SectionLabel text="PERSONALIZED LEARNING" />
-          <h2 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-normal text-center mt-4 mb-4 text-[#1A2B3D]">
+          <h2 className="font-normal text-center text-[#111023] mt-4 mb-4" style={{ fontSize: "24px", lineHeight: "32px", letterSpacing: "-0.64px" }}>
             How THAYLO personalizes
             <br />
             learning
           </h2>
           <p
-            className="text-center text-[#6B7280] text-sm sm:text-base lg:text-lg max-w-2xl mx-auto mb-10 sm:mb-16 leading-relaxed"
-            style={{ fontFamily: "Inter, sans-serif" }}
+            className="text-center text-[#606B68] max-w-2xl mx-auto mb-10 sm:mb-16 font-normal"
+            style={{ fontFamily: "Inter, sans-serif", fontSize: "16px", lineHeight: "27px", letterSpacing: "-0.48px" }}
           >
             THAYLO adjusts lessons in real time. If a child struggles, concepts
             are explained again in simpler ways. If a child is ready, new
@@ -187,27 +185,27 @@ export default function LearningApproach() {
             {/* Right - Feature items */}
             <div className="space-y-8">
               <div>
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4">
-                  <Image src="/assets/skill-progression-icon.png" alt="" width={40} height={40} className="w-10 h-10 object-contain" />
+                <div className="mb-4">
+                  <Image src="/assets/skill base.png" alt="" width={48} height={48} className="w-12 h-12 object-contain" />
                 </div>
-                <h3 className="text-lg sm:text-xl font-medium text-[#1A2B3D] mb-2">
+                <h3 className="font-medium text-[#0C211D] mb-2" style={{ fontSize: "26px", lineHeight: "31.2px", letterSpacing: "-0.64px" }}>
                   Skill based progression
                 </h3>
-                <p className="text-sm sm:text-base text-[#6B7280] leading-relaxed" style={{ fontFamily: "Inter, sans-serif" }}>
+                <p className="text-[#606B68] font-normal" style={{ fontFamily: "Inter, sans-serif", fontSize: "18px", lineHeight: "27px", letterSpacing: "-0.48px" }}>
                   Children move forward only when they understand a concept. This
                   ensures strong foundations and avoids learning gaps that often
                   appear later.
                 </p>
               </div>
 
-              <div>
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4">
-                  <Image src="/assets/ai-guidance-icon.png" alt="" width={40} height={40} className="w-10 h-10 object-contain" />
+              <div className="pt-8 border-t border-[#9CA3AF]">
+                <div className="mb-4">
+                  <Image src="/assets/child.png" alt="" width={48} height={48} className="w-12 h-12 object-contain" />
                 </div>
-                <h3 className="text-lg sm:text-xl font-medium text-[#1A2B3D] mb-2">
+                <h3 className="font-medium text-[#0C211D] mb-2" style={{ fontSize: "26px", lineHeight: "31.2px", letterSpacing: "-0.64px" }}>
                   Child friendly AI guidance
                 </h3>
-                <p className="text-sm sm:text-base text-[#6B7280] leading-relaxed" style={{ fontFamily: "Inter, sans-serif" }}>
+                <p className="text-[#606B68] font-normal" style={{ fontFamily: "Inter, sans-serif", fontSize: "18px", lineHeight: "27px", letterSpacing: "-0.48px" }}>
                   THAYLO&apos;s AI tutor is designed for K-5 learners. It
                   communicates in a warm, encouraging, and age-appropriate way
                   that feels supportive rather than instructional.
@@ -230,12 +228,12 @@ export default function LearningApproach() {
                   Personalized Learning
                 </span>
               </div>
-              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-[42px] font-normal leading-tight text-[#1A2B3D] mb-4">
+              <h2 className="font-normal text-[#111023] mb-4" style={{ fontSize: "24px", lineHeight: "32px", letterSpacing: "-0.64px" }}>
                 Building strong learning
                 <br />
                 foundations
               </h2>
-              <p className="text-sm sm:text-base text-[#6B7280] leading-relaxed mb-6" style={{ fontFamily: "Inter, sans-serif" }}>
+              <p className="text-[#606B68] font-normal mb-6" style={{ fontFamily: "Inter, sans-serif", fontSize: "18px", lineHeight: "27px", letterSpacing: "0px" }}>
                 Early learning shapes how children think, solve problems, and build confidence
                 in the future. By personalizing learning early, THAYLO helps children develop:
               </p>
@@ -247,22 +245,20 @@ export default function LearningApproach() {
                   "A healthy relationship with learning",
                 ].map((item) => (
                   <li key={item} className="flex items-center gap-3">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#14B8A6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                    <span className="text-[18px] leading-[27px] text-[#606B68] font-normal" style={{ fontFamily: "Inter, sans-serif" }}>{item}</span>
+                    <Image src="/assets/mdi_tick-circle-outline.png" alt="" width={24} height={24} className="w-6 h-6 flex-shrink-0" />
+                    <span className="text-[#606B68] font-normal" style={{ fontFamily: "Inter, sans-serif", fontSize: "18px", lineHeight: "27px", letterSpacing: "0px" }}>{item}</span>
                   </li>
                 ))}
               </ul>
             </div>
 
             {/* Right - Image */}
-            <div className="relative rounded-2xl overflow-hidden min-h-[220px] sm:min-h-[300px] lg:min-h-[380px]">
+            <div className="relative rounded-2xl overflow-hidden min-h-[300px] sm:min-h-[380px] lg:min-h-[480px]">
               <Image
-                src="/assets/personalize learning.png"
+                src="/assets/building.jpg"
                 alt="Building strong learning foundations"
                 fill
-                className="object-cover"
+                className="object-cover object-center"
               />
             </div>
           </div>

@@ -22,7 +22,7 @@ const sections = [
       "At each grade level, students work toward clearly defined learning expectations. These expectations are shared openly with families and students, so everyone understands what mastery looks like and what progress means.",
       "Expectations remain consistent, while the path toward meeting them adapts to each learner.",
     ],
-    image: "/assets/personalize learning.png",
+    image: "/assets/o 1.png",
     imageAlt: "Children with alphabet blocks",
     layout: "image-left" as const,
   },
@@ -31,7 +31,7 @@ const sections = [
     paragraphs: [
       "Learning at Thaylo is intentionally sequenced. Students begin by building strong foundations in reading, writing, and reasoning. Over time, they are guided to ask better questions, seek information thoughtfully, connect ideas, and express understanding clearly.",
     ],
-    image: "/assets/personalize learning.png",
+    image: "/assets/LM 3.jpg",
     imageAlt: "Children building and thinking",
     layout: "text-left" as const,
   },
@@ -41,7 +41,7 @@ const sections = [
       "Thaylo emphasizes learning that encourages students to examine ideas from multiple angles, consider context, and understand how knowledge connects across subjects and experiences.",
       "This approach strengthens reasoning, comprehension, and problem-solving by helping students move beyond memorization toward meaning.",
     ],
-    image: "/assets/personalize learning.png",
+    image: "/assets/o 1.png",
     imageAlt: "Children exploring perspectives",
     layout: "image-left" as const,
   },
@@ -51,7 +51,7 @@ const sections = [
       "As students progress, learning increasingly centers on gathering information, evaluating sources, organizing ideas, and communicating understanding through writing, discussion, and projects.",
       "These skills are developed gradually and intentionally, so students are not rushed into complex tasks before they are ready.",
     ],
-    image: "/assets/personalize learning.png",
+    image: "/assets/LM 3.jpg",
     imageAlt: "Students researching and communicating",
     layout: "text-left" as const,
   },
@@ -61,7 +61,7 @@ const sections = [
       "While Thaylo is currently piloting Grade 4 English Language Arts, the Learning Model is designed to apply consistently across subjects and grade levels.",
       "As additional courses are introduced, the same approach—clear expectations, intentional sequencing, and mastery-based progress—will guide instruction.",
     ],
-    image: "/assets/personalize learning.png",
+    image: "/assets/o 1.png",
     imageAlt: "Students growing with Thaylo",
     layout: "image-left" as const,
   },
@@ -98,11 +98,11 @@ export default function PersonalisedLearning() {
 
       {/* Alternating Content Sections */}
       {sections.map((section, index) => (
-        <section key={index} className="py-16 lg:py-24 px-4 sm:px-6 lg:px-12 bg-white">
+        <section key={index} className="py-10 lg:py-24 px-4 sm:px-6 lg:px-12 bg-white">
           <div className="max-w-[1320px] mx-auto">
-            {/* Label - only on first section */}
+            {/* Label - only on first section, desktop only (above grid) */}
             {section.label && (
-              <div className="flex items-center gap-2 mb-6">
+              <div className="hidden lg:flex items-center gap-2 mb-6">
                 <span className="w-2.5 h-2.5 rounded-sm bg-[#14B8A6]" />
                 <span className="text-xs font-normal tracking-widest text-[#6B7280] uppercase">
                   {section.label}
@@ -117,7 +117,16 @@ export default function PersonalisedLearning() {
             >
               {/* Text */}
               <div className={section.layout === "image-left" ? "order-2 lg:order-2" : "order-2 lg:order-1"}>
-                <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-normal text-[#1A2B3D] leading-[1.2] tracking-[-0.5px] mb-5">
+                {/* Label - mobile only (below image) */}
+                {section.label && (
+                  <div className="flex lg:hidden items-center gap-2 mb-4">
+                    <span className="w-2.5 h-2.5 rounded-sm bg-[#14B8A6]" />
+                    <span className="text-xs font-normal tracking-widest text-[#6B7280] uppercase">
+                      {section.label}
+                    </span>
+                  </div>
+                )}
+                <h2 className="text-2xl sm:text-4xl lg:text-[42px] font-normal text-[#1A2B3D] leading-[1.2] tracking-[-0.5px] mb-5">
                   {section.title}
                 </h2>
                 {section.paragraphs.map((p, i) => (

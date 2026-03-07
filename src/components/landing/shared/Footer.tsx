@@ -17,26 +17,26 @@ export default function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
           {/* Contact */}
           <div>
-            <h4 className="text-sm font-normal text-[#6B7280] mb-4">
+            <h4 className="font-normal text-[#606B68] mb-4" style={{ fontFamily: "Inter, sans-serif", fontSize: "18px", lineHeight: "27px", letterSpacing: "-0.48px" }}>
               Contact
             </h4>
-            <p className="text-sm text-[#1A2B3D] mb-1">
+            <p className="text-[#0C211D] mb-1" style={{ fontSize: "18px", lineHeight: "27px", letterSpacing: "-0.48px" }}>
               info@thayloglobal.com
             </p>
-            <p className="text-sm text-[#1A2B3D]">+1 (555) 123-4567</p>
+            <p className="text-[#0C211D]" style={{ fontSize: "18px", lineHeight: "27px", letterSpacing: "-0.48px" }}>+1 (555) 123-4567</p>
           </div>
 
           {/* Business Address */}
           <div>
-            <h4 className="text-sm font-normal text-[#6B7280] mb-4">
+            <h4 className="font-normal text-[#606B68] mb-4" style={{ fontFamily: "Inter, sans-serif", fontSize: "18px", lineHeight: "27px", letterSpacing: "-0.48px" }}>
               Business Address
             </h4>
-            <p className="text-sm text-[#1A2B3D]">Las Vegas, NV 89107</p>
+            <p className="text-[#0C211D]" style={{ fontSize: "18px", lineHeight: "27px", letterSpacing: "-0.48px" }}>Las Vegas, NV 89107</p>
           </div>
 
           {/* Main Pages */}
           <div>
-            <h4 className="text-sm font-normal text-[#6B7280] mb-4">
+            <h4 className="font-normal text-[#606B68] mb-4" style={{ fontFamily: "Inter, sans-serif", fontSize: "18px", lineHeight: "27px", letterSpacing: "-0.48px" }}>
               Main Pages
             </h4>
             <ul className="space-y-2">
@@ -44,7 +44,8 @@ export default function Footer() {
                 <li key={page.label}>
                   <a
                     href={page.href}
-                    className="text-sm text-[#1A2B3D] hover:text-[#14B8A6] transition-colors"
+                    className="text-[#0C211D] hover:text-[#14B8A6] transition-colors"
+                    style={{ fontSize: "18px", lineHeight: "27px", letterSpacing: "-0.48px" }}
                   >
                     {page.label}
                   </a>
@@ -55,10 +56,10 @@ export default function Footer() {
 
           {/* Newsletter */}
           <div>
-            <h4 className="text-sm font-normal text-[#6B7280] mb-4">
+            <h4 className="font-normal text-[#606B68] mb-4" style={{ fontFamily: "Inter, sans-serif", fontSize: "18px", lineHeight: "27px", letterSpacing: "-0.48px" }}>
               Stay Updated as Thaylo Grows
             </h4>
-            <p className="text-sm text-[#6B7280] mb-4 leading-relaxed">
+            <p className="text-[#0C211D] mb-4" style={{ fontSize: "18px", lineHeight: "27px", letterSpacing: "-0.48px" }}>
               Occasional updates on learning, pilots, and new offerings as well
               as what the latest learning science research suggests.
             </p>
@@ -77,13 +78,13 @@ export default function Footer() {
 
         {/* Big Logo */}
         <div className="mb-8">
-          <h2 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-normal text-[#0B1D2E] tracking-[0.15em]">
+          <h2 className="font-normal text-[#0C211D] text-[60px] sm:text-[80px] md:text-[100px] lg:text-[130px]" style={{ lineHeight: "1.2", letterSpacing: "-4px" }}>
             THAYLO
           </h2>
         </div>
 
         {/* Bottom Bar */}
-        <div className="flex flex-col sm:flex-row justify-between items-center pt-6 border-t border-gray-200 gap-4">
+        <div className="flex flex-col sm:flex-row justify-between items-center py-6 border-t border-gray-200 gap-4">
           <p className="text-sm text-[#6B7280]">Copyright &copy; Thaylo</p>
           <div className="flex items-center gap-3">
             <SocialLink
@@ -133,15 +134,15 @@ function SocialLink({
   return (
     <a
       href={href}
-      className="w-9 h-9 rounded-full bg-[#0B1D2E] flex items-center justify-center hover:bg-[#162A3E] transition-colors"
+      className="flex items-center justify-center hover:opacity-70 transition-opacity"
       aria-label={label}
     >
       <svg
-        width="15"
-        height="15"
+        width="20"
+        height="20"
         viewBox="0 0 24 24"
-        fill={stroke ? "none" : "white"}
-        stroke={stroke ? "white" : "none"}
+        fill={stroke ? "none" : "#0C211D"}
+        stroke={stroke ? "#0C211D" : "none"}
         strokeWidth={stroke ? "2" : "0"}
         strokeLinecap="round"
         strokeLinejoin="round"

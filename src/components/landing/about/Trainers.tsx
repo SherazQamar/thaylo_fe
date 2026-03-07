@@ -30,13 +30,13 @@ export default function Trainers() {
           </span>
         </div>
 
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mt-3 mb-8 lg:mb-16">
+        <div className="flex items-end justify-between gap-4 mt-3 mb-8 lg:mb-16">
           <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-[2.5rem] font-normal leading-tight text-[#1A2B3D]">
             Educators Behind Thaylo
           </h2>
           <Button
             variant="dark"
-            className="!rounded-xl text-sm px-6 py-3 self-start md:self-auto"
+            className="!rounded-xl text-sm px-6 py-3 shrink-0"
           >
             Explore More
           </Button>
