@@ -1,5 +1,4 @@
 import Image from "next/image";
-import Button from "@/components/ui/Button";
 
 export default function Hero() {
   return (
@@ -27,13 +26,13 @@ export default function Hero() {
       </div>
 
       {/* Floating badges - hidden on mobile */}
-      <div className="hidden lg:block absolute top-[28%] right-[4%] xl:right-[6%] z-20 animate-float">
+      <div className="hidden lg:block absolute top-[22%] right-[6%] xl:right-[8%] z-20 animate-float">
         <FloatingBadge text="Mastery-Based Progression" />
       </div>
-      <div className="hidden lg:block absolute bottom-[8%] left-[40%] z-20 animate-float-delayed">
+      <div className="hidden lg:block absolute bottom-[10%] left-[34%] xl:left-[36%] z-20 animate-float-delayed">
         <FloatingBadge text="Designed for Real Learning" />
       </div>
-      <div className="hidden lg:block absolute bottom-[6%] right-[4%] xl:right-[6%] z-20 animate-float-slow">
+      <div className="hidden lg:block absolute bottom-[8%] right-[3%] xl:right-[5%] z-20 animate-float-slow">
         <FloatingBadge text="Human-Guided AI" />
       </div>
 
@@ -49,22 +48,22 @@ export default function Hero() {
           </h1>
 
           <div className="flex flex-wrap gap-4 lg:gap-5 justify-center lg:justify-start">
-            <Button variant="primary" className="px-6 py-3 lg:px-8 lg:py-4 text-sm lg:text-[15px] font-normal shadow-lg shadow-green-500/25">
+            <button className="px-6 py-3 lg:px-8 lg:py-4 text-sm lg:text-[15px] font-normal bg-gradient-to-r from-[#60D624] to-[#00696B] text-white hover:opacity-90 shadow-lg shadow-green-500/25 transition-all duration-300 cursor-pointer" style={{ borderRadius: "12px" }}>
               See How Thaylo Works
-            </Button>
-            <Button variant="outline" className="hidden lg:inline-flex px-8 py-4 text-[15px] font-normal">
+            </button>
+            <button className="hidden lg:inline-flex px-8 py-4 text-[15px] font-normal border-2 border-white/40 text-white bg-transparent hover:bg-white/10 transition-all duration-300 cursor-pointer" style={{ borderRadius: "12px" }}>
               Explore The 4th Grade Pilot
-            </Button>
+            </button>
           </div>
 
           {/* Avatar group */}
           <div className="flex items-center gap-4 justify-center lg:justify-start">
             <div className="flex -space-x-3">
-              <div className="w-9 h-9 lg:w-11 lg:h-11 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 border-[2.5px] border-[#0B1D2E]" />
-              <div className="w-9 h-9 lg:w-11 lg:h-11 rounded-full bg-gradient-to-br from-rose-400 to-rose-600 border-[2.5px] border-[#0B1D2E]" />
-              <div className="w-9 h-9 lg:w-11 lg:h-11 rounded-full bg-gradient-to-br from-violet-400 to-violet-600 border-[2.5px] border-[#0B1D2E]" />
+              <Image src="/assets/hero 1.jpg" alt="Student 1" width={44} height={44} className="w-9 h-9 lg:w-11 lg:h-11 rounded-full border-[2.5px] border-[#0B1D2E] object-cover" />
+              <Image src="/assets/hero 2.jpg" alt="Student 2" width={44} height={44} className="w-9 h-9 lg:w-11 lg:h-11 rounded-full border-[2.5px] border-[#0B1D2E] object-cover" />
+              <Image src="/assets/hero 3.jpg" alt="Student 3" width={44} height={44} className="w-9 h-9 lg:w-11 lg:h-11 rounded-full border-[2.5px] border-[#0B1D2E] object-cover" />
             </div>
-            <span className="text-white/70 text-xs lg:text-sm font-normal">
+            <span className="text-white text-[18px] font-normal leading-[21.6px] tracking-[-0.48px]" style={{ fontFamily: "Inter, sans-serif" }}>
               Personalized for Every Learner
             </span>
           </div>
@@ -88,8 +87,8 @@ export default function Hero() {
 
 function FloatingBadge({ text }: { text: string }) {
   return (
-    <div className="px-5 py-3 rounded-[20px] bg-white/[0.07] border border-white/[0.12] backdrop-blur-xl shadow-lg">
-      <span className="text-white/90 text-sm font-normal whitespace-nowrap">
+    <div className="px-5 py-4 rounded-[24px] bg-white/[0.1] border border-white/[0.5] shadow-xl" style={{ backdropFilter: "blur(17.5px)", WebkitBackdropFilter: "blur(17.5px)" }}>
+      <span className="text-white text-[15px] font-normal whitespace-nowrap" style={{ fontFamily: "Inter, sans-serif" }}>
         {text}
       </span>
     </div>

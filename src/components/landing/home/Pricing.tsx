@@ -139,7 +139,7 @@ function PricingCard({
           {subtitle}
         </p>
 
-        {/* Price box */}
+        {/* Price box with button inside */}
         <div
           className={`rounded-xl p-3.5 mt-4 text-center relative z-10 ${priceBoxStyle}`}
         >
@@ -156,14 +156,12 @@ function PricingCard({
           >
             {priceNote}
           </p>
+          <button
+            className={`w-full py-2.5 rounded-xl text-[13px] font-normal transition-colors cursor-pointer mt-3 ${buttonStyle}`}
+          >
+            {buttonText}
+          </button>
         </div>
-
-        {/* CTA Button */}
-        <button
-          className={`w-full py-2.5 rounded-xl text-[13px] font-normal transition-colors cursor-pointer mt-4 relative z-10 ${buttonStyle}`}
-        >
-          {buttonText}
-        </button>
       </div>
 
       {/* Features section */}

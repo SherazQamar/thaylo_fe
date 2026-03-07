@@ -1,5 +1,5 @@
 import React from "react";
-import Button from "@/components/ui/Button";
+
 
 const courses = [
   {
@@ -35,17 +35,14 @@ export default function CoursePilot() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 sm:mb-12 gap-4">
           <div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="w-2.5 h-2.5 rounded-sm bg-[#14B8A6]" />
-              <span className="text-xs font-normal tracking-widest text-[#14B8A6] uppercase">FEATURED CLASS</span>
-            </div>
+  
             <h2 className="text-xl sm:text-2xl md:text-4xl font-normal text-[#1A2B3D]">
               Grade 4 English Language Arts Pilot
             </h2>
           </div>
-          <Button variant="dark" className="hidden sm:inline-flex rounded-xl px-8 py-3.5 font-medium">
+          <button className="hidden sm:inline-flex px-[45px] py-[15px] text-sm font-medium text-white bg-[#0C211D] border border-[#0C211D] hover:opacity-90 transition-all duration-300 cursor-pointer" style={{ borderRadius: "10px" }}>
             More Courses
-          </Button>
+          </button>
         </div>
 
         {/* Course Cards */}

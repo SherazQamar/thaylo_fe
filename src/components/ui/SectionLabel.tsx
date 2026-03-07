@@ -11,8 +11,8 @@ export default function SectionLabel({
 }: SectionLabelProps) {
   return (
     <div className={`flex items-center justify-center gap-2 ${className}`}>
-      <span className="w-2.5 h-2.5 rounded-sm bg-[#14B8A6]" />
-      <span className="text-sm font-normal tracking-widest text-[#14B8A6] uppercase">
+      <span className="w-[10px] h-[10px] bg-[#00CED1]" style={{ borderRadius: "2px" }} />
+      <span className="text-[18px] font-normal leading-[27px] tracking-[-0.48px] text-[#606B68] uppercase" style={{ fontFamily: "Inter, sans-serif" }}>
         {text}
       </span>
     </div>

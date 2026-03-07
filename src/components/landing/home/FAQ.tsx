@@ -55,62 +55,62 @@ export default function FAQ({ maxItems }: { maxItems?: number } = {}) {
       <div className="max-w-[1320px] mx-auto w-full">
         <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-8 lg:gap-20">
           {/* Left Column */}
-          <div>
-            <SectionLabel text="FAQS" className="!justify-start" />
-            <h2 className="text-2xl md:text-4xl font-normal text-[#1A2B3D] mt-4 mb-8 leading-tight">
-              Questions
-              <br />
-              Parents Ask
-            </h2>
+          <div className="flex flex-col justify-between">
+            <div>
+              <SectionLabel text="FAQS" className="!justify-start" />
+              <h2 className="text-2xl md:text-4xl font-normal text-[#1A2B3D] mt-4 mb-8 leading-tight">
+                Questions
+                <br />
+                Parents Ask
+              </h2>
+            </div>
 
-            {/* Contact Card */}
-            <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-              <div className="mb-6">
-                <p className="text-xs text-[#6B7280] mb-1">24/7 Support</p>
+            {/* Contact Card - at bottom of left column */}
+            <div className="mt-auto" style={{ backgroundColor: "#EBEEF2", borderRadius: "15px", padding: "30px" }}>
+              <div style={{ marginBottom: "30px" }}>
+                <p className="font-normal text-[#606B68]" style={{ fontFamily: "Inter, sans-serif", fontSize: "18px", lineHeight: "27px", letterSpacing: "-0.48px", marginBottom: "4px" }}>24/7 Support</p>
                 <div className="flex items-center justify-between">
-                  <p className="text-lg font-normal text-[#1A2B3D]">
+                  <p className="font-medium text-[#0C211D]" style={{ fontSize: "26px", lineHeight: "31.2px", letterSpacing: "-0.48px" }}>
                     (252) 769-4545
                   </p>
-                  <div className="w-10 h-10 rounded-full bg-[#E0F2FE] flex items-center justify-center">
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="#14B8A6"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M3 18v-6a9 9 0 0 1 18 0v6" />
-                      <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" />
-                    </svg>
-                  </div>
+                  <svg
+                    width="28"
+                    height="28"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#14B8A6"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="flex-shrink-0"
+                  >
+                    <path d="M3 18v-6a9 9 0 0 1 18 0v6" />
+                    <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" />
+                  </svg>
                 </div>
               </div>
-              <div className="border-t border-gray-100 pt-6">
-                <p className="text-xs text-[#6B7280] mb-1">
+              <div className="border-t border-gray-200" style={{ paddingTop: "30px" }}>
+                <p className="font-normal text-[#606B68]" style={{ fontFamily: "Inter, sans-serif", fontSize: "18px", lineHeight: "27px", letterSpacing: "-0.48px", marginBottom: "4px" }}>
                   Technical Support
                 </p>
                 <div className="flex items-center justify-between">
-                  <p className="text-base font-normal text-[#1A2B3D]">
+                  <p className="font-medium text-[#0C211D] min-w-0 truncate" style={{ fontSize: "20px", lineHeight: "31.2px", letterSpacing: "-0.48px" }}>
                     info@thayloglobal.com
                   </p>
-                  <div className="w-10 h-10 rounded-full bg-[#E0F2FE] flex items-center justify-center">
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="#14B8A6"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                      <polyline points="22,6 12,13 2,6" />
-                    </svg>
-                  </div>
+                  <svg
+                    width="28"
+                    height="28"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#14B8A6"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="flex-shrink-0"
+                  >
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                    <polyline points="22,6 12,13 2,6" />
+                  </svg>
                 </div>
               </div>
             </div>
