@@ -16,20 +16,20 @@ export default function OurStory() {
         <div className="grid grid-cols-1 md:grid-cols-3 md:grid-rows-[1fr_auto] gap-3 lg:gap-4">
           {/* Card 1 - How Learning Works (top-left) */}
           <div className="bg-[#F1F5F9] rounded-2xl p-4 lg:p-5 flex flex-col">
-            <h3 className="text-sm lg:text-base font-normal text-[#1A2B3D] mb-1">
+            <h3 className="text-base lg:text-base font-normal text-[#1A2B3D] mb-1">
               How Learning Works at Thaylo
             </h3>
-            <p className="text-xs lg:text-sm text-[#6B7280] leading-relaxed mb-2">
+            <p className="text-sm lg:text-sm text-[#6B7280] leading-relaxed mb-3">
               AI adapts lessons to your child&apos;s pace, strengths, and needs.
             </p>
-            <div className="flex-1 relative rounded-xl overflow-hidden min-h-[120px] bg-gradient-to-br from-[#e8d5b7] to-[#c4a882]">
-              <div className="absolute inset-0 bg-gradient-to-br from-[#d4b896]/80 via-[#c9a97e]/60 to-[#b89b6a]/80" />
-              <div className="absolute inset-0 flex items-center justify-center opacity-25">
-                <svg width="56" height="56" viewBox="0 0 24 24" fill="#8B7355">
-                  <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
-                </svg>
-              </div>
-              <div className="absolute bottom-0 left-0 right-0 p-2 flex flex-wrap gap-1.5">
+            <div className="flex-1 relative rounded-xl overflow-hidden min-h-[180px] md:min-h-[120px]">
+              <Image
+                src="/assets/o 1.png"
+                alt="Learning"
+                fill
+                className="object-cover"
+              />
+              <div className="absolute bottom-0 left-0 right-0 p-3 flex flex-nowrap gap-1.5">
                 <span className="px-[15px] py-[10px] text-white text-[10px] font-normal" style={{ borderRadius: "35px", backgroundColor: "rgba(12, 33, 29, 0.4)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)" }}>
                   TRENDS
                 </span>

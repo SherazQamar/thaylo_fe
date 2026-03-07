@@ -10,10 +10,34 @@ export default function CTABanner() {
             <div className="absolute top-[-30px] left-1/2 -translate-x-1/2 w-[300px] h-[200px] bg-[#14B8A6]/10 rounded-full blur-[80px]" />
           </div>
 
-          <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 items-center p-6 sm:p-10 md:p-14 gap-6 sm:gap-8">
+          {/* Mobile Layout */}
+          <div className="relative z-10 flex flex-col items-center text-center p-6 pb-0 md:hidden">
+            <h2 className="text-2xl sm:text-3xl font-normal text-white leading-tight mb-4">
+              Help Your Child
+              <br />
+              Grow With Thaylo
+            </h2>
+            <p className="text-white/70 text-sm leading-relaxed italic mb-4">
+              A thoughtful learning experience designed to support
+              understanding, confidence, and growth.
+            </p>
+            <button className="px-8 py-3 bg-white text-[#0B1D2E] text-sm font-normal hover:bg-white/90 transition-colors cursor-pointer shadow-lg mb-6" style={{ borderRadius: "12px" }}>
+              Start Your Free 7-Day Trial
+            </button>
+            <Image
+              src="/assets/character-sitting.png"
+              alt="Thaylo Character"
+              width={400}
+              height={450}
+              className="w-[220px] sm:w-[260px] h-auto object-contain drop-shadow-2xl mb-[-80px] sm:mb-[-100px]"
+            />
+          </div>
+
+          {/* Desktop Layout */}
+          <div className="relative z-10 hidden md:grid md:grid-cols-3 items-center p-6 sm:p-10 md:p-14 gap-6 sm:gap-8">
             {/* Left Text */}
-            <div className="text-center md:text-left">
-              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-[42px] font-normal text-white leading-tight">
+            <div className="text-left">
+              <h2 className="text-4xl lg:text-[42px] font-normal text-white leading-tight">
                 Help Your Child
                 <br />
                 Grow With Thaylo
@@ -21,18 +45,18 @@ export default function CTABanner() {
             </div>
 
             {/* Center - Character */}
-            <div className="flex justify-center relative order-first md:order-none">
+            <div className="flex justify-center relative">
               <Image
                 src="/assets/character-sitting.png"
                 alt="Thaylo Character"
                 width={400}
                 height={450}
-                className="w-[180px] sm:w-[220px] lg:w-[340px] h-auto object-contain drop-shadow-2xl md:-mt-6 lg:-mt-8 md:mb-[-150px] lg:mb-[-200px]"
+                className="lg:w-[340px] md:w-[280px] h-auto object-contain drop-shadow-2xl md:-mt-6 lg:-mt-8 md:mb-[-150px] lg:mb-[-200px]"
               />
             </div>
 
             {/* Right */}
-            <div className="text-center md:text-right">
+            <div className="text-right">
               <p className="text-white/70 text-sm leading-relaxed italic mb-4 sm:mb-6">
                 A thoughtful learning experience designed to support
                 understanding, confidence, and growth.

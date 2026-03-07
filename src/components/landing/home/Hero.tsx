@@ -4,7 +4,7 @@ export default function Hero() {
   return (
     <section
       id="home"
-      className="relative min-h-screen lg:h-screen bg-[#0B1D2E] overflow-hidden"
+      className="relative lg:h-screen bg-[#0B1D2E] overflow-hidden rounded-b-3xl lg:rounded-b-none"
     >
       {/* Background glow effects */}
       <div className="absolute inset-0 pointer-events-none">
@@ -56,27 +56,27 @@ export default function Hero() {
             </button>
           </div>
 
-          {/* Avatar group */}
-          <div className="flex items-center gap-4 justify-center lg:justify-start">
+          {/* Avatar group - desktop only */}
+          <div className="hidden lg:flex items-center gap-4 justify-start">
             <div className="flex -space-x-3">
               <Image src="/assets/hero 1.jpg" alt="Student 1" width={44} height={44} className="w-9 h-9 lg:w-11 lg:h-11 rounded-full border-[2.5px] border-[#0B1D2E] object-cover" />
               <Image src="/assets/hero 2.jpg" alt="Student 2" width={44} height={44} className="w-9 h-9 lg:w-11 lg:h-11 rounded-full border-[2.5px] border-[#0B1D2E] object-cover" />
               <Image src="/assets/hero 3.jpg" alt="Student 3" width={44} height={44} className="w-9 h-9 lg:w-11 lg:h-11 rounded-full border-[2.5px] border-[#0B1D2E] object-cover" />
             </div>
-            <span className="text-white text-[18px] font-normal leading-[21.6px] tracking-[-0.48px]" style={{ fontFamily: "Inter, sans-serif" }}>
+            <span className="text-white text-[14px] sm:text-[18px] font-normal leading-[21.6px] tracking-[-0.48px]" style={{ fontFamily: "Inter, sans-serif" }}>
               Personalized for Every Learner
             </span>
           </div>
         </div>
 
         {/* Mobile character - shown only on mobile */}
-        <div className="flex lg:hidden justify-center mt-6 flex-1 items-end">
+        <div className="flex lg:hidden justify-center mt-4 flex-1 items-end overflow-hidden">
           <Image
             src="/assets/green-robot-hero.png"
             alt="Thaylo AI Character"
             width={400}
             height={450}
-            className="w-[280px] h-auto object-contain drop-shadow-2xl"
+            className="w-[320px] sm:w-[360px] h-auto object-contain drop-shadow-2xl mb-[-40px]"
             priority
           />
         </div>
