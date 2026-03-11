@@ -23,7 +23,7 @@ export default function Navbar() {
       <nav className="absolute top-0 left-0 right-0 z-50 px-6 sm:px-8 lg:px-12 xl:px-16 py-5">
         <div className="max-w-[1400px] mx-auto flex items-center justify-between">
           {/* Logo */}
-          <div className="flex items-center gap-3 flex-shrink-0">
+          <Link href="/" className="flex items-center gap-2.5 flex-shrink-0">
             <Image
               src="/assets/logo.png"
               alt="Thaylo Logo"
@@ -31,15 +31,15 @@ export default function Navbar() {
               height={48}
               className="w-10 h-10 lg:w-12 lg:h-12 object-contain"
             />
-            <div className="text-white hidden sm:block">
-              <span className="text-lg font-normal tracking-[0.12em] leading-none block">
+            <div className="hidden sm:block leading-none">
+              <span className="block text-[18px] lg:text-[20px] font-medium tracking-[0.08em]" style={{ background: "linear-gradient(90deg, #60D624, #00A19A)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
                 THAYLO
               </span>
-              <span className="block text-[9px] tracking-[0.18em] text-[#60D624]/80 uppercase mt-0.5">
-                Global AI School
+              <span className="block text-[8px] lg:text-[9px] tracking-[0.2em] text-[#60D624]/70 uppercase mt-0.5">
+                GLOBAL AI SCHOOL
               </span>
             </div>
-          </div>
+          </Link>
 
           {/* Desktop Nav Links */}
           <div className="hidden lg:flex items-center gap-1 xl:gap-1.5 bg-[#090F15] border border-white/10 rounded-full px-2 py-1.5">
