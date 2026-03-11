@@ -1,6 +1,10 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
+import UserDropdown from "@/components/wayfinder/UserDropdown";
+
+const inter = { fontFamily: "Inter, sans-serif" } as const;
 
 const stats = [
   { label: "Mastery Trend", value: "Improving", change: "+11.01%", positive: true },
@@ -36,123 +40,55 @@ const students = [
     confidence: "Medium",
     confidenceColor: "bg-[#F59E0B]",
   },
+  {
+    name: "Alex Filler",
+    grade: "Grade 4",
+    plantStage: "Plant stage 3",
+    mastered: "3 of 5 mastered",
+    focus: "Focus: Inference",
+    confidence: "Medium",
+    confidenceColor: "bg-[#F59E0B]",
+  },
 ];
 
 export default function DashboardPage() {
   return (
-    <div className="p-6 lg:p-10">
+    <div className="p-4 md:p-6 lg:p-10">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-6 md:mb-8">
         <h1
-          className="text-xl lg:text-2xl font-bold text-white uppercase tracking-wide"
-          style={{ fontFamily: "Inter, sans-serif" }}
+          className="uppercase"
+          style={{ ...inter, fontWeight: 700, fontSize: "24px", lineHeight: "25px", letterSpacing: "0.8px", color: "#DCE6EC" }}
         >
           Wayfinder Dashboard
         </h1>
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-[#525162] flex items-center justify-center overflow-hidden">
-            <Image
-              src="/assets/wayfinder Em.png"
-              alt="Avatar"
-              width={40}
-              height={40}
-              className="w-full h-full object-cover"
-            />
-          </div>
-          <div className="hidden sm:block">
-            <p
-              className="text-sm font-semibold text-white leading-tight"
-              style={{ fontFamily: "Inter, sans-serif" }}
-            >
-              Alex Filler
-            </p>
-            <p
-              className="text-xs text-white/50"
-              style={{ fontFamily: "Inter, sans-serif" }}
-            >
-              Wayfinder
-            </p>
-          </div>
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="white"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="opacity-50"
-          >
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
+        <div className="hidden md:block">
+          <UserDropdown />
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 mb-8 md:mb-10">
         {stats.map((stat, i) => (
           <div
             key={i}
-            className="flex items-center gap-4 rounded-[24px] px-6 py-[10px] h-[72px]"
+            className="flex items-center gap-4 rounded-[24px] px-5 md:px-6 py-[10px] h-[72px]"
             style={{ backgroundColor: "#525162" }}
           >
-            {/* Icon */}
             <div className="w-10 h-10 rounded-full bg-[#00CED1]/20 flex items-center justify-center flex-shrink-0">
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="#00CED1"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00CED1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M22 2L11 13" />
                 <path d="M22 2L15 22L11 13L2 9L22 2Z" />
               </svg>
             </div>
-            {/* Text */}
             <div className="flex-1 min-w-0">
-              <p
-                className="text-[11px] text-white/50 leading-tight"
-                style={{ fontFamily: "Inter, sans-serif" }}
-              >
-                {stat.label}
-              </p>
-              <p
-                className="text-base font-semibold text-white leading-tight"
-                style={{ fontFamily: "Inter, sans-serif" }}
-              >
-                {stat.value}
-              </p>
+              <p style={{ ...inter, fontWeight: 500, fontSize: "11px", lineHeight: "16px", color: "rgba(255,255,255,0.5)" }}>{stat.label}</p>
+              <p style={{ ...inter, fontWeight: 600, fontSize: "20px", lineHeight: "28px", color: "#FFFFFF" }}>{stat.value}</p>
             </div>
-            {/* Change */}
             <div className="flex items-center gap-1 flex-shrink-0">
-              <span
-                className={`text-xs font-medium ${
-                  stat.positive ? "text-[#00CED1]" : "text-[#EF4444]"
-                }`}
-                style={{ fontFamily: "Inter, sans-serif" }}
-              >
-                {stat.change}
-              </span>
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke={stat.positive ? "#00CED1" : "#EF4444"}
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                {stat.positive ? (
-                  <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
-                ) : (
-                  <polyline points="23 18 13.5 8.5 8.5 13.5 1 6" />
-                )}
+              <span style={{ fontFamily: "Poppins, sans-serif", fontWeight: 500, fontSize: "13px", lineHeight: "20px", color: stat.positive ? "#00DCAB" : "#EF4444" }}>{stat.change}</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={stat.positive ? "#00DCAB" : "#EF4444"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                {stat.positive ? <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /> : <polyline points="23 18 13.5 8.5 8.5 13.5 1 6" />}
               </svg>
             </div>
           </div>
@@ -160,122 +96,86 @@ export default function DashboardPage() {
       </div>
 
       {/* Student List */}
-      <div className="rounded-[12px] p-6" style={{ backgroundColor: "rgba(255, 255, 255, 0.05)" }}>
-        <div className="flex items-center justify-between mb-5">
-          <h2
-            className="text-lg font-semibold text-white"
-            style={{ fontFamily: "Inter, sans-serif" }}
-          >
-            Student List
-          </h2>
-          <button
-            className="text-[13px] font-semibold text-[#00CED1] uppercase tracking-wider cursor-pointer hover:text-[#00B8BB] transition-colors"
-            style={{ fontFamily: "Inter, sans-serif" }}
-          >
+      <div className="rounded-[12px] p-4 md:p-6" style={{ backgroundColor: "rgba(255, 255, 255, 0.05)" }}>
+        <div className="flex items-center justify-between mb-4 md:mb-5">
+          <h2 style={{ ...inter, fontWeight: 700, fontSize: "22px", lineHeight: "22px", color: "#FFFFFF" }}>Student List</h2>
+          <button className="uppercase cursor-pointer hover:opacity-80 transition-opacity" style={{ ...inter, fontWeight: 700, fontSize: "13.5px", lineHeight: "18px", letterSpacing: "0.8px", color: "#00CED1" }}>
             View All
           </button>
         </div>
 
-        <div className="flex flex-col gap-3">
+        {/* Mobile: Search + Filters */}
+        <div className="md:hidden mb-4">
+          <div className="rounded-[8px] px-4 py-2.5 flex items-center gap-2 mb-3" style={{ backgroundColor: "#313044" }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
+            <input type="text" placeholder="Search Students" className="bg-transparent outline-none text-white/80 placeholder-white/40 w-full" style={{ ...inter, fontWeight: 400, fontSize: "13px" }} />
+          </div>
+          <div className="flex gap-2">
+            <button className="rounded-[8px] px-4 py-2 flex items-center gap-2 flex-1" style={{ backgroundColor: "#313044" }}>
+              <span style={{ ...inter, fontWeight: 500, fontSize: "13px", color: "rgba(255,255,255,0.7)" }}>Risk</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="2"><polyline points="6 9 12 15 18 9" /></svg>
+            </button>
+            <button className="rounded-[8px] px-4 py-2 flex items-center gap-2 flex-1" style={{ backgroundColor: "#313044" }}>
+              <span style={{ ...inter, fontWeight: 500, fontSize: "13px", color: "rgba(255,255,255,0.7)" }}>Grade</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="2"><polyline points="6 9 12 15 18 9" /></svg>
+            </button>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2">
           {students.map((student, i) => (
-            <div
+            <Link
+              href="/dashboard/student"
               key={i}
-              className="grid grid-cols-[1fr_1fr_1fr_auto] items-center rounded-[12px] px-6 py-[17px] gap-6"
-              style={{ backgroundColor: "rgba(255, 255, 255, 0.05)" }}
+              className="md:grid md:grid-cols-[1fr_1fr_1fr_auto] items-center rounded-[12px] px-4 md:px-5 py-3 gap-3 md:gap-4 hover:bg-white/10 transition-colors flex flex-col"
+              style={{ backgroundColor: "#313044" }}
             >
               {/* Student Info */}
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#525162] flex items-center justify-center overflow-hidden flex-shrink-0">
-                  <Image
-                    src="/assets/wayfinder Em.png"
-                    alt={student.name}
-                    width={40}
-                    height={40}
-                    className="w-full h-full object-cover"
-                  />
+              <div className="flex items-center gap-2.5 w-full">
+                <div className="w-9 h-9 rounded-full bg-[#525162] overflow-hidden flex-shrink-0">
+                  <Image src="/assets/wayfinder Em.png" alt={student.name} width={36} height={36} className="w-full h-full object-cover" />
                 </div>
                 <div>
-                  <p
-                    className="text-[15px] font-semibold text-white leading-tight"
-                    style={{ fontFamily: "Inter, sans-serif" }}
-                  >
-                    {student.name}
-                  </p>
-                  <p
-                    className="text-xs text-white/40 mt-0.5"
-                    style={{ fontFamily: "Inter, sans-serif" }}
-                  >
-                    {student.grade}
-                  </p>
+                  <p style={{ ...inter, fontWeight: 600, fontSize: "15px", lineHeight: "20px", color: "#FFFFFF" }}>{student.name}</p>
+                  <p style={{ ...inter, fontWeight: 500, fontSize: "12px", lineHeight: "16px", color: "#858C94" }}>{student.grade}</p>
                 </div>
               </div>
 
               {/* Plant Stage */}
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#313044] border border-[#00CED1]/30 flex items-center justify-center flex-shrink-0">
-                  <svg
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="#00CED1"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M12 22V8" />
-                    <path d="M5 12H2a10 10 0 0020 0h-3" />
-                    <path d="M8 5.2C9.2 3.6 10.5 3 12 3c1.5 0 2.8.6 4 2.2" />
+              <div className="flex items-center gap-2.5 w-full mt-2 md:mt-0">
+                <div className="w-9 h-9 rounded-full bg-[#313044] border border-[#00CED1]/30 flex items-center justify-center flex-shrink-0">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00CED1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 22V8" /><path d="M5 12H2a10 10 0 0020 0h-3" /><path d="M8 5.2C9.2 3.6 10.5 3 12 3c1.5 0 2.8.6 4 2.2" />
                   </svg>
                 </div>
                 <div>
-                  <p
-                    className="text-[20px] font-semibold text-white leading-[28px]"
-                    style={{ fontFamily: "Inter, sans-serif" }}
-                  >
-                    {student.plantStage}
-                  </p>
-                  <p
-                    className="text-xs text-[#00CED1] mt-0.5"
-                    style={{ fontFamily: "Inter, sans-serif" }}
-                  >
-                    {student.mastered}
-                  </p>
+                  <p style={{ ...inter, fontWeight: 600, fontSize: "15px", lineHeight: "20px", color: "#FFFFFF" }}>{student.plantStage}</p>
+                  <p style={{ ...inter, fontWeight: 500, fontSize: "11px", lineHeight: "14px", color: "#00CED1" }}>{student.mastered}</p>
                 </div>
               </div>
 
               {/* Focus */}
-              <div className="rounded-[12px] px-5 py-3 bg-[#525162]">
-                <p
-                  className="text-[15px] font-semibold text-white leading-tight"
-                  style={{ fontFamily: "Inter, sans-serif" }}
-                >
-                  {student.focus}
-                </p>
-                <div className="flex items-center gap-2 mt-1.5">
-                  <span
-                    className="text-xs text-white/50"
-                    style={{ fontFamily: "Inter, sans-serif" }}
-                  >
-                    Confidence
-                  </span>
-                  <span
-                    className={`text-[10px] font-semibold px-2.5 py-0.5 rounded-full text-white ${student.confidenceColor}`}
-                    style={{ fontFamily: "Inter, sans-serif" }}
-                  >
-                    {student.confidence}
-                  </span>
+              <div className="rounded-[20px] w-full mt-2 md:mt-0" style={{ backgroundColor: "#525162", padding: "8px 16px" }}>
+                <p style={{ ...inter, fontWeight: 600, fontSize: "15px", lineHeight: "20px", color: "#FFFFFF" }}>{student.focus}</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <span style={{ ...inter, fontWeight: 400, fontSize: "12px", lineHeight: "16px", color: "#FFFFFF" }}>Confidence</span>
+                  <span className={`px-2 py-0.5 rounded-full ${student.confidenceColor}`} style={{ ...inter, fontWeight: 500, fontSize: "10px", lineHeight: "10px", color: "#111023" }}>{student.confidence}</span>
+                </div>
+              </div>
+
+              {/* Timer card - mobile */}
+              <div className="md:hidden rounded-[20px] w-full mt-2 flex items-center h-[60px]" style={{ backgroundColor: "#525162", padding: "8px 16px" }}>
+                <div>
+                  <p style={{ ...inter, fontWeight: 600, fontSize: "15px", lineHeight: "20px", color: "#FFFFFF" }}>Timer: 08:42</p>
+                  <p style={{ ...inter, fontWeight: 400, fontSize: "12px", lineHeight: "16px", color: "rgba(255,255,255,0.5)" }}>Last active: Today</p>
                 </div>
               </div>
 
               {/* Open Chat */}
-              <button
-                className="text-[13px] font-semibold text-[#00CED1] uppercase tracking-wider flex-shrink-0 cursor-pointer hover:text-[#00B8BB] transition-colors whitespace-nowrap"
-                style={{ fontFamily: "Inter, sans-serif" }}
-              >
+              <button className="uppercase flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity whitespace-nowrap mt-2 md:mt-0 self-start md:self-center" style={{ ...inter, fontWeight: 700, fontSize: "13.5px", lineHeight: "18px", letterSpacing: "0.8px", color: "#00CED1" }}>
                 Open Chat
               </button>
-            </div>
+            </Link>
           ))}
         </div>
       </div>

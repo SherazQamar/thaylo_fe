@@ -58,8 +58,15 @@ export default function Navbar() {
             ))}
           </div>
 
-          {/* CTA Button */}
-          <div className="hidden lg:block flex-shrink-0">
+          {/* Sign In + CTA Button */}
+          <div className="hidden lg:flex items-center gap-5 flex-shrink-0">
+            <Link href="/sign-in" className="flex items-center gap-2 text-white/80 hover:text-white transition-colors text-sm font-normal">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+              Sign in
+            </Link>
             <Button variant="primary" className="!rounded-xl px-8 py-3 text-sm font-normal shadow-lg shadow-green-500/25">
               {pathname === "/" ? "Join The Pilot" : "Sign Up"}
             </Button>
@@ -102,7 +109,18 @@ export default function Navbar() {
                 {link.label}
               </Link>
             ))}
-            <Button variant="primary" className="mt-4 w-full">
+            <Link
+              href="/sign-in"
+              onClick={() => setMobileOpen(false)}
+              className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-normal text-white/80 hover:text-white hover:bg-white/10 transition-all mt-2"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+              Sign in
+            </Link>
+            <Button variant="primary" className="mt-2 w-full">
               Join The Pilot
             </Button>
           </div>
