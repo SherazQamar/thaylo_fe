@@ -72,6 +72,13 @@ export default function PersonalisedLearning() {
     <main>
       {/* Hero Section */}
       <section className="relative bg-[#0B1D2E] overflow-hidden">
+        <Image
+          src="/assets/aboutbg.png"
+          alt=""
+          fill
+          className="object-cover mix-blend-screen"
+          priority
+        />
         {/* Background glow effects */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-[-80px] left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-[#00696B]/8 rounded-full blur-[150px]" />
@@ -81,7 +88,7 @@ export default function PersonalisedLearning() {
 
         <Navbar />
 
-        <div className="relative z-10 max-w-[1400px] mx-auto px-6 sm:px-8 lg:px-12 xl:px-16 pt-20 sm:pt-24 pb-16 sm:pb-20 text-center">
+        <div className="relative z-10 max-w-[1400px] mx-auto px-6 sm:px-8 lg:px-12 xl:px-16 pt-28 sm:pt-36 pb-16 sm:pb-20 text-center">
           <div className="flex items-center justify-center gap-2 mb-6">
             <span className="w-2.5 h-2.5 rounded-sm bg-[#14B8A6]" />
             <span className="text-sm font-normal tracking-widest text-[#14B8A6] uppercase">
@@ -98,11 +105,11 @@ export default function PersonalisedLearning() {
 
       {/* Alternating Content Sections */}
       {sections.map((section, index) => (
-        <section key={index} className="py-10 lg:py-24 px-4 sm:px-6 lg:px-12 bg-white">
+        <section key={index} className="py-4 lg:py-10 px-4 sm:px-6 lg:px-12 bg-white">
           <div className="max-w-[1320px] mx-auto">
             {/* Label - only on first section, desktop only (above grid) */}
             {section.label && (
-              <div className="hidden lg:flex items-center gap-2 mb-6">
+              <div className="hidden lg:flex items-center gap-2 mb-3">
                 <span className="w-2.5 h-2.5 rounded-sm bg-[#14B8A6]" />
                 <span className="text-xs font-normal tracking-widest text-[#6B7280] uppercase">
                   {section.label}
@@ -110,27 +117,23 @@ export default function PersonalisedLearning() {
               </div>
             )}
 
-            <div
-              className={`grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center ${
-                section.layout === "image-left" ? "" : ""
-              }`}
-            >
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
               {/* Text */}
               <div className={section.layout === "image-left" ? "order-2 lg:order-2" : "order-2 lg:order-1"}>
                 {/* Label - mobile only (below image) */}
                 {section.label && (
-                  <div className="flex lg:hidden items-center gap-2 mb-4">
+                  <div className="flex lg:hidden items-center gap-2 mb-3">
                     <span className="w-2.5 h-2.5 rounded-sm bg-[#14B8A6]" />
                     <span className="text-xs font-normal tracking-widest text-[#6B7280] uppercase">
                       {section.label}
                     </span>
                   </div>
                 )}
-                <h2 className="text-2xl sm:text-4xl lg:text-[42px] font-normal text-[#1A2B3D] leading-[1.2] tracking-[-0.5px] mb-5">
+                <h2 className="text-[28px] lg:text-[56px] leading-[1.15] lg:leading-[67.2px] text-[#111023] mb-4" style={{ letterSpacing: "-0.64px", fontWeight: 400 }}>
                   {section.title}
                 </h2>
                 {section.paragraphs.map((p, i) => (
-                  <p key={i} className="text-sm text-[#6B7280] leading-relaxed mb-3 last:mb-0">
+                  <p key={i} className="text-[#606B68] mb-3 last:mb-0" style={{ fontFamily: "Inter, sans-serif", fontSize: "18px", lineHeight: "27px", letterSpacing: "-0.48px", fontWeight: 400 }}>
                     {p}
                   </p>
                 ))}

@@ -21,7 +21,7 @@ const trainers = [
 
 export default function Trainers() {
   return (
-    <section className="bg-white px-4 sm:px-6 lg:px-12 py-12 lg:py-24 flex flex-col justify-center">
+    <section className="bg-white px-4 sm:px-6 lg:px-12 pt-6 pb-12 lg:py-24 flex flex-col justify-center">
       <div className="max-w-[1320px] mx-auto w-full">
         <div className="flex items-center gap-2">
           <span className="w-2.5 h-2.5 rounded-sm bg-[#14B8A6]" />

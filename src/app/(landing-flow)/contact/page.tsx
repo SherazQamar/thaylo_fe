@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, FormEvent } from "react";
+import Image from "next/image";
 import Navbar from "@/components/landing/shared/Navbar";
 import Footer from "@/components/landing/shared/Footer";
 import FAQ from "@/components/landing/home/FAQ";
@@ -32,6 +33,13 @@ export default function ContactPage() {
     <main>
       {/* Hero Section */}
       <section className="relative bg-[#0B1D2E] overflow-hidden">
+        <Image
+          src="/assets/aboutbg.png"
+          alt=""
+          fill
+          className="object-cover mix-blend-screen"
+          priority
+        />
         {/* Background glow effects */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-[-80px] left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-[#00696B]/8 rounded-full blur-[150px]" />
@@ -41,7 +49,7 @@ export default function ContactPage() {
 
         <Navbar />
 
-        <div className="relative z-10 max-w-[1400px] mx-auto px-6 sm:px-8 lg:px-12 xl:px-16 pt-20 sm:pt-24 pb-16 sm:pb-20 text-center">
+        <div className="relative z-10 max-w-[1400px] mx-auto px-6 sm:px-8 lg:px-12 xl:px-16 pt-28 sm:pt-36 pb-16 sm:pb-20 text-center">
           <div className="flex items-center justify-center gap-2 mb-6">
             <span className="w-2.5 h-2.5 rounded-sm bg-[#14B8A6]" />
             <span className="text-sm font-normal tracking-widest text-[#14B8A6] uppercase">
@@ -160,12 +168,13 @@ export default function ContactPage() {
                   </button>
                 </div>
               ) : (
-                <form onSubmit={handleSubmit} className="bg-[#F7F5EE] rounded-2xl p-8 sm:p-10 space-y-6">
+                <form onSubmit={handleSubmit} className="bg-[#F7F5EE] space-y-6" style={{ borderRadius: "16.75px", padding: "33px" }}>
                   <div className="grid sm:grid-cols-2 gap-6">
                     <div>
                       <label
                         htmlFor="firstName"
-                        className="block text-sm font-normal text-[#1A2B3D] mb-2"
+                        className="block text-[#0C211D] mb-2"
+                        style={{ fontSize: "24.57px", lineHeight: "29.48px", letterSpacing: "-0.54px", fontWeight: 500 }}
                       >
                         First Name
                       </label>
@@ -176,13 +185,15 @@ export default function ContactPage() {
                         value={formData.firstName}
                         onChange={handleChange}
                         required
-                        className="w-full px-4 py-3 rounded-lg border border-gray-200 text-sm bg-white outline-none focus:border-[#14B8A6] transition-colors text-[#1A2B3D]"
+                        className="w-full px-4 bg-white outline-none focus:border-[#14B8A6] transition-colors text-[#1A2B3D]"
+                        style={{ border: "1.12px solid #CED3D2", borderRadius: "11.17px", height: "61px", fontSize: "16px" }}
                       />
                     </div>
                     <div>
                       <label
                         htmlFor="lastName"
-                        className="block text-sm font-normal text-[#1A2B3D] mb-2"
+                        className="block text-[#0C211D] mb-2"
+                        style={{ fontSize: "24.57px", lineHeight: "29.48px", letterSpacing: "-0.54px", fontWeight: 500 }}
                       >
                         Last Name
                       </label>
@@ -193,7 +204,8 @@ export default function ContactPage() {
                         value={formData.lastName}
                         onChange={handleChange}
                         required
-                        className="w-full px-4 py-3 rounded-lg border border-gray-200 text-sm bg-white outline-none focus:border-[#14B8A6] transition-colors text-[#1A2B3D]"
+                        className="w-full px-4 bg-white outline-none focus:border-[#14B8A6] transition-colors text-[#1A2B3D]"
+                        style={{ border: "1.12px solid #CED3D2", borderRadius: "11.17px", height: "61px", fontSize: "16px" }}
                       />
                     </div>
                   </div>
@@ -202,7 +214,8 @@ export default function ContactPage() {
                     <div>
                       <label
                         htmlFor="email"
-                        className="block text-sm font-normal text-[#1A2B3D] mb-2"
+                        className="block text-[#0C211D] mb-2"
+                        style={{ fontSize: "24.57px", lineHeight: "29.48px", letterSpacing: "-0.54px", fontWeight: 500 }}
                       >
                         Email
                       </label>
@@ -213,13 +226,15 @@ export default function ContactPage() {
                         value={formData.email}
                         onChange={handleChange}
                         required
-                        className="w-full px-4 py-3 rounded-lg border border-gray-200 text-sm bg-white outline-none focus:border-[#14B8A6] transition-colors text-[#1A2B3D]"
+                        className="w-full px-4 bg-white outline-none focus:border-[#14B8A6] transition-colors text-[#1A2B3D]"
+                        style={{ border: "1.12px solid #CED3D2", borderRadius: "11.17px", height: "61px", fontSize: "16px" }}
                       />
                     </div>
                     <div>
                       <label
                         htmlFor="phone"
-                        className="block text-sm font-normal text-[#1A2B3D] mb-2"
+                        className="block text-[#0C211D] mb-2"
+                        style={{ fontSize: "24.57px", lineHeight: "29.48px", letterSpacing: "-0.54px", fontWeight: 500 }}
                       >
                         Phone Number
                       </label>
@@ -229,7 +244,8 @@ export default function ContactPage() {
                         name="phone"
                         value={formData.phone}
                         onChange={handleChange}
-                        className="w-full px-4 py-3 rounded-lg border border-gray-200 text-sm bg-white outline-none focus:border-[#14B8A6] transition-colors text-[#1A2B3D]"
+                        className="w-full px-4 bg-white outline-none focus:border-[#14B8A6] transition-colors text-[#1A2B3D]"
+                        style={{ border: "1.12px solid #CED3D2", borderRadius: "11.17px", height: "61px", fontSize: "16px" }}
                       />
                     </div>
                   </div>
@@ -237,7 +253,8 @@ export default function ContactPage() {
                   <div>
                     <label
                       htmlFor="message"
-                      className="block text-sm font-normal text-[#1A2B3D] mb-2"
+                      className="block text-[#0C211D] mb-2"
+                      style={{ fontSize: "24.57px", lineHeight: "29.48px", letterSpacing: "-0.54px", fontWeight: 500 }}
                     >
                       Message
                     </label>
@@ -248,13 +265,15 @@ export default function ContactPage() {
                       onChange={handleChange}
                       required
                       rows={5}
-                      className="w-full px-4 py-3 rounded-lg border border-gray-200 text-sm bg-white outline-none focus:border-[#14B8A6] transition-colors resize-none text-[#1A2B3D]"
+                      className="w-full px-4 py-4 bg-white outline-none focus:border-[#14B8A6] transition-colors resize-none text-[#1A2B3D]"
+                      style={{ border: "1.12px solid #CED3D2", borderRadius: "11.17px", fontSize: "16px" }}
                     />
                   </div>
 
                   <button
                     type="submit"
-                    className="w-full py-4 rounded-lg bg-[#0B1D2E] text-white text-sm font-medium hover:bg-[#162A3E] transition-colors cursor-pointer"
+                    className="w-full text-white hover:opacity-90 transition-colors cursor-pointer"
+                    style={{ backgroundColor: "#0C211D", border: "1.12px solid #0C211D", borderRadius: "11.17px", padding: "18px 51px", fontSize: "16px", fontWeight: 500 }}
                   >
                     Submit Now
                   </button>

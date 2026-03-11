@@ -23,7 +23,7 @@ export default function AboutHero() {
 
       <Navbar />
 
-      <div className="relative z-10 max-w-[1400px] mx-auto px-6 sm:px-8 lg:px-12 xl:px-16 pt-20 sm:pt-24 pb-16 sm:pb-20 text-center">
+      <div className="relative z-10 max-w-[1400px] mx-auto px-6 sm:px-8 lg:px-12 xl:px-16 pt-28 sm:pt-36 pb-16 sm:pb-20 text-center">
         <div className="flex items-center justify-center gap-2 mb-6">
           <span className="w-2.5 h-2.5 rounded-sm bg-[#14B8A6]" />
           <span className="text-sm font-normal tracking-widest text-[#14B8A6] uppercase">

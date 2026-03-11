@@ -73,7 +73,7 @@ export default function Pricing() {
           ONE FULL ACADEMIC YEAR.&nbsp; FLEXIBLE PAYMENT OPTIONS.
         </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-5 items-start max-w-[1330px] mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-[30px] items-start max-w-[1330px] mx-auto">
           {plans.map((plan, index) => (
             <PricingCard key={index} {...plan} />
           ))}
@@ -108,14 +108,14 @@ function PricingCard({
 }) {
   return (
     <div
-      className={`rounded-[15px] overflow-hidden ${
+      className={`rounded-[15px] overflow-hidden flex flex-col gap-[30px] ${
         featured
           ? "bg-[#0B1D2E] text-white shadow-2xl"
           : "bg-[#F1F5F9] text-[#111023]"
       }`}
     >
       {/* Top section */}
-      <div className="relative p-5">
+      <div className="relative p-[30px] pb-0">
         {featured && (
           <Image
             src="/assets/testimonial-bg-pattern.png"
@@ -165,7 +165,7 @@ function PricingCard({
       </div>
 
       {/* Features section */}
-      <div className="px-5 pb-5">
+      <div className="px-[30px] pb-[30px]">
         <p
           className={`text-[14px] font-medium mb-2.5 leading-[20px] ${
             featured ? "text-white" : "text-[#111023]"

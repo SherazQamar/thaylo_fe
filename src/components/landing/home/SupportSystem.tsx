@@ -3,7 +3,7 @@ import SectionLabel from "@/components/ui/SectionLabel";
 
 export default function SupportSystem() {
   return (
-    <section id="learning-model" className="py-12 px-4 sm:px-6 lg:px-12 bg-white flex flex-col justify-center">
+    <section id="learning-model" className="pt-20 lg:pt-28 pb-12 px-4 sm:px-6 lg:px-12 bg-white flex flex-col justify-center">
       <div className="max-w-[1320px] mx-auto">
         <SectionLabel text="WHY US" />
         <h2 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-normal text-center mt-4 mb-10 sm:mb-16 text-[#1A2B3D]">
@@ -16,12 +16,12 @@ export default function SupportSystem() {
             {/* AI Instructor */}
             <div className="text-center lg:text-left">
               <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 mx-auto lg:mx-0">
-                <Image src="/assets/certificate-symbol.png" alt="AI Instructor" width={28} height={28} className="w-7 h-7 object-contain" />
+                <Image src="/assets/certificate-symbol.png" alt="AI Instructor" width={28} height={28} className="w-12 h-12 object-contain" />
               </div>
-              <h3 className="text-lg font-normal text-[#1A2B3D] mb-2">
+              <h3 className="font-medium text-[#0C211D] mb-2" style={{ fontSize: "26px", lineHeight: "31.2px", letterSpacing: "-0.64px" }}>
                 AI Instructor
               </h3>
-              <p className="text-sm text-[#6B7280] leading-relaxed">
+              <p className="text-[#606B68] font-normal" style={{ fontFamily: "Inter, sans-serif", fontSize: "18px", lineHeight: "27px", letterSpacing: "-0.48px" }}>
                 A personalized, human-appearing AI Instructor delivers
                 structured lessons aligned to mastery-based expectations.
                 Students have some choice in selecting the Instructor&apos;s
@@ -33,12 +33,12 @@ export default function SupportSystem() {
             {/* Calyx */}
             <div className="pt-4 border-t border-gray-100 text-center lg:text-left">
               <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 mx-auto lg:mx-0">
-                <Image src="/assets/handshake-symbol.png" alt="Bloom Buddy" width={28} height={28} className="w-7 h-7 object-contain" />
+                <Image src="/assets/handshake-symbol.png" alt="Bloom Buddy" width={28} height={28} className="w-12 h-12 object-contain" />
               </div>
-              <h3 className="text-lg font-normal text-[#1A2B3D] mb-2">
+              <h3 className="font-medium text-[#0C211D] mb-2" style={{ fontSize: "26px", lineHeight: "31.2px", letterSpacing: "-0.64px" }}>
                 Calyx, Your Bloom Buddy
               </h3>
-              <p className="text-sm text-[#6B7280] leading-relaxed">
+              <p className="text-[#606B68] font-normal" style={{ fontFamily: "Inter, sans-serif", fontSize: "18px", lineHeight: "27px", letterSpacing: "-0.48px" }}>
                 Calyx supports focus and reflection through simple check-ins
                 that help students notice how they&apos;re feeling so they can
                 fully engage with learning.
@@ -61,12 +61,12 @@ export default function SupportSystem() {
           <div className="text-center lg:text-right">
             <div>
               <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 mx-auto lg:ml-auto lg:mr-0">
-                <Image src="/assets/wayfinder-symbol.png" alt="Wayfinder Support" width={32} height={32} className="w-7 h-7 object-contain" />
+                <Image src="/assets/wayfinder-symbol.png" alt="Wayfinder Support" width={32} height={32} className="w-12 h-12 object-contain" />
               </div>
-              <h3 className="text-lg font-normal text-[#1A2B3D] mb-2">
+              <h3 className="font-medium text-[#0C211D] mb-2" style={{ fontSize: "26px", lineHeight: "31.2px", letterSpacing: "-0.64px" }}>
                 Wayfinder Support
               </h3>
-              <p className="text-sm text-[#6B7280] leading-relaxed">
+              <p className="text-[#606B68] font-normal" style={{ fontFamily: "Inter, sans-serif", fontSize: "18px", lineHeight: "27px", letterSpacing: "-0.48px" }}>
                 A real educator oversees progress, intervenes when learning
                 stalls, and partners with families when human attention is
                 needed.

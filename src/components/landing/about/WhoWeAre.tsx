@@ -51,7 +51,7 @@ export default function WhoWeAre() {
             <div className="flex justify-center md:justify-start">
               <Button
                 variant="primary"
-                className="!rounded-xl text-sm px-6 py-3"
+                className="!rounded-xl text-sm px-12 py-3.5"
               >
                 Join Now
               </Button>

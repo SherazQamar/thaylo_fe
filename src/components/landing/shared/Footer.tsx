@@ -1,4 +1,3 @@
-import React from "react";
 import Image from "next/image";
 
 const mainPages = [
@@ -85,34 +84,17 @@ export default function Footer() {
 
         {/* Bottom Bar */}
         <div className="flex flex-col sm:flex-row justify-between items-center py-6 border-t border-gray-200 gap-4">
-          <p className="text-sm text-[#6B7280]">Copyright &copy; Thaylo</p>
-          <div className="flex items-center gap-3">
-            <SocialLink
-              href="#"
-              label="Facebook"
-              icon={
-                <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z" />
-              }
-            />
-            <SocialLink
-              href="#"
-              label="Instagram"
-              icon={
-                <>
-                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
-                  <path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z" />
-                  <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
-                </>
-              }
-              stroke
-            />
-            <SocialLink
-              href="#"
-              label="LinkedIn"
-              icon={
-                <path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2zM4 6a2 2 0 100-4 2 2 0 000 4z" />
-              }
-            />
+          <p className="text-[#000000] font-normal" style={{ fontFamily: "Inter, sans-serif", fontSize: "18px", lineHeight: "21.6px", letterSpacing: "-0.48px" }}>Copyright &copy; Thaylo</p>
+          <div className="flex items-center gap-5">
+            <a href="#" aria-label="Facebook" className="hover:opacity-70 transition-opacity">
+              <Image src="/assets/Facebook symbol.png" alt="Facebook" width={40} height={40} className="w-10 h-10 object-contain" />
+            </a>
+            <a href="#" aria-label="Instagram" className="hover:opacity-70 transition-opacity">
+              <Image src="/assets/Instagram symbol.png" alt="Instagram" width={40} height={40} className="w-10 h-10 object-contain" />
+            </a>
+            <a href="#" aria-label="LinkedIn" className="hover:opacity-70 transition-opacity">
+              <Image src="/assets/linkedin symbol.png" alt="LinkedIn" width={40} height={40} className="w-10 h-10 object-contain" />
+            </a>
           </div>
         </div>
       </div>
@@ -120,35 +102,3 @@ export default function Footer() {
   );
 }
 
-function SocialLink({
-  href,
-  label,
-  icon,
-  stroke,
-}: {
-  href: string;
-  label: string;
-  icon: React.ReactNode;
-  stroke?: boolean;
-}) {
-  return (
-    <a
-      href={href}
-      className="flex items-center justify-center hover:opacity-70 transition-opacity"
-      aria-label={label}
-    >
-      <svg
-        width="20"
-        height="20"
-        viewBox="0 0 24 24"
-        fill={stroke ? "none" : "#0C211D"}
-        stroke={stroke ? "#0C211D" : "none"}
-        strokeWidth={stroke ? "2" : "0"}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        {icon}
-      </svg>
-    </a>
-  );
-}

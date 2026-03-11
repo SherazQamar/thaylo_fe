@@ -5,7 +5,7 @@ import Button from "@/components/ui/Button";
 
 export default function OurStory() {
   return (
-    <section id="about" className="pt-8 lg:pt-10 pb-6 lg:pb-8 px-4 sm:px-6 lg:px-12 bg-white flex flex-col justify-center">
+    <section id="about" className="pt-16 lg:pt-24 pb-6 lg:pb-8 px-4 sm:px-6 lg:px-12 bg-white flex flex-col justify-center">
       <div className="max-w-7xl mx-auto">
         <SectionLabel text="OUR STORY" />
         <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-[56px] font-normal text-center mt-4 mb-8 max-w-[1170px] mx-auto leading-[1.2] lg:leading-[67.2px] tracking-[-0.64px] text-[#0C211D]">
@@ -16,10 +16,10 @@ export default function OurStory() {
         <div className="grid grid-cols-1 md:grid-cols-3 md:grid-rows-[1fr_auto] gap-3 lg:gap-4">
           {/* Card 1 - How Learning Works (top-left) */}
           <div className="bg-[#F1F5F9] rounded-2xl p-4 lg:p-5 flex flex-col">
-            <h3 className="text-base lg:text-base font-normal text-[#1A2B3D] mb-1">
+            <h3 className="text-[26px] font-medium text-[#0C211D] mb-1 leading-[31.2px] tracking-[-0.64px]">
               How Learning Works at Thaylo
             </h3>
-            <p className="text-sm lg:text-sm text-[#6B7280] leading-relaxed mb-3">
+            <p className="text-[16px] font-normal text-[#606B68] leading-[24px] tracking-[-0.48px] mb-3" style={{ fontFamily: "Inter, sans-serif" }}>
               AI adapts lessons to your child&apos;s pace, strengths, and needs.
             </p>
             <div className="flex-1 relative rounded-xl overflow-hidden min-h-[180px] md:min-h-[120px]">
@@ -48,7 +48,7 @@ export default function OurStory() {
             <h3 className="text-[26px] font-medium text-[#0C211D] mb-1 leading-[31.2px] tracking-[-0.64px]">
               AI Instructor, Guided by Human Pedagogy
             </h3>
-            <p className="text-[18px] font-normal text-[#606B68] leading-[27px] tracking-[-0.48px] mb-2" style={{ fontFamily: "Inter, sans-serif" }}>
+            <p className="text-[16px] font-normal text-[#606B68] leading-[24px] tracking-[-0.48px] mb-2" style={{ fontFamily: "Inter, sans-serif" }}>
               Thaylo&apos;s AI Instructor delivers lessons using proven
               instructional strategies, adapting in real time while staying
               aligned to human-designed curriculum and learning goals.
@@ -80,10 +80,10 @@ export default function OurStory() {
 
           {/* Card 3 - Mastery-Based Progression (right, spans 2 rows) */}
           <div className="bg-[#F1F5F9] rounded-2xl p-4 lg:p-5 flex flex-col md:row-span-2">
-            <h3 className="text-sm lg:text-base font-normal text-[#1A2B3D] mb-1">
+            <h3 className="text-[26px] font-medium text-[#0C211D] mb-1 leading-[31.2px] tracking-[-0.64px]">
               Mastery-Based Progression:
             </h3>
-            <p className="text-xs lg:text-sm text-[#6B7280] leading-relaxed mb-2">
+            <p className="text-[16px] font-normal text-[#606B68] leading-[24px] tracking-[-0.48px] mb-2" style={{ fontFamily: "Inter, sans-serif" }}>
               Students advance only after demonstrating understanding.
               <br />
               Concepts are assessed, reinforced, and revisited until mastery is
@@ -127,10 +127,10 @@ export default function OurStory() {
           {/* Learning That Grows - bottom-left, spans 2 columns */}
           <div className="bg-[#F1F5F9] rounded-2xl p-4 lg:p-6 md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
             <div className="space-y-2">
-              <h2 className="text-lg md:text-xl font-normal text-[#1A2B3D] leading-tight">
+              <h2 className="text-[26px] font-medium text-[#0C211D] leading-[31.2px] tracking-[-0.64px]">
                 Learning That Grows With Your Child
               </h2>
-              <p className="text-[#6B7280] text-xs lg:text-sm leading-relaxed">
+              <p className="text-[16px] font-normal text-[#606B68] leading-[24px] tracking-[-0.48px]" style={{ fontFamily: "Inter, sans-serif" }}>
                 Providing easy AI learning that helps to build real skills fast
                 and smart.
               </p>

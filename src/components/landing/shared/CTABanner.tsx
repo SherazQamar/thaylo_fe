@@ -2,8 +2,8 @@ import Image from "next/image";
 
 export default function CTABanner() {
   return (
-    <section className="flex flex-col justify-center">
-      <div className="relative bg-[#0B1D2E] overflow-hidden" style={{ minHeight: "240px" }}>
+    <section className="flex flex-col justify-center px-4 sm:px-6 lg:px-12">
+      <div className="relative bg-[#0B1D2E] overflow-hidden rounded-2xl max-w-[1320px] mx-auto w-full" style={{ minHeight: "240px" }}>
           {/* Background glow */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-[#00696B]/20 rounded-full blur-[100px]" />

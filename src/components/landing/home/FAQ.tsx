@@ -124,15 +124,15 @@ export default function FAQ({ maxItems }: { maxItems?: number } = {}) {
                   className="w-full flex items-center justify-between text-left cursor-pointer"
                   onClick={() => setOpenIndex(index)}
                 >
-                  <span className="text-lg md:text-xl font-normal text-[#1A2B3D] pr-4">
+                  <span className="text-lg md:text-xl font-semibold text-[#1A2B3D] pr-4" style={{ fontSize: "20px", lineHeight: "28px", letterSpacing: "-0.48px" }}>
                     {faq.question}
                   </span>
-                  <span className="text-xl text-[#1A2B3D] flex-shrink-0">
+                  <span className="flex-shrink-0 w-10 h-10 rounded-full border border-[#D1D5DB] flex items-center justify-center text-[#1A2B3D]" style={{ fontSize: "22px", lineHeight: "1" }}>
                     {openIndex === index ? "−" : "+"}
                   </span>
                 </button>
                 {openIndex === index && (
-                  <p className="mt-3 text-sm text-[#6B7280] leading-relaxed pr-8">
+                  <p className="mt-3 text-[#606B68] pr-8 font-normal" style={{ fontFamily: "Inter, sans-serif", fontSize: "16px", lineHeight: "26px", letterSpacing: "-0.32px" }}>
                     {faq.answer}
                   </p>
                 )}

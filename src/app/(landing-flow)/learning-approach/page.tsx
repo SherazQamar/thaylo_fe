@@ -9,6 +9,13 @@ export default function LearningApproach() {
     <main>
       {/* Hero Section */}
       <section className="relative bg-[#0B1D2E] overflow-hidden">
+        <Image
+          src="/assets/aboutbg.png"
+          alt=""
+          fill
+          className="object-cover mix-blend-screen"
+          priority
+        />
         {/* Background glow effects */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-[-80px] left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-[#00696B]/8 rounded-full blur-[150px]" />
@@ -18,7 +25,7 @@ export default function LearningApproach() {
 
         <Navbar />
 
-        <div className="relative z-10 max-w-[1400px] mx-auto px-6 sm:px-8 lg:px-12 xl:px-16 pt-20 sm:pt-24 pb-16 sm:pb-20 text-center">
+        <div className="relative z-10 max-w-[1400px] mx-auto px-6 sm:px-8 lg:px-12 xl:px-16 pt-28 sm:pt-36 pb-16 sm:pb-20 text-center">
           <div className="flex items-center justify-center gap-2 mb-6">
             <span className="w-2.5 h-2.5 rounded-sm bg-[#14B8A6]" />
             <span className="text-sm font-normal tracking-widest text-[#14B8A6] uppercase">
@@ -56,12 +63,12 @@ export default function LearningApproach() {
                   WHO WE ARE
                 </span>
               </div>
-              <h2 className="text-[22px] sm:text-3xl md:text-4xl lg:text-5xl font-normal leading-[1.2] text-[#1A2B3D]">
+              <h2 className="text-[28px] lg:text-[56px] text-[#111023]" style={{ lineHeight: "67.2px", letterSpacing: "-0.64px", fontWeight: 400 }}>
                 Learning is not one size fits all
               </h2>
               <p
                 className="text-[#606B68] font-normal"
-                style={{ fontFamily: "Inter, sans-serif", fontSize: "18px", lineHeight: "27px", letterSpacing: "0px" }}
+                style={{ fontFamily: "Inter, sans-serif", fontSize: "18px", lineHeight: "27px", letterSpacing: "-0.48px" }}
               >
                 Every child learns in a different way. Some children need more
                 time. Some learn faster with visuals. Others understand better
@@ -78,17 +85,17 @@ export default function LearningApproach() {
       <section className="py-12 px-4 sm:px-6 lg:px-12 bg-white flex flex-col justify-center">
         <div className="max-w-[1320px] mx-auto">
           <SectionLabel text="WHY US" />
-          <h2 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-normal text-center mt-4 mb-10 sm:mb-16 text-[#1A2B3D]">
+          <h2 className="text-[24px] lg:text-[56px] text-center mt-4 mb-10 sm:mb-16 text-[#111023]" style={{ lineHeight: "67.2px", letterSpacing: "-0.64px", fontWeight: 400 }}>
             What personalized learning
             <br />
             means at THAYLO
           </h2>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-6 lg:gap-10 items-center">
             {/* Left Column */}
-            <div className="space-y-8 lg:space-y-12">
+            <div className="space-y-6 lg:space-y-8">
               <div className="text-center lg:text-left">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 mx-auto lg:mx-0">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-3 mx-auto lg:mx-0">
                   <Image src="/assets/certificate-symbol.png" alt="" width={28} height={28} className="w-12 h-12 object-contain" />
                 </div>
                 <h3 className="font-medium text-[#111023] mb-2" style={{ fontSize: "26px", lineHeight: "31.2px", letterSpacing: "-0.64px" }}>
@@ -99,8 +106,8 @@ export default function LearningApproach() {
                 </p>
               </div>
 
-              <div className="pt-4 border-t border-[#9CA3AF] text-center lg:text-left">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 mx-auto lg:mx-0">
+              <div className="pt-6 border-t border-[#9CA3AF] text-center lg:text-left">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-3 mx-auto lg:mx-0">
                   <Image src="/assets/handshake-symbol.png" alt="" width={28} height={28} className="w-12 h-12 object-contain" />
                 </div>
                 <h3 className="font-medium text-[#111023] mb-2" style={{ fontSize: "26px", lineHeight: "31.2px", letterSpacing: "-0.64px" }}>
@@ -119,14 +126,14 @@ export default function LearningApproach() {
                 alt="Thaylo Character"
                 width={400}
                 height={450}
-                className="w-[200px] sm:w-[240px] lg:w-[340px] h-auto object-contain drop-shadow-xl"
+                className="w-[200px] sm:w-[240px] lg:w-[400px] h-auto object-contain drop-shadow-xl"
               />
             </div>
 
             {/* Right Column */}
-            <div className="space-y-8 lg:space-y-12">
+            <div className="space-y-6 lg:space-y-8">
               <div className="text-center lg:text-right">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 mx-auto lg:ml-auto lg:mr-0">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-3 mx-auto lg:ml-auto lg:mr-0">
                   <Image src="/assets/wayfinder-symbol.png" alt="" width={28} height={28} className="w-12 h-12 object-contain" />
                 </div>
                 <h3 className="font-medium text-[#111023] mb-2" style={{ fontSize: "26px", lineHeight: "31.2px", letterSpacing: "-0.64px" }}>
@@ -137,8 +144,8 @@ export default function LearningApproach() {
                 </p>
               </div>
 
-              <div className="pt-4 border-t border-[#9CA3AF] text-center lg:text-right">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 mx-auto lg:ml-auto lg:mr-0">
+              <div className="pt-6 border-t border-[#9CA3AF] text-center lg:text-right">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-3 mx-auto lg:ml-auto lg:mr-0">
                   <Image src="/assets/treat.png" alt="" width={28} height={28} className="w-12 h-12 object-contain" />
                 </div>
                 <h3 className="font-medium text-[#111023] mb-2" style={{ fontSize: "26px", lineHeight: "31.2px", letterSpacing: "-0.64px" }}>
@@ -157,7 +164,7 @@ export default function LearningApproach() {
       <section className="py-12 lg:py-24 px-4 sm:px-6 lg:px-12 bg-[#EBEEF2] flex flex-col justify-center">
         <div className="max-w-[1320px] mx-auto">
           <SectionLabel text="PERSONALIZED LEARNING" />
-          <h2 className="font-normal text-center text-[#111023] mt-4 mb-4" style={{ fontSize: "24px", lineHeight: "32px", letterSpacing: "-0.64px" }}>
+          <h2 className="text-[24px] lg:text-[56px] text-center text-[#111023] mt-4 mb-4" style={{ lineHeight: "67.2px", letterSpacing: "-0.64px", fontWeight: 400 }}>
             How THAYLO personalizes
             <br />
             learning
@@ -228,7 +235,7 @@ export default function LearningApproach() {
                   Personalized Learning
                 </span>
               </div>
-              <h2 className="font-normal text-[#111023] mb-4" style={{ fontSize: "24px", lineHeight: "32px", letterSpacing: "-0.64px" }}>
+              <h2 className="text-[28px] lg:text-[56px] text-[#111023] mb-4" style={{ lineHeight: "67.2px", letterSpacing: "-0.64px", fontWeight: 400 }}>
                 Building strong learning
                 <br />
                 foundations

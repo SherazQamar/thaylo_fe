@@ -36,11 +36,11 @@ export default function CoursePilot() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 sm:mb-12 gap-4">
           <div>
   
-            <h2 className="text-xl sm:text-2xl md:text-4xl font-normal text-[#1A2B3D]">
+            <h2 className="font-normal text-[#0C211D]" style={{ fontSize: "56px", lineHeight: "67.2px", letterSpacing: "-0.64px" }}>
               Grade 4 English Language Arts Pilot
             </h2>
           </div>
-          <button className="hidden sm:inline-flex px-[45px] py-[15px] text-sm font-medium text-white bg-[#0C211D] border border-[#0C211D] hover:opacity-90 transition-all duration-300 cursor-pointer" style={{ borderRadius: "10px" }}>
+          <button className="hidden sm:inline-flex font-normal text-white bg-[#0C211D] border border-[#0C211D] hover:opacity-90 transition-all duration-300 cursor-pointer" style={{ borderRadius: "10px", padding: "15px 45px", fontSize: "16px" }}>
             More Courses
           </button>
         </div>
@@ -81,15 +81,15 @@ function CourseCard({
       </div>
 
       <div className="pt-5 px-2 pb-1">
-        <h3 className="text-xl font-medium text-[#1A2B3D] mb-1">{title}</h3>
-        <p className="text-sm text-[#6B7280] mb-5">{instructor}</p>
+        <h3 className="font-medium text-[#0C211D] mb-1" style={{ fontSize: "26px", lineHeight: "31.2px", letterSpacing: "-0.48px" }}>{title}</h3>
+        <p className="font-normal text-[#606B68] mb-5" style={{ fontSize: "18px", lineHeight: "27px", letterSpacing: "-0.48px" }}>{instructor}</p>
 
         {/* Meta info */}
-        <div className="flex items-center gap-3 text-xs text-[#6B7280] mb-4">
-          <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-3 mb-4" style={{ fontSize: "18px", lineHeight: "18px", letterSpacing: "-0.48px" }}>
+          <div className="flex items-center gap-1.5 text-[#0C211D]" style={{ fontFamily: "Inter, sans-serif" }}>
             <svg
-              width="14"
-              height="14"
+              width="16"
+              height="16"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -101,10 +101,10 @@ function CourseCard({
             <span>{lessons} Lessons</span>
           </div>
           <span className="text-gray-300">|</span>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 text-[#0C211D]" style={{ fontFamily: "Inter, sans-serif" }}>
             <svg
-              width="14"
-              height="14"
+              width="16"
+              height="16"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -116,13 +116,13 @@ function CourseCard({
             <span>{duration}</span>
           </div>
           <span className="text-gray-300">|</span>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 text-[#0C211D]" style={{ fontFamily: "Inter, sans-serif" }}>
             <svg
-              width="14"
-              height="14"
+              width="16"
+              height="16"
               viewBox="0 0 24 24"
               fill="none"
-              stroke="#6B7280"
+              stroke="#0C211D"
               strokeWidth="1.5"
             >
               <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
