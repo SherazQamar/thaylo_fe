@@ -1,0 +1,327 @@
+"use client";
+
+import React, { useState, FormEvent } from "react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+
+export default function ParentRegister() {
+  const router = useRouter();
+  const [guardian1Name, setGuardian1Name] = useState("");
+  const [guardian1Type, setGuardian1Type] = useState<"parent" | "guardian">("parent");
+  const [guardian2Name, setGuardian2Name] = useState("");
+  const [guardian2Type, setGuardian2Type] = useState<"parent" | "guardian">("parent");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [country, setCountry] = useState("");
+  const [timezone, setTimezone] = useState("");
+
+  function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    // TODO: integrate with backend
+    router.push("/parent-register/step-2");
+  }
+
+  return (
+    <div className="h-screen flex flex-col lg:flex-row overflow-hidden bg-[#111023]">
+      {/* Left Half - hidden on mobile */}
+      <div className="relative hidden lg:flex w-1/2 bg-[#313044] flex-col pt-16 px-16 pb-0 overflow-hidden">
+        <div className="relative z-10">
+          <div className="flex items-center gap-2.5">
+            <Image
+              src="/assets/logo.png"
+              alt="Thaylo"
+              width={48}
+              height={48}
+              className="w-12 h-12 object-contain"
+            />
+            <div className="leading-none">
+              <span className="block text-[20px] font-medium tracking-[0.08em]" style={{ background: "linear-gradient(90deg, #60D624, #00A19A)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                THAYLO
+              </span>
+              <span className="block text-[8px] tracking-[0.2em] text-[#60D624]/70 uppercase mt-0.5">
+                GLOBAL AI SCHOOL
+              </span>
+            </div>
+          </div>
+          <h1
+            className="text-white text-[36px] font-semibold leading-[1.1] tracking-tight max-w-[400px] mt-6"
+            style={{ fontFamily: "Inter, sans-serif" }}
+          >
+            Courses Chosen for
+            <br />
+            Your Child&apos;s Path
+          </h1>
+          <p
+            className="text-white/70 text-lg mt-3 max-w-[350px]"
+            style={{ fontFamily: "Inter, sans-serif" }}
+          >
+            Thoughtfully designed lessons that grow skills, understanding, and independence.
+          </p>
+        </div>
+
+        <div className="relative z-10 flex justify-start mt-auto mb-0">
+          <Image
+            src="/assets/Parent P1.png"
+            alt="Parent character"
+            width={320}
+            height={360}
+            className="w-[280px] max-h-[50vh] object-contain object-bottom"
+          />
+        </div>
+
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-[#00CED1]/5 rounded-full blur-[120px] pointer-events-none" />
+      </div>
+
+      {/* Right Half - full screen on mobile */}
+      <div className="w-full lg:w-1/2 flex-1 flex flex-col overflow-y-auto">
+        <div className="px-6 pt-4 pb-6 sm:p-8 lg:px-20 lg:py-6">
+          {/* Mobile Logo */}
+          <div className="lg:hidden mb-3 flex items-center gap-2.5">
+            <Image
+              src="/assets/logo.png"
+              alt="Thaylo"
+              width={40}
+              height={40}
+              className="w-10 h-10 object-contain"
+            />
+            <div className="leading-none">
+              <span className="block text-[18px] font-medium tracking-[0.08em]" style={{ background: "linear-gradient(90deg, #60D624, #00A19A)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                THAYLO
+              </span>
+              <span className="block text-[7px] tracking-[0.2em] text-[#60D624]/70 uppercase mt-0.5">
+                GLOBAL AI SCHOOL
+              </span>
+            </div>
+          </div>
+
+          {/* Step Progress Bar */}
+          <div className="w-full max-w-[420px] lg:max-w-[560px] mx-auto mb-4">
+            {/* Progress bar first */}
+            <div className="w-full h-[6px] bg-[#313044] rounded-full overflow-hidden mb-3">
+              <div className="h-full w-1/4 bg-[#00CED1] rounded-full" />
+            </div>
+            {/* Back arrow + step info */}
+            <div className="flex items-center justify-between">
+              <button
+                onClick={() => router.back()}
+                className="text-white/70 hover:text-white text-2xl cursor-pointer"
+                style={{ fontFamily: "Inter, sans-serif" }}
+              >
+                &#8249;
+              </button>
+              <div className="text-right">
+                <span
+                  className="block text-white/70 text-sm font-medium"
+                  style={{ fontFamily: "Inter, sans-serif" }}
+                >
+                  STEP 01/04
+                </span>
+                <span
+                  className="block text-[#00CED1] text-sm font-medium"
+                  style={{ fontFamily: "Inter, sans-serif" }}
+                >
+                  Family register
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="w-full max-w-[420px] lg:max-w-[560px] mx-auto">
+            {/* Form Card */}
+            <div className="rounded-[16px] p-5 border border-[#525162]/50 lg:bg-transparent lg:rounded-[19px] lg:border lg:border-[#525162]/50 lg:px-8 lg:py-6">
+              <h2
+                className="text-white text-lg sm:text-xl font-semibold mb-4 tracking-wide uppercase text-center"
+                style={{ fontFamily: "Inter, sans-serif" }}
+              >
+                Family Register
+              </h2>
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {/* Parent/Guardian #1 */}
+                <div>
+                  <label
+                    className="block text-[14px] font-semibold text-white mb-1.5"
+                    style={{ fontFamily: "Inter, sans-serif" }}
+                  >
+                    Parent/Guardian #1
+                  </label>
+                  <input
+                    type="text"
+                    value={guardian1Name}
+                    onChange={(e) => setGuardian1Name(e.target.value)}
+                    placeholder="Allex filler"
+                    className="w-full rounded-[40px] bg-[#313044] text-white text-sm outline-none border border-transparent focus:border-[#00CED1]/40 transition-colors placeholder:text-white/30"
+                    style={{ fontFamily: "Inter, sans-serif", padding: "12px 20px", height: "44px" }}
+                  />
+                  {/* Parent / Guardian Toggle */}
+                  <div className="flex gap-2.5 mt-4">
+                    <button
+                      type="button"
+                      onClick={() => setGuardian1Type("parent")}
+                      className={`flex-1 flex items-center justify-center gap-2 rounded-[40px] py-2.5 text-sm font-medium transition-colors cursor-pointer ${
+                        guardian1Type === "parent"
+                          ? "bg-[#313044] text-white border border-[#00CED1]"
+                          : "bg-[#313044] text-white/50 border border-transparent"
+                      }`}
+                      style={{ fontFamily: "Inter, sans-serif" }}
+                    >
+                      <span className={`w-3.5 h-3.5 rounded-full border-2 ${guardian1Type === "parent" ? "border-[#00CED1] bg-[#00CED1]" : "border-white/30"}`} />
+                      Parent
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setGuardian1Type("guardian")}
+                      className={`flex-1 flex items-center justify-center gap-2 rounded-[40px] py-2.5 text-sm font-medium transition-colors cursor-pointer ${
+                        guardian1Type === "guardian"
+                          ? "bg-[#313044] text-white border border-[#00CED1]"
+                          : "bg-[#313044] text-white/50 border border-transparent"
+                      }`}
+                      style={{ fontFamily: "Inter, sans-serif" }}
+                    >
+                      <span className={`w-3.5 h-3.5 rounded-full border-2 ${guardian1Type === "guardian" ? "border-[#00CED1] bg-[#00CED1]" : "border-white/30"}`} />
+                      Guardian
+                    </button>
+                  </div>
+                </div>
+
+                {/* Divider */}
+                <div className="py-3"><div className="border-t border-[#525162]/50" /></div>
+
+                {/* Parent/Guardian #2 (Optional) */}
+                <div>
+                  <label
+                    className="block text-[14px] font-semibold text-white mb-1.5"
+                    style={{ fontFamily: "Inter, sans-serif" }}
+                  >
+                    Parent/Guardian #2 (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={guardian2Name}
+                    onChange={(e) => setGuardian2Name(e.target.value)}
+                    placeholder="Allex filler"
+                    className="w-full rounded-[40px] bg-[#313044] text-white text-sm outline-none border border-transparent focus:border-[#00CED1]/40 transition-colors placeholder:text-white/30"
+                    style={{ fontFamily: "Inter, sans-serif", padding: "12px 20px", height: "44px" }}
+                  />
+                  {/* Parent / Guardian Toggle */}
+                  <div className="flex gap-2.5 mt-4">
+                    <button
+                      type="button"
+                      onClick={() => setGuardian2Type("parent")}
+                      className={`flex-1 flex items-center justify-center gap-2 rounded-[40px] py-2.5 text-sm font-medium transition-colors cursor-pointer ${
+                        guardian2Type === "parent"
+                          ? "bg-[#313044] text-white border border-[#00CED1]"
+                          : "bg-[#313044] text-white/50 border border-transparent"
+                      }`}
+                      style={{ fontFamily: "Inter, sans-serif" }}
+                    >
+                      <span className={`w-3.5 h-3.5 rounded-full border-2 ${guardian2Type === "parent" ? "border-[#00CED1] bg-[#00CED1]" : "border-white/30"}`} />
+                      Parent
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setGuardian2Type("guardian")}
+                      className={`flex-1 flex items-center justify-center gap-2 rounded-[40px] py-2.5 text-sm font-medium transition-colors cursor-pointer ${
+                        guardian2Type === "guardian"
+                          ? "bg-[#313044] text-white border border-[#00CED1]"
+                          : "bg-[#313044] text-white/50 border border-transparent"
+                      }`}
+                      style={{ fontFamily: "Inter, sans-serif" }}
+                    >
+                      <span className={`w-3.5 h-3.5 rounded-full border-2 ${guardian2Type === "guardian" ? "border-[#00CED1] bg-[#00CED1]" : "border-white/30"}`} />
+                      Guardian
+                    </button>
+                  </div>
+                </div>
+
+                {/* Divider */}
+                <div className="py-3"><div className="border-t border-[#525162]/50" /></div>
+
+                {/* Email address */}
+                <div>
+                  <label
+                    className="block text-[14px] font-semibold text-white mb-1"
+                    style={{ fontFamily: "Inter, sans-serif" }}
+                  >
+                    Email address
+                  </label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Allex@gmail.com"
+                    className="w-full rounded-[40px] bg-[#313044] text-white text-sm outline-none border border-transparent focus:border-[#00CED1]/40 transition-colors placeholder:text-white/30"
+                    style={{ fontFamily: "Inter, sans-serif", padding: "12px 20px", height: "44px" }}
+                  />
+                </div>
+
+                {/* Phone number */}
+                <div>
+                  <label
+                    className="block text-[14px] font-semibold text-white mb-1"
+                    style={{ fontFamily: "Inter, sans-serif" }}
+                  >
+                    Phone number
+                  </label>
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="00-123-456-789"
+                    className="w-full rounded-[40px] bg-[#313044] text-white text-sm outline-none border border-transparent focus:border-[#00CED1]/40 transition-colors placeholder:text-white/30"
+                    style={{ fontFamily: "Inter, sans-serif", padding: "12px 20px", height: "44px" }}
+                  />
+                </div>
+
+                {/* Country & Timezone */}
+                <div className="flex gap-2">
+                  <div className="flex-1">
+                    <label
+                      className="block text-[14px] font-semibold text-white mb-1"
+                      style={{ fontFamily: "Inter, sans-serif" }}
+                    >
+                      Country
+                    </label>
+                    <input
+                      type="text"
+                      value={country}
+                      onChange={(e) => setCountry(e.target.value)}
+                      placeholder="USA"
+                      className="w-full rounded-[40px] bg-[#313044] text-white text-sm outline-none border border-transparent focus:border-[#00CED1]/40 transition-colors placeholder:text-white/30"
+                      style={{ fontFamily: "Inter, sans-serif", padding: "12px 20px", height: "44px" }}
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <label
+                      className="block text-[14px] font-semibold text-white mb-1"
+                      style={{ fontFamily: "Inter, sans-serif" }}
+                    >
+                      Timezone
+                    </label>
+                    <input
+                      type="text"
+                      value={timezone}
+                      onChange={(e) => setTimezone(e.target.value)}
+                      placeholder="SA (GMT-5)"
+                      className="w-full rounded-[40px] bg-[#313044] text-white text-sm outline-none border border-transparent focus:border-[#00CED1]/40 transition-colors placeholder:text-white/30"
+                      style={{ fontFamily: "Inter, sans-serif", padding: "12px 20px", height: "44px" }}
+                    />
+                  </div>
+                </div>
+
+                {/* Continue Button */}
+                <button
+                  type="submit"
+                  className="w-full py-4 rounded-[16px] bg-[#00CED1] text-white text-sm font-semibold uppercase tracking-wide hover:bg-[#00B8BB] transition-colors cursor-pointer"
+                  style={{ fontFamily: "Inter, sans-serif" }}
+                >
+                  Continue
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

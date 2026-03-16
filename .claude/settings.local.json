@@ -20,7 +20,10 @@
       "mcp__playwright__browser_click",
       "Bash(npm run build)",
       "Bash(ls -la \"d:/GitHub/thaylo_fe/src/app/\\(landing-flow\\)/assets/\")",
-      "Bash(npx next build)"
+      "Bash(npx next build)",
+      "Bash(ls -la \"d:/GitHub/thaylo_fe/src/app/\\(wayfinder-flow\\)/\")",
+      "Bash(ls -la \"d:/GitHub/thaylo_fe/src/app/\\(parent-flow\\)/\")",
+      "Bash(find \"d:/GitHub/thaylo_fe/src/app/\\(wayfinder-flow\\)\" -type f -name \"*.tsx\" -o -name \"*.ts\" -o -name \"*.jsx\" -o -name \"*.js\")"
     ]
   }
 }
