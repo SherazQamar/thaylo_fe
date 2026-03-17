@@ -79,8 +79,8 @@ export default function ParentRegisterStep4() {
       </div>
 
       {/* Right Half */}
-      <div className="w-full lg:w-1/2 flex-1 flex flex-col overflow-y-auto">
-        <div className="px-6 pt-4 pb-6 sm:p-8 lg:px-20 lg:py-6 lg:flex-1 lg:flex lg:flex-col">
+      <div className="w-full lg:w-1/2 flex-1 flex flex-col items-center overflow-y-auto">
+        <div className="w-full max-w-[480px] lg:max-w-none px-6 pt-4 pb-6 sm:p-8 lg:px-20 lg:py-6 lg:flex-1 lg:flex lg:flex-col">
           {/* Mobile Logo */}
           <div className="lg:hidden mb-3 flex items-center gap-2.5">
             <Image

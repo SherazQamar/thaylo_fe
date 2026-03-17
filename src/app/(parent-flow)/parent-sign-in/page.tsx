@@ -157,9 +157,9 @@ export default function ParentSignIn() {
         </div>
       ) : (
         /* Sign In - Full right panel */
-        <div className="w-full lg:w-1/2 flex-1 flex flex-col px-6 pt-6 pb-8 sm:p-12 lg:px-20 lg:py-16 lg:items-center lg:justify-center">
+        <div className="w-full lg:w-1/2 flex-1 flex flex-col items-center justify-center px-6 pt-6 pb-8 sm:p-12 lg:px-20 lg:py-16">
           {/* Mobile Logo */}
-          <div className="lg:hidden mb-10 flex items-center gap-2.5">
+          <div className="lg:hidden mb-10 flex items-center gap-2.5 self-start">
             <Image
               src="/assets/logo.png"
               alt="Thaylo"
