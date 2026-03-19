@@ -23,7 +23,7 @@ export default function UserDropdown() {
 
   function handleLogout() {
     setOpen(false);
-    router.push("/sign-in");
+    router.push("/wayfinder-sign-in");
   }
 
   return (
