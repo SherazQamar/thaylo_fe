@@ -49,6 +49,15 @@ body {
   animation: float-slow 6s ease-in-out infinite 0.5s;
 }
 
+/* Hide scrollbar but keep scroll functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 /* Override browser autofill styles for dark inputs */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
