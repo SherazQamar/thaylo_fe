@@ -62,20 +62,20 @@ export default function LiveSessionsPage() {
             Student List
           </h2>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 md:gap-3">
-            <div className="rounded-[8px] px-4 py-2 flex items-center gap-2" style={{ backgroundColor: "#313044" }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <div className="rounded-full px-5 py-3 flex items-center gap-2.5 flex-1 sm:flex-none" style={{ backgroundColor: "#313044", border: "1px solid #525162" }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
               </svg>
-              <input type="text" placeholder="Search Students" className="bg-transparent outline-none text-white/80 placeholder-white/40 w-full md:w-[140px]" style={{ ...inter, fontWeight: 400, fontSize: "13px" }} />
+              <input type="text" placeholder="Search Students" className="bg-transparent outline-none text-white/80 placeholder-white/40 w-full md:w-[220px]" style={{ ...inter, fontWeight: 400, fontSize: "14px" }} />
             </div>
             <div className="flex gap-2">
-              <button className="rounded-[8px] px-4 py-2 flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity flex-1 sm:flex-none" style={{ backgroundColor: "#313044" }}>
-                <span style={{ ...inter, fontWeight: 500, fontSize: "13px", color: "rgba(255,255,255,0.7)" }}>Risk</span>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="2"><polyline points="6 9 12 15 18 9" /></svg>
+              <button className="rounded-full px-5 py-2.5 flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity flex-1 sm:flex-none" style={{ backgroundColor: "#313044", border: "1px solid #525162" }}>
+                <span style={{ ...inter, fontWeight: 500, fontSize: "14px", color: "rgba(255,255,255,0.7)" }}>Risk</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="2"><polyline points="6 9 12 15 18 9" /></svg>
               </button>
-              <button className="rounded-[8px] px-4 py-2 flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity flex-1 sm:flex-none" style={{ backgroundColor: "#313044" }}>
-                <span style={{ ...inter, fontWeight: 500, fontSize: "13px", color: "rgba(255,255,255,0.7)" }}>Grade</span>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="2"><polyline points="6 9 12 15 18 9" /></svg>
+              <button className="rounded-full px-5 py-2.5 flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity flex-1 sm:flex-none" style={{ backgroundColor: "#313044", border: "1px solid #525162" }}>
+                <span style={{ ...inter, fontWeight: 500, fontSize: "14px", color: "rgba(255,255,255,0.7)" }}>Grade</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="2"><polyline points="6 9 12 15 18 9" /></svg>
               </button>
             </div>
           </div>

@@ -87,13 +87,13 @@ export default function Footer() {
           <p className="text-[#000000] font-normal" style={{ fontFamily: "Inter, sans-serif", fontSize: "18px", lineHeight: "21.6px", letterSpacing: "-0.48px" }}>Copyright &copy; Thaylo</p>
           <div className="flex items-center gap-5">
             <a href="#" aria-label="Facebook" className="hover:opacity-70 transition-opacity">
-              <Image src="/assets/Facebook symbol.png" alt="Facebook" width={40} height={40} className="w-10 h-10 object-contain" />
+              <Image src="/assets/Facebook symbol.png" alt="Facebook" width={24} height={24} className="w-6 h-6 object-contain" unoptimized />
             </a>
             <a href="#" aria-label="Instagram" className="hover:opacity-70 transition-opacity">
-              <Image src="/assets/Instagram symbol.png" alt="Instagram" width={40} height={40} className="w-10 h-10 object-contain" />
+              <Image src="/assets/Instagram symbol.png" alt="Instagram" width={24} height={24} className="w-6 h-6 object-contain" unoptimized />
             </a>
             <a href="#" aria-label="LinkedIn" className="hover:opacity-70 transition-opacity">
-              <Image src="/assets/linkedin symbol.png" alt="LinkedIn" width={40} height={40} className="w-10 h-10 object-contain" />
+              <Image src="/assets/linkedin symbol.png" alt="LinkedIn" width={24} height={24} className="w-6 h-6 object-contain" unoptimized />
             </a>
           </div>
         </div>

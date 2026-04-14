@@ -32,7 +32,7 @@ export default function Hero() {
       <div className="hidden lg:block absolute bottom-[10%] left-[34%] xl:left-[36%] z-20 animate-float-delayed">
         <FloatingBadge text="Designed for Real Learning" />
       </div>
-      <div className="hidden lg:block absolute bottom-[8%] right-[3%] xl:right-[5%] z-20 animate-float-slow">
+      <div className="hidden lg:block absolute bottom-[10%] right-[3%] xl:right-[5%] z-20 animate-float-slow">
         <FloatingBadge text="Human-Guided AI" />
       </div>
 

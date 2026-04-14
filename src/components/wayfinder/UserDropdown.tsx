@@ -39,17 +39,14 @@ export default function UserDropdown() {
           <p style={{ ...inter, fontWeight: 600, fontSize: "16px", lineHeight: "22px", color: "#FFFFFF" }}>Alex Filler</p>
           <p style={{ ...inter, fontWeight: 400, fontSize: "12px", lineHeight: "16px", color: "rgba(255,255,255,0.5)" }}>Wayfinder</p>
         </div>
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="white"
-          strokeWidth="2"
-          className={`opacity-50 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
-        >
-          <polyline points="6 9 12 15 18 9" />
-        </svg>
+        <Image
+          src="/assets/arrow-down.png"
+          alt=""
+          width={16}
+          height={16}
+          className={`w-4 h-4 object-contain opacity-50 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          unoptimized
+        />
       </button>
 
       {open && (

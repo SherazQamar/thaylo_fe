@@ -61,142 +61,136 @@ export default function StudentDetailsPage() {
         </div>
       </div>
 
-      {/* Engagement / Attendance / Performance Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 mb-6">
-        {[
-          { label: "Engagement", value: "High", dotColor: "#EF4444" },
-          { label: "Attendance", value: "Good", dotColor: "#00CED1" },
-          { label: "Performance", value: "Inconsistent", dotColor: "#00CED1" },
-        ].map((item, i) => (
-          <div key={i} className="rounded-[12px] px-5 py-3.5 flex justify-between items-center" style={{ backgroundColor: "#313044" }}>
-            <div className="flex flex-col gap-1">
-              <p style={{ ...inter, fontWeight: 500, fontSize: "13px", lineHeight: "16px", color: "rgba(255,255,255,0.5)" }}>{item.label}</p>
-              <p style={{ ...inter, fontWeight: 600, fontSize: "20px", lineHeight: "24px", color: "#FFFFFF" }}>{item.value}</p>
+      {/* Two Column Layout - Left (content) + Right (garden + messages) */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4">
+        {/* Left Column */}
+        <div className="flex flex-col gap-4">
+          {/* Curricular Progress */}
+          <div className="rounded-[12px] p-5 md:p-6" style={{ backgroundColor: "#313044" }}>
+            <h3 style={{ ...inter, fontWeight: 700, fontSize: "20px", lineHeight: "28px", color: "#FFFFFF", marginBottom: "20px" }}>Curricular Progress</h3>
+            <div className="flex flex-col gap-5">
+              {[
+                { label: "Reading", value: 65 },
+                { label: "Writing", value: 40 },
+                { label: "Vocabulary", value: 80 },
+              ].map((skill, i) => (
+                <div key={i}>
+                  <div className="flex items-center justify-between mb-2">
+                    <span style={{ ...inter, fontWeight: 500, fontSize: "14px", lineHeight: "20px", color: "rgba(255,255,255,0.7)" }}>{skill.label}</span>
+                    <span style={{ ...inter, fontWeight: 600, fontSize: "14px", lineHeight: "20px", color: "#00CED1" }}>{skill.value}%</span>
+                  </div>
+                  <div className="w-full h-2 rounded-full bg-[#525162]">
+                    <div className="h-full rounded-full bg-[#00CED1]" style={{ width: `${skill.value}%` }} />
+                  </div>
+                </div>
+              ))}
             </div>
-            <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: item.dotColor }} />
           </div>
-        ))}
-      </div>
 
-      {/* Curricular Progress + Growth Garden */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 mb-6">
-        <div className="rounded-[12px] p-5 md:p-6" style={{ backgroundColor: "#313044" }}>
-          <h3 style={{ ...inter, fontWeight: 700, fontSize: "20px", lineHeight: "28px", color: "#FFFFFF", marginBottom: "20px" }}>Curricular Progress</h3>
-          <div className="flex flex-col gap-5">
-            {[
-              { label: "Reading", value: 65 },
-              { label: "Writing", value: 40 },
-              { label: "Vocabulary", value: 80 },
-            ].map((skill, i) => (
-              <div key={i}>
-                <div className="flex items-center justify-between mb-2">
-                  <span style={{ ...inter, fontWeight: 500, fontSize: "14px", lineHeight: "20px", color: "rgba(255,255,255,0.7)" }}>{skill.label}</span>
-                  <span style={{ ...inter, fontWeight: 600, fontSize: "14px", lineHeight: "20px", color: "#00CED1" }}>{skill.value}%</span>
+          {/* Learning Summary */}
+          <div>
+            <h3 style={{ ...inter, fontWeight: 700, fontSize: "20px", lineHeight: "28px", color: "#FFFFFF", marginBottom: "12px" }}>Learning Summary</h3>
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { label: "Current Focus", value: "Reading \u2013 Inference" },
+                { label: "Confidence Level", value: "Medium" },
+                { label: "Engagement", value: "High" },
+              ].map((item, i) => (
+                <div key={i} className="rounded-[12px] p-4" style={{ backgroundColor: "#313044" }}>
+                  <p style={{ ...inter, fontWeight: 500, fontSize: "13px", lineHeight: "20px", color: "rgba(255,255,255,0.5)" }}>{item.label}</p>
+                  <p style={{ ...inter, fontWeight: 600, fontSize: "18px", lineHeight: "26px", color: "#FFFFFF", marginTop: "4px" }}>{item.value}</p>
                 </div>
-                <div className="w-full h-2 rounded-full bg-[#525162]">
-                  <div className="h-full rounded-full" style={{ width: `${skill.value}%`, background: "linear-gradient(90deg, #00CED1, #00CED1)" }} />
+              ))}
+            </div>
+          </div>
+
+          {/* Alerts & Guidance */}
+          <div>
+            <h3 style={{ ...inter, fontWeight: 700, fontSize: "20px", lineHeight: "28px", color: "#FFFFFF", marginBottom: "12px" }}>Alerts &amp; Guidance</h3>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex items-center gap-3 flex-1" style={{ backgroundColor: "rgba(0,206,209,0.08)", border: "1px solid #00CED1", borderRadius: "47px", padding: "10px 16px", height: "64px" }}>
+                <div className="w-9 h-9 rounded-full bg-[#00CED1] flex items-center justify-center flex-shrink-0">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111023" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
                 </div>
+                <p style={{ ...inter, fontWeight: 500, fontSize: "13px", lineHeight: "18px", color: "#FFFFFF" }}>Needed reteach twice in inference this week</p>
               </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="rounded-[12px] p-6 flex flex-col items-center justify-center min-w-0 lg:min-w-[260px]" style={{ backgroundColor: "#313044" }}>
-          <h3 style={{ ...inter, fontWeight: 600, fontSize: "18px", lineHeight: "28px", color: "#FFFFFF", marginBottom: "16px" }}>Growth Garden</h3>
-          <div className="w-[120px] h-[120px] rounded-full border-4 border-[#525162] flex items-center justify-center mb-4 relative">
-            <div className="w-[100px] h-[100px] rounded-full border-4 border-[#00CED1] flex items-center justify-center" style={{ borderColor: "#00CED1", borderTopColor: "transparent" }}>
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#00CED1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 22V8" /><path d="M5 12H2a10 10 0 0020 0h-3" /><path d="M8 5.2C9.2 3.6 10.5 3 12 3c1.5 0 2.8.6 4 2.2" />
-              </svg>
-            </div>
-          </div>
-          <p style={{ ...inter, fontWeight: 700, fontSize: "22px", lineHeight: "28px", color: "#FFFFFF" }}>Stage 3</p>
-          <p style={{ ...inter, fontWeight: 500, fontSize: "13px", lineHeight: "20px", color: "#00CED1", marginTop: "4px" }}>Fatima&apos;s plant is thriving</p>
-          <div className="flex items-center gap-2 mt-4">
-            {["🌱", "💡", "🏆", "+1"].map((badge, i) => (
-              <div key={i} className="w-8 h-8 rounded-full flex items-center justify-center text-sm" style={{ backgroundColor: "#525162" }}>{badge}</div>
-            ))}
-          </div>
-          <p style={{ ...inter, fontWeight: 500, fontSize: "12px", lineHeight: "16px", color: "rgba(255,255,255,0.5)", marginTop: "8px" }}>4 Badges Earned</p>
-        </div>
-      </div>
-
-      {/* Learning Summary */}
-      <div className="mb-6">
-        <h3 style={{ ...inter, fontWeight: 700, fontSize: "20px", lineHeight: "28px", color: "#FFFFFF", marginBottom: "16px" }}>Learning Summary</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
-          {[
-            { label: "Current Focus", value: "Reading – Inference" },
-            { label: "Confidence Level", value: "Medium" },
-            { label: "Engagement", value: "High" },
-          ].map((item, i) => (
-            <div key={i} className="rounded-[12px] p-4 md:p-5" style={{ backgroundColor: "#313044" }}>
-              <p style={{ ...inter, fontWeight: 500, fontSize: "13px", lineHeight: "20px", color: "rgba(255,255,255,0.5)" }}>{item.label}</p>
-              <p style={{ ...inter, fontWeight: 600, fontSize: "20px", lineHeight: "28px", color: "#FFFFFF", marginTop: "4px" }}>{item.value}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Alerts & Guidance */}
-      <div className="mb-6">
-        <h3 style={{ ...inter, fontWeight: 700, fontSize: "20px", lineHeight: "28px", color: "#FFFFFF", marginBottom: "16px" }}>Alerts &amp; Guidance</h3>
-        <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
-          <div className="flex items-center gap-[10px] flex-1" style={{ backgroundColor: "rgba(0,206,209,0.1)", border: "1px solid #00CED1", borderRadius: "47px", padding: "10px 15px", height: "72px" }}>
-            <div className="w-10 h-10 rounded-full bg-[#00CED1] flex items-center justify-center flex-shrink-0">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#111023" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
-            </div>
-            <p style={{ ...inter, fontWeight: 500, fontSize: "14px", lineHeight: "20px", color: "#FFFFFF" }}>Needed reteach twice in inference this week</p>
-          </div>
-          <div className="flex items-center gap-[10px] flex-1" style={{ backgroundColor: "rgba(255,111,111,0.1)", border: "1px solid #FF6F6F", borderRadius: "47px", padding: "10px 15px", height: "72px" }}>
-            <div className="w-10 h-10 rounded-full bg-[#FF6F6F] flex items-center justify-center flex-shrink-0">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M9 12h6" /></svg>
-            </div>
-            <p style={{ ...inter, fontWeight: 500, fontSize: "14px", lineHeight: "20px", color: "#FFFFFF" }}>Recommended next step: 10-min evidence practice</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Messages */}
-      <div className="rounded-[12px] p-4 md:p-5 mb-6" style={{ backgroundColor: "#313044" }}>
-        <div className="flex items-center justify-between mb-4">
-          <h3 style={{ ...inter, fontWeight: 700, fontSize: "18px", lineHeight: "28px", color: "#FFFFFF" }}>Messages</h3>
-          <button className="uppercase cursor-pointer hover:opacity-80 transition-opacity" style={{ ...inter, fontWeight: 700, fontSize: "13.5px", lineHeight: "18px", letterSpacing: "0.8px", color: "#00CED1" }}>Open Chat</button>
-        </div>
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-3 rounded-[12px] p-3" style={{ backgroundColor: "rgba(255,255,255,0.05)" }}>
-            <span className="text-2xl">😊</span>
-            <div>
-              <p style={{ ...inter, fontWeight: 600, fontSize: "14px", lineHeight: "20px", color: "#FFFFFF" }}>Bloom Buddy</p>
-              <p style={{ ...inter, fontWeight: 400, fontSize: "12px", lineHeight: "16px", color: "rgba(255,255,255,0.5)" }}>I feel good!</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 rounded-[12px] p-3" style={{ backgroundColor: "rgba(255,255,255,0.05)" }}>
-            <span className="text-2xl">🔔</span>
-            <div>
-              <p style={{ ...inter, fontWeight: 600, fontSize: "14px", lineHeight: "20px", color: "#FFFFFF" }}>Wayfinder sent note</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Wellbeing Snapshot */}
-      <div className="rounded-[12px] p-4 md:p-6" style={{ backgroundColor: "#313044" }}>
-        <h3 style={{ ...inter, fontWeight: 600, fontSize: "18px", lineHeight: "28px", color: "#FFFFFF", marginBottom: "16px" }}>Wellbeing Snapshot</h3>
-        <div className="grid grid-cols-3 gap-3 md:gap-4">
-          {[
-            { label: "Positive", count: 3 },
-            { label: "Neutral", count: 1 },
-            { label: "Low Mood", count: 0 },
-          ].map((item, i) => (
-            <div key={i} className="rounded-[12px] p-3 md:p-4 flex items-center gap-2 md:gap-3" style={{ backgroundColor: "rgba(255,255,255,0.05)" }}>
-              <span className="text-xl md:text-2xl">😊</span>
-              <div>
-                <p style={{ ...inter, fontWeight: 500, fontSize: "13px", lineHeight: "20px", color: "rgba(255,255,255,0.7)" }}>{item.label}</p>
-                <p style={{ ...inter, fontWeight: 600, fontSize: "18px", lineHeight: "24px", color: "#FFFFFF" }}>{item.count}</p>
+              <div className="flex items-center gap-3 flex-1" style={{ backgroundColor: "rgba(255,111,111,0.08)", border: "1px solid #FF6F6F", borderRadius: "47px", padding: "10px 16px", height: "64px" }}>
+                <div className="w-9 h-9 rounded-full bg-[#FF6F6F] flex items-center justify-center flex-shrink-0">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M9 12h6" /></svg>
+                </div>
+                <p style={{ ...inter, fontWeight: 500, fontSize: "13px", lineHeight: "18px", color: "#FFFFFF" }}>Recommended next step: 10-min evidence practice</p>
               </div>
             </div>
-          ))}
+          </div>
+
+          {/* Wellbeing Snapshot */}
+          <div className="rounded-[12px] p-4 md:p-5" style={{ backgroundColor: "#313044" }}>
+            <h3 style={{ ...inter, fontWeight: 600, fontSize: "18px", lineHeight: "28px", color: "#FFFFFF", marginBottom: "12px" }}>Wellbeing Snapshot</h3>
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { label: "Positive", count: 3, emoji: "😊" },
+                { label: "Neutral", count: 1, emoji: "😐" },
+                { label: "Low Mood", count: 0, emoji: "😔" },
+              ].map((item, i) => (
+                <div key={i} className="rounded-[12px] p-3 flex items-center gap-2" style={{ backgroundColor: "rgba(255,255,255,0.05)" }}>
+                  <span className="text-xl">{item.emoji}</span>
+                  <div>
+                    <p style={{ ...inter, fontWeight: 500, fontSize: "12px", lineHeight: "18px", color: "rgba(255,255,255,0.7)" }}>{item.label}</p>
+                    <p style={{ ...inter, fontWeight: 600, fontSize: "16px", lineHeight: "22px", color: "#FFFFFF" }}>{item.count}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column */}
+        <div className="flex flex-col gap-4">
+          {/* Growth Garden */}
+          <div className="rounded-[12px] p-5 flex flex-col items-center justify-center" style={{ backgroundColor: "#313044" }}>
+            <h3 style={{ ...inter, fontWeight: 600, fontSize: "18px", lineHeight: "28px", color: "#FFFFFF", marginBottom: "12px" }}>Growth Garden</h3>
+            <div className="w-[100px] h-[100px] rounded-full border-4 border-[#525162] flex items-center justify-center mb-3 relative">
+              <div className="w-[80px] h-[80px] rounded-full border-4 border-[#00CED1] flex items-center justify-center" style={{ borderTopColor: "transparent" }}>
+                <Image src="/assets/s0.png" alt="Plant" width={36} height={36} className="w-9 h-9 object-contain" unoptimized />
+              </div>
+            </div>
+            <p style={{ ...inter, fontWeight: 700, fontSize: "20px", lineHeight: "28px", color: "#FFFFFF" }}>Stage 3</p>
+            <p style={{ ...inter, fontWeight: 500, fontSize: "13px", lineHeight: "20px", color: "#00CED1", marginTop: "4px" }}>Fatima&apos;s plant is thriving</p>
+            <div className="flex items-center gap-2 mt-3">
+              {["/assets/s1.png", "/assets/s2.png", "/assets/s3.png"].map((src, i) => (
+                <div key={i} className="w-7 h-7 rounded-full flex items-center justify-center" style={{ backgroundColor: "#525162" }}>
+                  <Image src={src} alt="badge" width={19} height={19} className="w-[19px] h-[19px] object-contain" unoptimized />
+                </div>
+              ))}
+              <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ backgroundColor: "#525162" }}>
+                <span style={{ ...inter, fontWeight: 500, fontSize: "16px", lineHeight: "100%", color: "#00CED1" }}>+1</span>
+              </div>
+            </div>
+            <p style={{ ...inter, fontWeight: 500, fontSize: "11px", lineHeight: "16px", color: "rgba(255,255,255,0.5)", marginTop: "6px" }}>4 Badges Earned</p>
+          </div>
+
+          {/* Messages */}
+          <div className="rounded-[12px] p-4" style={{ backgroundColor: "#313044" }}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 style={{ ...inter, fontWeight: 700, fontSize: "18px", lineHeight: "28px", color: "#FFFFFF" }}>Messages</h3>
+              <Link href="/dashboard/message" className="uppercase cursor-pointer hover:opacity-80 transition-opacity" style={{ ...inter, fontWeight: 700, fontSize: "13px", lineHeight: "18px", letterSpacing: "0.8px", color: "#00CED1" }}>Open Chat</Link>
+            </div>
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center gap-3 rounded-[12px] p-3" style={{ backgroundColor: "rgba(255,255,255,0.05)" }}>
+                <span className="text-2xl">😊</span>
+                <div>
+                  <p style={{ ...inter, fontWeight: 600, fontSize: "14px", lineHeight: "20px", color: "#FFFFFF" }}>Bloom Buddy</p>
+                  <p style={{ ...inter, fontWeight: 400, fontSize: "12px", lineHeight: "16px", color: "rgba(255,255,255,0.5)" }}>I feel good!</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 rounded-[12px] p-3" style={{ backgroundColor: "rgba(255,255,255,0.05)" }}>
+                <span className="text-2xl">🔔</span>
+                <div>
+                  <p style={{ ...inter, fontWeight: 600, fontSize: "14px", lineHeight: "20px", color: "#FFFFFF" }}>Wayfinder sent note</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

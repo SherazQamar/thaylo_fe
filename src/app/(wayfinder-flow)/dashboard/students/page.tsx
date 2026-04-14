@@ -32,11 +32,7 @@ const students = [
 
 function PlantIcon() {
   return (
-    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#00CED1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 22V8" />
-      <path d="M5 12H2a10 10 0 0020 0h-3" />
-      <path d="M8 5.2C9.2 3.6 10.5 3 12 3c1.5 0 2.8.6 4 2.2" />
-    </svg>
+    <Image src="/assets/s0.png" alt="Plant" width={48} height={48} className="w-12 h-12 object-contain" unoptimized />
   );
 }
 
@@ -77,11 +73,14 @@ export default function StudentsPage() {
             <p style={{ ...inter, fontWeight: 500, fontSize: "13px", lineHeight: "20px", color: student.statusColor, marginTop: "4px" }}>{student.status}</p>
             <div className="w-full h-px bg-white/10 my-4" />
             <div className="flex items-center gap-2 mb-2">
-              {["🌱", "💡", "🏆", "+1"].map((badge, j) => (
-                <div key={j} className="w-7 h-7 rounded-full flex items-center justify-center text-xs" style={{ backgroundColor: "#525162", color: "#00CED1" }}>
-                  {badge}
+              {["/assets/s1.png", "/assets/s2.png", "/assets/s3.png"].map((src, j) => (
+                <div key={j} className="w-7 h-7 rounded-full flex items-center justify-center" style={{ backgroundColor: "#525162" }}>
+                  <Image src={src} alt="badge" width={19} height={19} className="w-[19px] h-[19px] object-contain" unoptimized />
                 </div>
               ))}
+              <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ backgroundColor: "#525162" }}>
+                <span style={{ fontFamily: "Inter, sans-serif", fontWeight: 500, fontSize: "16px", lineHeight: "100%", color: "#00CED1" }}>+1</span>
+              </div>
             </div>
             <p style={{ ...inter, fontWeight: 500, fontSize: "12px", lineHeight: "16px", color: "rgba(255,255,255,0.5)" }}>
               {student.badges} Badges Earned

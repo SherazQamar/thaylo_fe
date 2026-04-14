@@ -10,56 +10,31 @@ const navItems = [
     label: "DASHBOARD",
     href: "/dashboard",
     matchPaths: ["/dashboard"],
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-        <polyline points="9 22 9 12 15 12 15 22" />
-      </svg>
-    ),
+    iconSrc: "/assets/dashboard.png",
   },
   {
     label: "STUDENTS",
     href: "/dashboard/students",
     matchPaths: ["/dashboard/students", "/dashboard/student"],
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="8" r="5" />
-        <path d="M8 14h.01M16 14h.01" />
-        <path d="M9 18c0 0 1.5-1 3-1s3 1 3 1" />
-      </svg>
-    ),
+    iconSrc: "/assets/student.png",
   },
   {
     label: "LIVE SESSIONS",
     href: "/dashboard/live-sessions",
     matchPaths: ["/dashboard/live-sessions"],
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
-        <path d="M8 10h.01M12 10h.01M16 10h.01" />
-      </svg>
-    ),
+    iconSrc: "/assets/live.png",
   },
   {
     label: "MESSAGE",
     href: "/dashboard/message",
     matchPaths: ["/dashboard/message"],
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" />
-      </svg>
-    ),
+    iconSrc: "/assets/message.png",
   },
   {
     label: "PROFILE",
     href: "/dashboard/profile",
     matchPaths: ["/dashboard/profile"],
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
-        <circle cx="12" cy="7" r="4" />
-      </svg>
-    ),
+    iconSrc: "/assets/profile.png",
   },
 ];
 
@@ -116,7 +91,17 @@ export default function Sidebar() {
                     : "text-white/60 hover:text-white hover:bg-white/5"
                 }`}
               >
-                <span className="flex-shrink-0">{item.icon}</span>
+                <span className="flex-shrink-0">
+                  <Image
+                    src={item.iconSrc}
+                    alt={item.label}
+                    width={22}
+                    height={22}
+                    className={`w-[22px] h-[22px] object-contain ${isActive ? "brightness-0 invert-0" : "opacity-60"}`}
+                    style={isActive ? { filter: "brightness(0) saturate(100%) invert(72%) sepia(52%) saturate(2894%) hue-rotate(139deg) brightness(96%) contrast(101%)" } : {}}
+                    unoptimized
+                  />
+                </span>
                 {!collapsed && (
                   <span
                     className="text-[13px] font-medium tracking-wider"
@@ -208,7 +193,15 @@ export default function Sidebar() {
                   : "text-white/40"
               }`}
             >
-              {item.icon}
+              <Image
+                src={item.iconSrc}
+                alt={item.label}
+                width={22}
+                height={22}
+                className="w-[22px] h-[22px] object-contain"
+                style={isActive ? { filter: "brightness(0) saturate(100%) invert(72%) sepia(52%) saturate(2894%) hue-rotate(139deg) brightness(96%) contrast(101%)" } : { opacity: 0.4 }}
+                unoptimized
+              />
             </Link>
           );
         })}

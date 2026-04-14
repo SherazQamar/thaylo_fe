@@ -27,7 +27,7 @@ const sections = [
     layout: "image-left" as const,
   },
   {
-    title: "Building Thinking Over Time",
+    title: "Building Thinking\nOver Time",
     paragraphs: [
       "Learning at Thaylo is intentionally sequenced. Students begin by building strong foundations in reading, writing, and reasoning. Over time, they are guided to ask better questions, seek information thoughtfully, connect ideas, and express understanding clearly.",
     ],
@@ -46,7 +46,7 @@ const sections = [
     layout: "image-left" as const,
   },
   {
-    title: "Research, Synthesis, and Communication",
+    title: "Research, Synthesis,\nand Communication",
     paragraphs: [
       "As students progress, learning increasingly centers on gathering information, evaluating sources, organizing ideas, and communicating understanding through writing, discussion, and projects.",
       "These skills are developed gradually and intentionally, so students are not rushed into complex tasks before they are ready.",
@@ -56,7 +56,7 @@ const sections = [
     layout: "text-left" as const,
   },
   {
-    title: "Designed to Grow with Students",
+    title: "Designed to Grow\nwith Students",
     paragraphs: [
       "While Thaylo is currently piloting Grade 4 English Language Arts, the Learning Model is designed to apply consistently across subjects and grade levels.",
       "As additional courses are introduced, the same approach—clear expectations, intentional sequencing, and mastery-based progress—will guide instruction.",
@@ -95,7 +95,7 @@ export default function PersonalisedLearning() {
               Learning Model
             </span>
           </div>
-          <h1 className="text-3xl sm:text-4xl lg:text-[52px] font-normal text-white leading-[1.2] tracking-[-0.64px]">
+          <h1 className="text-3xl sm:text-4xl lg:text-[72px] font-normal text-white leading-[1.2] tracking-[-0.64px]" style={{ fontFamily: "Instrument Sans, sans-serif" }}>
             Learning that adapts to
             <br />
             every child
@@ -129,7 +129,7 @@ export default function PersonalisedLearning() {
                     </span>
                   </div>
                 )}
-                <h2 className="text-[28px] lg:text-[56px] leading-[1.15] lg:leading-[67.2px] text-[#111023] mb-4" style={{ letterSpacing: "-0.64px", fontWeight: 400 }}>
+                <h2 className="text-[28px] lg:text-[56px] leading-[1.15] lg:leading-[67.2px] text-[#111023] mb-4 whitespace-pre-line" style={{ letterSpacing: "-0.64px", fontWeight: 400, fontFamily: "Instrument Sans, sans-serif" }}>
                   {section.title}
                 </h2>
                 {section.paragraphs.map((p, i) => (

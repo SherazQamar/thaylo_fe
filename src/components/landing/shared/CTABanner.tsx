@@ -17,11 +17,11 @@ export default function CTABanner() {
               <br />
               Grow With Thaylo
             </h2>
-            <p className="text-white/70 text-sm leading-relaxed italic mb-4">
+            <p className="italic mb-4" style={{ fontFamily: "Inter, sans-serif", fontWeight: 400, fontSize: "18px", lineHeight: "27px", letterSpacing: "-0.48px", color: "#FFFFFF" }}>
               A thoughtful learning experience designed to support
               understanding, confidence, and growth.
             </p>
-            <button className="px-8 py-3 bg-white text-[#0B1D2E] text-sm font-normal hover:bg-white/90 transition-colors cursor-pointer shadow-lg mb-6" style={{ borderRadius: "12px" }}>
+            <button className="px-8 py-3 bg-white hover:bg-white/90 transition-colors cursor-pointer shadow-lg mb-6" style={{ borderRadius: "12px", fontFamily: "Instrument Sans, sans-serif", fontWeight: 500, fontSize: "18px", lineHeight: "21.6px", letterSpacing: "-0.48px", color: "#111023" }}>
               Start Your Free 7-Day Trial
             </button>
             <Image
@@ -57,11 +57,11 @@ export default function CTABanner() {
 
             {/* Right */}
             <div className="text-right">
-              <p className="text-white/70 text-sm leading-relaxed italic mb-4 sm:mb-6">
+              <p className="italic mb-4 sm:mb-6" style={{ fontFamily: "Inter, sans-serif", fontWeight: 400, fontSize: "18px", lineHeight: "27px", letterSpacing: "-0.48px", color: "#FFFFFF" }}>
                 A thoughtful learning experience designed to support
                 understanding, confidence, and growth.
               </p>
-              <button className="px-6 sm:px-8 py-3 sm:py-3.5 bg-white text-[#0B1D2E] text-sm font-normal hover:bg-white/90 transition-colors cursor-pointer shadow-lg" style={{ borderRadius: "12px" }}>
+              <button className="px-6 sm:px-8 py-3 sm:py-3.5 bg-white hover:bg-white/90 transition-colors cursor-pointer shadow-lg" style={{ borderRadius: "12px", fontFamily: "Instrument Sans, sans-serif", fontWeight: 500, fontSize: "18px", lineHeight: "21.6px", letterSpacing: "-0.48px", color: "#111023" }}>
                 Start Your Free 7-Day Trial
               </button>
             </div>

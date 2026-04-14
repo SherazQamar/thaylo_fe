@@ -165,19 +165,6 @@ export default function WayfinderSignIn() {
             </form>
           </div>
 
-          {/* Create Account */}
-          <p
-            className="text-center text-white/50 text-sm mt-6 sm:mt-8"
-            style={{ fontFamily: "Inter, sans-serif" }}
-          >
-            Not registered yet?{" "}
-            <Link
-              href="#"
-              className="text-[#00CED1] font-medium hover:underline"
-            >
-              Create an Account
-            </Link>
-          </p>
         </div>
       </div>
     </div>

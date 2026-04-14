@@ -132,7 +132,10 @@ function CourseCard({
         </div>
 
         <div className="border-t border-gray-100 pt-4">
-          <button className="w-full py-3.5 rounded-xl border border-[#1A2B3D]/80 text-[#1A2B3D] text-sm font-normal hover:bg-gray-50 transition-colors cursor-pointer">
+          <button
+            className="w-full py-3.5 rounded-xl border border-[#1A2B3D]/80 text-[#1A2B3D] hover:bg-gray-50 transition-colors cursor-pointer capitalize"
+            style={{ fontFamily: "Instrument Sans, sans-serif", fontWeight: 500, fontSize: "18px", lineHeight: "21.6px", letterSpacing: "-0.48px" }}
+          >
             View Module
           </button>
         </div>
