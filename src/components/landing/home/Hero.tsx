@@ -37,7 +37,7 @@ export default function Hero() {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 max-w-[1400px] mx-auto px-6 sm:px-8 lg:px-12 xl:px-16 h-full flex flex-col lg:flex-row lg:items-end pt-24 lg:pt-0 pb-8 lg:pb-16">
+      <div className="relative z-10 max-w-[1400px] mx-auto px-6 sm:px-8 lg:px-12 xl:px-16 h-full flex flex-col lg:flex-row lg:items-end pt-24 lg:pt-0 pb-0 lg:pb-16">
         <div className="w-full lg:max-w-[55%] space-y-6 lg:space-y-9 lg:pb-12 text-center lg:text-left">
           <h1 className="text-3xl sm:text-4xl lg:text-[60px] xl:text-[72px] font-normal text-white leading-[1.2] tracking-[-0.64px]">
             Rooted In Learning,

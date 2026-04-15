@@ -63,8 +63,9 @@ export default function Pricing() {
     <section className="py-12 lg:py-24 px-4 sm:px-6 lg:px-12 bg-white flex flex-col justify-center">
       <div className="max-w-[1320px] mx-auto w-full">
         <SectionLabel text="MEMBERSHIP" />
-        <h2 className="text-xl sm:text-2xl md:text-4xl lg:text-[48px] font-normal text-center mt-4 mb-3 text-[#111023] leading-tight tracking-[-0.64px]">
-          Enrollment Options for the Academic Year
+        <h2 className="text-[24px] sm:text-2xl md:text-4xl lg:text-[48px] font-normal text-center mt-4 mb-3 text-[#111023] leading-[1.2] tracking-[-0.64px]">
+          <span className="block sm:inline">Enrollment Options for the</span>{" "}
+          <span className="block sm:inline">Academic Year</span>
         </h2>
         <p
           className="text-center text-[#606B68] text-xs tracking-[0.1em] uppercase mb-12 lg:mb-16 font-normal"

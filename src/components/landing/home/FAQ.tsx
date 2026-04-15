@@ -58,10 +58,8 @@ export default function FAQ({ maxItems }: { maxItems?: number } = {}) {
           <div className="flex flex-col justify-between">
             <div>
               <SectionLabel text="FAQS" className="!justify-start" />
-              <h2 className="text-2xl md:text-4xl font-normal text-[#1A2B3D] mt-4 mb-8 leading-tight">
-                Questions
-                <br />
-                Parents Ask
+              <h2 className="text-[20px] sm:text-2xl md:text-4xl font-normal text-[#1A2B3D] mt-4 mb-8 leading-[1.2] tracking-[-0.64px]">
+                Questions Parents Ask
               </h2>
             </div>
 
@@ -94,7 +92,7 @@ export default function FAQ({ maxItems }: { maxItems?: number } = {}) {
                   Technical Support
                 </p>
                 <div className="flex items-center justify-between">
-                  <p className="font-medium text-[#0C211D] min-w-0 truncate" style={{ fontSize: "20px", lineHeight: "31.2px", letterSpacing: "-0.48px" }}>
+                  <p className="font-medium text-[#0C211D]" style={{ fontSize: "20px", lineHeight: "31.2px", letterSpacing: "-0.48px" }}>
                     info@thayloglobal.com
                   </p>
                   <svg

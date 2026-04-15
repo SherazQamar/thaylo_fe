@@ -31,11 +31,11 @@ export default function Navbar() {
               height={48}
               className="w-10 h-10 lg:w-12 lg:h-12 object-contain"
             />
-            <div className="hidden sm:block leading-none">
-              <span className="block text-[18px] lg:text-[20px] font-medium tracking-[0.08em]" style={{ background: "linear-gradient(90deg, #60D624, #00A19A)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+            <div className="block leading-none">
+              <span className="block text-[16px] sm:text-[18px] lg:text-[20px] font-medium tracking-[0.08em]" style={{ background: "linear-gradient(90deg, #60D624, #00A19A)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
                 THAYLO
               </span>
-              <span className="block text-[8px] lg:text-[9px] tracking-[0.2em] text-[#60D624]/70 uppercase mt-0.5">
+              <span className="block text-[7px] sm:text-[8px] lg:text-[9px] tracking-[0.2em] text-[#60D624]/70 uppercase mt-0.5">
                 GLOBAL AI SCHOOL
               </span>
             </div>

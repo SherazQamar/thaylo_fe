@@ -1,30 +1,34 @@
 import React from "react";
+import Image from "next/image";
 
 
 const courses = [
   {
     title: "Grade 4 ELA",
+    mobileClassTitle: "Grade 4 English Language Arts I",
     instructor: "Dr. Emily Carter",
     lessons: 12,
     duration: "10h 55m",
     rating: 4.9,
-    color: "from-amber-200 to-amber-400",
+    image: "/assets/Grade-4-ELA.png",
   },
   {
     title: "Grade 3 Math",
+    mobileClassTitle: "Grade 3 Mathematics I",
     instructor: "Dr. Emily Carter",
     lessons: 12,
     duration: "10h 55m",
     rating: 4.9,
-    color: "from-rose-200 to-rose-400",
+    image: "/assets/Grade-3-Math.png",
   },
   {
     title: "Grade 5 Science",
+    mobileClassTitle: "Grade 5 Science I",
     instructor: "Dr. Emily Carter",
     lessons: 12,
     duration: "10h 55m",
     rating: 4.9,
-    color: "from-emerald-200 to-emerald-400",
+    image: "/assets/Grade-5-Science.png",
   },
 ];
 
@@ -36,7 +40,7 @@ export default function CoursePilot() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 sm:mb-12 gap-4">
           <div>
   
-            <h2 className="font-normal text-[#0C211D]" style={{ fontSize: "56px", lineHeight: "67.2px", letterSpacing: "-0.64px" }}>
+            <h2 className="hidden sm:block font-normal text-[#0C211D]" style={{ fontSize: "56px", lineHeight: "67.2px", letterSpacing: "-0.64px" }}>
               Grade 4 English Language Arts Pilot
             </h2>
           </div>
@@ -46,7 +50,7 @@ export default function CoursePilot() {
         </div>
 
         {/* Course Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-5">
+        <div className="flex flex-col sm:grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-5">
           {courses.map((course, index) => (
             <CourseCard key={index} {...course} />
           ))}
@@ -62,22 +66,38 @@ function CourseCard({
   lessons,
   duration,
   rating,
-  color,
+  image,
+  mobileClassTitle,
 }: {
   title: string;
+  mobileClassTitle: string;
   instructor: string;
   lessons: number;
   duration: string;
   rating: number;
-  color: string;
+  image: string;
 }) {
   return (
     <div className="bg-white rounded-[15px] shadow hover:shadow-lg transition-shadow border border-gray-100 p-3">
-      {/* Image placeholder */}
-      <div
-        className={`h-56 bg-gradient-to-br ${color} relative flex items-center justify-center rounded-[10px] overflow-hidden`}
-      >
-        <span className="text-white/60 text-xs">Course Image</span>
+      {/* Mobile class header */}
+      <div className="sm:hidden px-2 pt-1 pb-3">
+        <p className="text-[#606B68] uppercase tracking-wide mb-2" style={{ fontFamily: "Inter, sans-serif", fontSize: "10px", lineHeight: "12px" }}>
+          <span className="inline-block w-2 h-2 rounded-[2px] bg-[#14B8A6] mr-2 align-middle" />
+          Featured Class
+        </p>
+        <p className="text-[#0C211D] truncate" style={{ fontSize: "18px", lineHeight: "21.6px", letterSpacing: "-0.48px" }}>
+          {mobileClassTitle}
+        </p>
+      </div>
+
+      {/* Course image */}
+      <div className="h-56 relative rounded-[10px] overflow-hidden">
+        <Image
+          src={image}
+          alt={title}
+          fill
+          className="object-cover"
+        />
       </div>
 
       <div className="pt-5 px-2 pb-1">
@@ -85,8 +105,8 @@ function CourseCard({
         <p className="font-normal text-[#606B68] mb-5" style={{ fontSize: "18px", lineHeight: "27px", letterSpacing: "-0.48px" }}>{instructor}</p>
 
         {/* Meta info */}
-        <div className="flex items-center gap-3 mb-4" style={{ fontSize: "18px", lineHeight: "18px", letterSpacing: "-0.48px" }}>
-          <div className="flex items-center gap-1.5 text-[#0C211D]" style={{ fontFamily: "Inter, sans-serif" }}>
+        <div className="flex items-center mb-4" style={{ fontSize: "18px", lineHeight: "18px", letterSpacing: "-0.48px" }}>
+          <div className="flex items-center gap-1.5 pr-3 border-r border-gray-300 text-[#0C211D]" style={{ fontFamily: "Inter, sans-serif" }}>
             <svg
               width="16"
               height="16"
@@ -100,8 +120,7 @@ function CourseCard({
             </svg>
             <span>{lessons} Lessons</span>
           </div>
-          <span className="text-gray-300">|</span>
-          <div className="flex items-center gap-1.5 text-[#0C211D]" style={{ fontFamily: "Inter, sans-serif" }}>
+          <div className="flex items-center gap-1.5 px-3 border-r border-gray-300 text-[#0C211D]" style={{ fontFamily: "Inter, sans-serif" }}>
             <svg
               width="16"
               height="16"
@@ -115,8 +134,7 @@ function CourseCard({
             </svg>
             <span>{duration}</span>
           </div>
-          <span className="text-gray-300">|</span>
-          <div className="flex items-center gap-1.5 text-[#0C211D]" style={{ fontFamily: "Inter, sans-serif" }}>
+          <div className="flex items-center gap-1.5 pl-3 text-[#0C211D]" style={{ fontFamily: "Inter, sans-serif" }}>
             <svg
               width="16"
               height="16"

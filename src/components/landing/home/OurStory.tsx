@@ -9,7 +9,10 @@ export default function OurStory() {
       <div className="max-w-7xl mx-auto">
         <SectionLabel text="OUR STORY" />
         <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-[56px] font-normal text-center mt-4 mb-8 max-w-[1170px] mx-auto leading-[1.2] lg:leading-[67.2px] tracking-[-0.64px] text-[#0C211D]">
-          Mastery-based learning powered by AI, guided by human pedagogy--so students move forward only when they truly understand
+          <span className="lg:hidden">Global AI School for Real World Brilliance</span>
+          <span className="hidden lg:inline">
+            Mastery-based learning powered by AI, guided by human pedagogy--so students move forward only when they truly understand
+          </span>
         </h2>
 
         {/* Bento Grid */}
@@ -134,11 +137,11 @@ export default function OurStory() {
                 Providing easy AI learning that helps to build real skills fast
                 and smart.
               </p>
-              <div className="flex flex-wrap gap-3 pt-2">
-                <button className="px-6 py-3 text-sm font-normal text-white bg-gradient-to-r from-[#60D624] to-[#00696B] hover:opacity-90 transition-all duration-300 cursor-pointer" style={{ borderRadius: "12px" }}>
+              <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                <button className="w-full sm:w-auto px-6 py-3 text-sm font-normal text-white bg-gradient-to-r from-[#60D624] to-[#00696B] hover:opacity-90 transition-all duration-300 cursor-pointer" style={{ borderRadius: "12px" }}>
                   Start Your Trial
                 </button>
-                <button className="px-6 py-3 text-sm font-normal border border-[#1A2B3D] text-[#1A2B3D] bg-transparent hover:bg-gray-50 transition-all duration-300 cursor-pointer" style={{ borderRadius: "12px" }}>
+                <button className="w-full sm:w-auto px-6 py-3 text-sm font-normal border border-[#1A2B3D] text-[#1A2B3D] bg-transparent hover:bg-gray-50 transition-all duration-300 cursor-pointer" style={{ borderRadius: "12px" }}>
                   Learn More
                 </button>
               </div>
