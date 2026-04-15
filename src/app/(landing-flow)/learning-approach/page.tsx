@@ -39,11 +39,11 @@ export default function LearningApproach() {
       </section>
 
       {/* Learning is not one size fits all */}
-      <section className="py-16 lg:py-24 px-4 sm:px-6 lg:px-12 bg-white flex flex-col justify-center">
+      <section className="py-16 lg:py-24 px-4 sm:px-6 lg:px-12 bg-[#F8FAFB] lg:bg-white flex flex-col justify-center">
         <div className="max-w-[1320px] mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-16 items-center">
             {/* Left - Image */}
-            <div className="relative rounded-2xl overflow-hidden min-h-[220px] sm:min-h-[300px] lg:min-h-[380px] bg-[#F1F5F9]">
+            <div className="relative rounded-2xl overflow-hidden min-h-[300px] sm:min-h-[300px] lg:min-h-[380px] bg-[#F1F5F9]">
               <Image
                 src="/assets/learning approach.png"
                 alt="Learning approach"
@@ -53,22 +53,35 @@ export default function LearningApproach() {
             </div>
 
             {/* Right - Text */}
-            <div className="space-y-4">
+            <div className="space-y-4 text-left">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-sm bg-[#14B8A6]" />
                 <span
-                  className="text-[14px] md:text-[18px] font-normal uppercase tracking-[-0.48px] text-[#606B68] leading-[27px]"
+                  className="text-[18px] md:text-[18px] font-normal uppercase tracking-[-0.48px] text-[#606B68] leading-[27px]"
                   style={{ fontFamily: "Inter, sans-serif" }}
                 >
                   WHO WE ARE
                 </span>
               </div>
-              <h2 className="text-[28px] lg:text-[56px] text-[#111023]" style={{ lineHeight: "67.2px", letterSpacing: "-0.64px", fontWeight: 400 }}>
+              <h2 className="text-[20px] lg:text-[56px] text-[#111023] leading-[1.2] lg:leading-[67.2px] tracking-[-0.64px]" style={{ fontWeight: 400 }}>
                 Learning is not one size fits all
               </h2>
               <p
-                className="text-[#606B68] font-normal"
-                style={{ fontFamily: "Inter, sans-serif", fontSize: "18px", lineHeight: "27px", letterSpacing: "-0.48px" }}
+                className="sm:hidden text-[#606B68] font-normal text-[16px] leading-[1.45] tracking-[-0.32px]"
+                style={{ fontFamily: "Inter, sans-serif" }}
+              >
+                <span className="block whitespace-nowrap">Every child learns in a different way. Some</span>
+                <span className="block whitespace-nowrap">children need more time. Some learn faster</span>
+                <span className="block whitespace-nowrap">with visuals. Others understand better</span>
+                <span className="block whitespace-nowrap">through practice and repetition. Traditional</span>
+                <span className="block whitespace-nowrap">learning methods often move at a fixed</span>
+                <span className="block whitespace-nowrap">pace,</span>
+                <span className="block whitespace-nowrap">which can make children feel pressured,</span>
+                <span className="block whitespace-nowrap">bored, or left behind.</span>
+              </p>
+              <p
+                className="hidden sm:block text-[#606B68] font-normal text-[18px] leading-[1.55] tracking-[-0.48px]"
+                style={{ fontFamily: "Inter, sans-serif" }}
               >
                 Every child learns in a different way. Some children need more
                 time. Some learn faster with visuals. Others understand better
@@ -85,7 +98,7 @@ export default function LearningApproach() {
       <section className="py-12 px-4 sm:px-6 lg:px-12 bg-white flex flex-col justify-center">
         <div className="max-w-[1320px] mx-auto">
           <SectionLabel text="WHY US" />
-          <h2 className="text-[24px] lg:text-[56px] text-center mt-4 mb-10 sm:mb-16 text-[#111023]" style={{ lineHeight: "67.2px", letterSpacing: "-0.64px", fontWeight: 400 }}>
+          <h2 className="text-[20px] lg:text-[56px] text-center mt-4 mb-10 sm:mb-16 text-[#111023] leading-[1.2] lg:leading-[67.2px] tracking-[-0.64px]" style={{ fontWeight: 400 }}>
             What personalized learning
             <br />
             means at THAYLO
@@ -120,7 +133,7 @@ export default function LearningApproach() {
             </div>
 
             {/* Center - Character */}
-            <div className="flex justify-center items-center order-first lg:order-none">
+            <div className="hidden lg:flex justify-center items-center order-first lg:order-none">
               <Image
                 src="/assets/character-jumping.png"
                 alt="Thaylo Character"
@@ -164,7 +177,7 @@ export default function LearningApproach() {
       <section className="py-12 lg:py-24 px-4 sm:px-6 lg:px-12 bg-[#EBEEF2] flex flex-col justify-center">
         <div className="max-w-[1320px] mx-auto">
           <SectionLabel text="PERSONALIZED LEARNING" />
-          <h2 className="text-[24px] lg:text-[56px] text-center text-[#111023] mt-4 mb-4" style={{ lineHeight: "67.2px", letterSpacing: "-0.64px", fontWeight: 400 }}>
+          <h2 className="text-[20px] lg:text-[56px] text-center text-[#111023] mt-4 mb-4 leading-[1.2] lg:leading-[67.2px] tracking-[-0.64px]" style={{ fontWeight: 400 }}>
             How THAYLO personalizes
             <br />
             learning
@@ -224,7 +237,7 @@ export default function LearningApproach() {
       </section>
 
       {/* Building strong learning foundations */}
-      <section className="py-12 lg:py-24 px-4 sm:px-6 lg:px-12 bg-white flex flex-col justify-center">
+      <section className="py-12 lg:py-24 px-4 sm:px-6 lg:px-12 bg-[#F8FAFB] lg:bg-white flex flex-col justify-center">
         <div className="max-w-[1320px] mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             {/* Left - Text */}
@@ -235,12 +248,12 @@ export default function LearningApproach() {
                   Personalized Learning
                 </span>
               </div>
-              <h2 className="text-[28px] lg:text-[56px] text-[#111023] mb-4" style={{ lineHeight: "67.2px", letterSpacing: "-0.64px", fontWeight: 400 }}>
+              <h2 className="text-[20px] lg:text-[56px] text-[#111023] mb-4 leading-[1.2] lg:leading-[67.2px] tracking-[-0.64px]" style={{ fontWeight: 400 }}>
                 Building strong learning
                 <br />
                 foundations
               </h2>
-              <p className="text-[#606B68] font-normal mb-6" style={{ fontFamily: "Inter, sans-serif", fontSize: "18px", lineHeight: "27px", letterSpacing: "0px" }}>
+              <p className="text-[#606B68] font-normal mb-6 text-[18px] leading-[1.5] tracking-[-0.48px]" style={{ fontFamily: "Inter, sans-serif" }}>
                 Early learning shapes how children think, solve problems, and build confidence
                 in the future. By personalizing learning early, THAYLO helps children develop:
               </p>
@@ -253,7 +266,7 @@ export default function LearningApproach() {
                 ].map((item) => (
                   <li key={item} className="flex items-center gap-3">
                     <Image src="/assets/mdi_tick-circle-outline.png" alt="" width={24} height={24} className="w-6 h-6 flex-shrink-0" />
-                    <span className="text-[#606B68] font-normal" style={{ fontFamily: "Inter, sans-serif", fontSize: "18px", lineHeight: "27px", letterSpacing: "0px" }}>{item}</span>
+                    <span className="text-[#606B68] font-normal text-[18px] leading-[1.5] tracking-[-0.48px]" style={{ fontFamily: "Inter, sans-serif" }}>{item}</span>
                   </li>
                 ))}
               </ul>

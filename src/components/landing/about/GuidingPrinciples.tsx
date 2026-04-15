@@ -70,7 +70,7 @@ export default function GuidingPrinciples() {
           Our Guiding Principles
         </h2>
         <p
-          className="text-white/70 text-[13px] sm:text-sm lg:text-base leading-[1.6] font-normal text-center max-w-md sm:max-w-3xl mx-auto mb-8 lg:mb-16"
+          className="hidden md:block text-white/70 text-[13px] sm:text-sm lg:text-base leading-[1.6] font-normal text-center max-w-md sm:max-w-3xl mx-auto mb-8 lg:mb-16"
           style={{ fontFamily: "Inter, sans-serif" }}
         >
           Thaylo is guided by a clear set of educational principles rooted in

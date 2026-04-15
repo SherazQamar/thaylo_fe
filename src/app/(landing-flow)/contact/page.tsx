@@ -70,26 +70,26 @@ export default function ContactPage() {
             <div className="text-center lg:text-left">
               <div className="flex items-center justify-center lg:justify-start gap-2 mb-8">
                 <span className="w-2.5 h-2.5 rounded-sm bg-[#14B8A6]" />
-                <span className="text-sm font-normal tracking-widest text-[#6B7280] uppercase">
+                <span className="text-[18px] lg:text-sm font-normal tracking-[-0.48px] lg:tracking-widest text-[#6B7280] uppercase">
                   Lets Talk
                 </span>
               </div>
 
               <a
                 href="mailto:info@thaylo.com"
-                className="block text-3xl sm:text-4xl lg:text-[44px] font-medium text-[#111023] mb-4 hover:text-[#14B8A6] transition-colors leading-[1.2] tracking-[-0.54px]"
+                className="block text-[28px] sm:text-4xl lg:text-[44px] font-medium text-[#111023] mb-4 hover:text-[#14B8A6] transition-colors leading-[1.2] tracking-[-0.54px] break-words"
               >
                 info@thaylo.com
               </a>
 
               <a
                 href="tel:+18006339870"
-                className="block text-3xl sm:text-4xl lg:text-[44px] font-medium text-[#111023] mb-10 hover:text-[#14B8A6] transition-colors leading-[1.2] tracking-[-0.54px]"
+                className="block text-[28px] sm:text-4xl lg:text-[44px] font-medium text-[#111023] mb-10 hover:text-[#14B8A6] transition-colors leading-[1.2] tracking-[-0.54px] whitespace-nowrap"
               >
                 +1 (800) 633 – 9870
               </a>
 
-              <div className="flex items-center justify-center lg:justify-start gap-3">
+              <div className="flex items-center justify-center lg:justify-start gap-5 lg:gap-3">
                 <SocialLink
                   href="#"
                   label="Instagram"
@@ -305,12 +305,12 @@ function SocialLink({
   return (
     <a
       href={href}
-      className="w-11 h-11 rounded-full bg-[#0B1D2E] flex items-center justify-center hover:bg-[#162A3E] transition-colors"
+      className="w-20 h-20 lg:w-11 lg:h-11 rounded-full bg-[#0B1D2E] flex items-center justify-center hover:bg-[#162A3E] transition-colors"
       aria-label={label}
     >
       <svg
-        width="16"
-        height="16"
+        width="30"
+        height="30"
         viewBox="0 0 24 24"
         fill={stroke ? "none" : "white"}
         stroke={stroke ? "white" : "none"}

@@ -22,7 +22,7 @@ export default function CTABanner() {
               <span className="block">Help Your Child Grow With</span>
               <span className="block">Thaylo</span>
             </h2>
-            <p className="mb-5 max-w-[320px]" style={{ fontFamily: "Inter, sans-serif", fontWeight: 400, fontSize: "18px", lineHeight: "1.5", letterSpacing: "-0.48px", color: "#FFFFFF" }}>
+            <p className="mb-5 max-w-[320px]" style={{ fontFamily: "Inter, sans-serif", fontWeight: 400, fontSize: "16px", lineHeight: "1.45", letterSpacing: "-0.32px", color: "#FFFFFF" }}>
               <span className="block">A thoughtful learning experience</span>
               <span className="block">designed to support understanding,</span>
               <span className="block">confidence, and growth.</span>
@@ -30,13 +30,15 @@ export default function CTABanner() {
             <button className="w-full max-w-[300px] px-8 py-3 bg-white hover:bg-white/90 transition-colors cursor-pointer shadow-lg mb-3" style={{ borderRadius: "12px", fontFamily: "Instrument Sans, sans-serif", fontWeight: 500, fontSize: "18px", lineHeight: "21.6px", letterSpacing: "-0.48px", color: "#111023" }}>
               Start Your Free 7-Day Trial
             </button>
-            <Image
-              src="/assets/character-sitting.png"
-              alt="Thaylo Character"
-              width={400}
-              height={450}
-              className="w-[300px] h-auto object-contain drop-shadow-2xl"
-            />
+            <div className="w-full max-w-[320px] h-[280px] overflow-hidden flex justify-center">
+              <Image
+                src="/assets/character-sitting.png"
+                alt="Thaylo Character"
+                width={420}
+                height={560}
+                className="w-[320px] h-[420px] object-cover object-top drop-shadow-2xl"
+              />
+            </div>
           </div>
 
           {/* Desktop Layout */}
