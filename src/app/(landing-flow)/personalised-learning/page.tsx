@@ -105,7 +105,7 @@ export default function PersonalisedLearning() {
 
       {/* Alternating Content Sections */}
       {sections.map((section, index) => (
-        <section key={index} className="py-4 lg:py-10 px-4 sm:px-6 lg:px-12 bg-white">
+        <section key={index} className="py-4 lg:py-10 px-4 sm:px-6 lg:px-12 bg-[#F8FAFB] lg:bg-white">
           <div className="max-w-[1320px] mx-auto">
             {/* Label - only on first section, desktop only (above grid) */}
             {section.label && (
@@ -124,16 +124,16 @@ export default function PersonalisedLearning() {
                 {section.label && (
                   <div className="flex lg:hidden items-center gap-2 mb-3">
                     <span className="w-2.5 h-2.5 rounded-sm bg-[#14B8A6]" />
-                    <span className="text-xs font-normal tracking-widest text-[#6B7280] uppercase">
+                    <span className="text-[18px] font-normal tracking-[-0.48px] text-[#6B7280] uppercase leading-[1.2]">
                       {section.label}
                     </span>
                   </div>
                 )}
-                <h2 className="text-[28px] lg:text-[56px] leading-[1.15] lg:leading-[67.2px] text-[#111023] mb-4 whitespace-pre-line" style={{ letterSpacing: "-0.64px", fontWeight: 400, fontFamily: "Instrument Sans, sans-serif" }}>
+                <h2 className="text-[20px] lg:text-[56px] leading-[1.2] lg:leading-[67.2px] text-[#111023] mb-4 whitespace-pre-line tracking-[-0.64px]" style={{ fontWeight: 400, fontFamily: "Instrument Sans, sans-serif" }}>
                   {section.title}
                 </h2>
                 {section.paragraphs.map((p, i) => (
-                  <p key={i} className="text-[#606B68] mb-3 last:mb-0" style={{ fontFamily: "Inter, sans-serif", fontSize: "18px", lineHeight: "27px", letterSpacing: "-0.48px", fontWeight: 400 }}>
+                  <p key={i} className="text-[#606B68] mb-3 last:mb-0 text-[18px] leading-[1.5] tracking-[-0.48px]" style={{ fontFamily: "Inter, sans-serif", fontWeight: 400 }}>
                     {p}
                   </p>
                 ))}
