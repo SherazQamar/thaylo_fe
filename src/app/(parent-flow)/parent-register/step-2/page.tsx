@@ -1,26 +1,52 @@
 "use client";
 
-import React, { useState, useRef, FormEvent } from "react";
+import React, { useState, useRef, FormEvent, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-
-interface Child {
-  name: string;
-  grade: string;
-  pin: string;
-}
+import { getUserToken } from "@/lib/auth-cookies";
+import { useRedirectIfFamilyRegistered } from "@/hooks/use-redirect-if-family-registered";
+import {
+  useRegisterWizardStore,
+  type RegisterChildDraft,
+} from "@/stores/register-wizard.store";
 
 export default function ParentRegisterStep2() {
   const router = useRouter();
-  const [children, setChildren] = useState<Child[]>([]);
+  const children = useRegisterWizardStore((s) => s.children);
+  const addChild = useRegisterWizardStore((s) => s.addChild);
+  const updateChild = useRegisterWizardStore((s) => s.updateChild);
+  const removeChild = useRegisterWizardStore((s) => s.removeChild);
   const [showModal, setShowModal] = useState(false);
+  const [editingChildId, setEditingChildId] = useState<string | null>(null);
   const [studentName, setStudentName] = useState("");
   const [grade, setGrade] = useState("");
   const [pin, setPin] = useState(["", "", "", ""]);
+  const [modalError, setModalError] = useState<string | null>(null);
   const pinRefs = [useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null)];
 
+  useRedirectIfFamilyRegistered();
+
+  useEffect(() => {
+    if (!getUserToken()) {
+      router.replace("/parent-sign-in");
+    }
+  }, [router]);
+
+  function resetModalForm() {
+    setStudentName("");
+    setGrade("");
+    setPin(["", "", "", ""]);
+    setModalError(null);
+    setEditingChildId(null);
+  }
+
+  function closeModal() {
+    resetModalForm();
+    setShowModal(false);
+  }
+
   function handlePinChange(index: number, value: string) {
-    if (value.length > 1) return;
+    if (!/^\d?$/.test(value)) return;
     const newPin = [...pin];
     newPin[index] = value;
     setPin(newPin);
@@ -35,20 +61,65 @@ export default function ParentRegisterStep2() {
     }
   }
 
-  function handleAddChild(e: FormEvent) {
+  function handleSaveChild(e: FormEvent) {
     e.preventDefault();
-    if (!studentName || !grade) return;
-    setChildren([...children, { name: studentName, grade, pin: pin.join("") }]);
-    setStudentName("");
-    setGrade("");
-    setPin(["", "", "", ""]);
-    setShowModal(false);
+    setModalError(null);
+
+    const userName = studentName.trim();
+    const pinStr = pin.join("");
+
+    if (!userName) {
+      setModalError("Student name is required");
+      return;
+    }
+    if (!grade) {
+      setModalError("Grade is required");
+      return;
+    }
+    if (pinStr.length !== 4) {
+      setModalError("PIN must be 4 digits");
+      return;
+    }
+
+    const duplicate = children.some(
+      (c) =>
+        c.userName.toLowerCase() === userName.toLowerCase() &&
+        c.localId !== editingChildId,
+    );
+    if (duplicate) {
+      setModalError("A child with this name already exists in your list");
+      return;
+    }
+
+    if (editingChildId) {
+      updateChild(editingChildId, { userName, grade, pin: pinStr });
+    } else {
+      addChild({ userName, grade, pin: pinStr });
+    }
+
+    closeModal();
   }
 
   function handleContinue() {
     if (children.length === 0) return;
     router.push("/parent-register/step-3");
   }
+
+  function openAddModal() {
+    resetModalForm();
+    setShowModal(true);
+  }
+
+  function openEditModal(child: RegisterChildDraft) {
+    setEditingChildId(child.localId);
+    setStudentName(child.userName);
+    setGrade(child.grade);
+    setPin(child.pin.split("").concat(["", "", "", ""]).slice(0, 4));
+    setModalError(null);
+    setShowModal(true);
+  }
+
+  const isEditing = editingChildId !== null;
 
   const gradeGroups = ["K-2", "3-5", "6-8"];
   const grades = ["K", "1", "2", "3", "4", "5", "6"];
@@ -186,22 +257,22 @@ export default function ParentRegisterStep2() {
               ) : (
                 /* Children List */
                 <div className="space-y-3 mb-6">
-                  {children.map((child, i) => (
-                    <div key={i} className="flex items-center justify-between rounded-[16px] bg-[#313044] border border-[#525162]/50 px-4 py-3">
+                  {children.map((child) => (
+                    <div key={child.localId} className="flex items-center justify-between rounded-[16px] bg-[#313044] border border-[#525162]/50 px-4 py-3">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-[#525162] flex items-center justify-center text-lg">
                           🧒
                         </div>
                         <div>
-                          <p className="text-white text-sm font-semibold" style={{ fontFamily: "Inter, sans-serif" }}>{child.name}</p>
-                          <p className="text-white/50 text-xs" style={{ fontFamily: "Inter, sans-serif" }}>Grade {child.grade}</p>
+                          <p className="text-white text-sm font-semibold" style={{ fontFamily: "Inter, sans-serif" }}>{child.userName}</p>
+                          <p className="text-white/50 text-xs" style={{ fontFamily: "Inter, sans-serif" }}>Grade {child.grade ?? "—"}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
                         <button
+                          type="button"
                           onClick={() => {
-                            const updated = children.filter((_, idx) => idx !== i);
-                            setChildren(updated);
+                            removeChild(child.localId);
                           }}
                           className="text-white/40 hover:text-red-400 transition-colors cursor-pointer"
                         >
@@ -210,7 +281,10 @@ export default function ParentRegisterStep2() {
                           </svg>
                         </button>
                         <button
+                          type="button"
+                          onClick={() => openEditModal(child)}
                           className="text-white/40 hover:text-[#00CED1] transition-colors cursor-pointer"
+                          aria-label={`Edit ${child.userName}`}
                         >
                           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                             <path d="M11 3l4 4-9 9H2v-4l9-9z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -239,7 +313,7 @@ export default function ParentRegisterStep2() {
               {/* Add Child Link */}
               <p className="text-center mt-4">
                 <button
-                  onClick={() => setShowModal(true)}
+                  onClick={openAddModal}
                   className="text-[#00CED1] text-sm font-medium underline cursor-pointer"
                   style={{ fontFamily: "Inter, sans-serif" }}
                 >
@@ -254,16 +328,16 @@ export default function ParentRegisterStep2() {
       {/* Add Child Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-          <div className="absolute inset-0 bg-black/60" onClick={() => setShowModal(false)} />
+          <div className="absolute inset-0 bg-black/60" onClick={closeModal} />
           <div
             className="relative w-full max-w-[360px] lg:max-w-[500px] rounded-[19px] p-6 lg:p-8 border border-[#525162]/50"
             style={{ backgroundColor: "#313044", fontFamily: "Inter, sans-serif" }}
           >
             <h3 className="text-white text-lg font-semibold uppercase tracking-wide text-center mb-6">
-              Add Child
+              {isEditing ? "Edit Child" : "Add Child"}
             </h3>
 
-            <form onSubmit={handleAddChild} className="space-y-5">
+            <form onSubmit={handleSaveChild} className="space-y-5">
               {/* Student Name */}
               <div>
                 <label className="block text-[14px] font-semibold text-white mb-1.5">
@@ -347,12 +421,17 @@ export default function ParentRegisterStep2() {
                 </div>
               </div>
 
-              {/* Add Button */}
+              {modalError && (
+                <p className="text-sm text-red-400 text-center" role="alert">
+                  {modalError}
+                </p>
+              )}
+
               <button
                 type="submit"
                 className="w-full py-4 rounded-[16px] bg-[#00CED1] text-white text-sm font-semibold uppercase tracking-wide hover:bg-[#00B8BB] transition-colors cursor-pointer"
               >
-                Add
+                {isEditing ? "Save changes" : "Add"}
               </button>
             </form>
           </div>

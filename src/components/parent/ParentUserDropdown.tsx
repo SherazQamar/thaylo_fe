@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { logoutParent } from "@/lib/auth-session";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
@@ -23,6 +24,7 @@ export default function ParentUserDropdown() {
 
   function handleLogout() {
     setOpen(false);
+    logoutParent();
     router.push("/parent-sign-in");
   }
 

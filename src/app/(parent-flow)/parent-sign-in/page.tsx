@@ -1,39 +1,113 @@
 "use client";
 
-import React, { useState, FormEvent } from "react";
+import React, { useState, FormEvent, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useMutation } from "@tanstack/react-query";
+import { isAxiosError } from "axios";
+import { forgotPassword, getApiErrorMessage, loginParent } from "@/lib/auth-api";
+import { startResendCooldown } from "@/lib/pending-verification";
+import { setUserSession } from "@/lib/auth-session";
+import { hasCompletedFamilyRegistration } from "@/lib/parent-registration";
 
-type ModalState = "none" | "reset" | "verification" | "new-password";
+type ModalState = "none" | "reset" | "verification";
 
 export default function ParentSignIn() {
   const router = useRouter();
-  const [email, setEmail] = useState("Allex@gmail.com");
-  const [password, setPassword] = useState("123456");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [modal, setModal] = useState<ModalState>("none");
   const [resetEmail, setResetEmail] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [resetError, setResetError] = useState<string | null>(null);
+  const [resetSuccessMessage, setResetSuccessMessage] = useState<string | null>(
+    null,
+  );
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("verified") === "1") {
+      setSuccessMessage("Email verified. You can sign in now.");
+    }
+    if (params.get("reset") === "1") {
+      setSuccessMessage(
+        "Password reset successfully. Sign in with your new password.",
+      );
+    }
+  }, []);
+
+  const loginMutation = useMutation({
+    mutationFn: async () => {
+      const { user, accessToken } = await loginParent(email.trim(), password);
+      setUserSession(accessToken, user);
+      return user;
+    },
+    onSuccess: (user) => {
+      const params = new URLSearchParams(window.location.search);
+      const returnUrl = params.get("returnUrl");
+
+      if (
+        returnUrl?.startsWith("/parent-dashboard") &&
+        hasCompletedFamilyRegistration(user)
+      ) {
+        router.push(returnUrl);
+        return;
+      }
+
+      if (!hasCompletedFamilyRegistration(user)) {
+        router.push("/parent-register/step-2");
+        return;
+      }
+      router.push("/parent-dashboard");
+    },
+    onError: (err) => {
+      if (
+        isAxiosError(err) &&
+        err.response?.status === 403 &&
+        email.trim()
+      ) {
+        const emailTrimmed = email.trim();
+        startResendCooldown();
+        router.push(
+          `/verify-email?${new URLSearchParams({ email: emailTrimmed }).toString()}`,
+        );
+        return;
+      }
+      setError(getApiErrorMessage(err));
+    },
+  });
+
+  const forgotPasswordMutation = useMutation({
+    mutationFn: async () => {
+      const emailTrimmed = resetEmail.trim();
+      if (!emailTrimmed) {
+        throw new Error("Email address is required");
+      }
+      return forgotPassword(emailTrimmed);
+    },
+    onSuccess: (response) => {
+      setResetError(null);
+      setResetSuccessMessage(response.message);
+      setModal("verification");
+    },
+    onError: (err) => {
+      setResetError(getApiErrorMessage(err));
+    },
+  });
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    router.push("/parent-dashboard");
+    setError(null);
+    setSuccessMessage(null);
+    loginMutation.mutate();
   }
 
   function handleSendReset(e: FormEvent) {
     e.preventDefault();
-    setModal("verification");
-  }
-
-  function handleResetPassword() {
-    setModal("new-password");
-  }
-
-  function handleSetNewPassword(e: FormEvent) {
-    e.preventDefault();
-    // TODO: integrate with backend
-    setModal("none");
+    setResetError(null);
+    forgotPasswordMutation.mutate();
   }
 
   // Mask email for display
@@ -95,69 +169,7 @@ export default function ParentSignIn() {
       </div>
 
       {/* Right Half */}
-      {modal === "new-password" ? (
-        /* Enter New Password - Full right panel */
-        <div className="w-full lg:w-1/2 flex-1 flex flex-col px-6 pt-6 pb-8 sm:p-12 lg:px-20 lg:py-16 lg:items-center lg:justify-center">
-          <div className="w-full max-w-[420px] lg:max-w-[560px] mx-auto">
-            <div className="rounded-[16px] p-6 border border-[#525162]/50 lg:bg-transparent lg:rounded-[19px] lg:border lg:border-[#525162]/50 lg:px-10 lg:py-10">
-              <h2
-                className="text-white text-xl sm:text-2xl font-semibold mb-8 tracking-wide uppercase text-center"
-                style={{ fontFamily: "Inter, sans-serif" }}
-              >
-                Enter New Password
-              </h2>
-
-              <form onSubmit={handleSetNewPassword} className="space-y-5">
-                <div>
-                  <label
-                    className="block text-sm font-medium text-white/70 mb-2"
-                    style={{ fontFamily: "Inter, sans-serif" }}
-                  >
-                    New password
-                  </label>
-                  <input
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="••••••••••••••"
-                    required
-                    className="w-full px-4 py-3 sm:py-3.5 rounded-full bg-[#313044] text-white text-sm outline-none border border-transparent focus:border-[#00CED1]/40 transition-colors placeholder:text-white/30"
-                    style={{ fontFamily: "Inter, sans-serif" }}
-                  />
-                </div>
-
-                <div>
-                  <label
-                    className="block text-sm font-medium text-white/70 mb-2"
-                    style={{ fontFamily: "Inter, sans-serif" }}
-                  >
-                    Confirm new password
-                  </label>
-                  <input
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="••••••••••••••"
-                    required
-                    className="w-full px-4 py-3 sm:py-3.5 rounded-full bg-[#313044] text-white text-sm outline-none border border-transparent focus:border-[#00CED1]/40 transition-colors placeholder:text-white/30"
-                    style={{ fontFamily: "Inter, sans-serif" }}
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full py-4 rounded-[16px] bg-[#00CED1] text-white text-sm font-semibold uppercase tracking-wide hover:bg-[#00B8BB] transition-colors cursor-pointer"
-                  style={{ fontFamily: "Inter, sans-serif" }}
-                >
-                  Reset Password
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
-      ) : (
-        /* Sign In - Full right panel */
-        <div className="w-full lg:w-1/2 flex-1 flex flex-col items-center justify-center px-6 pt-6 pb-8 sm:p-12 lg:px-20 lg:py-16">
+      <div className="w-full lg:w-1/2 flex-1 flex flex-col items-center justify-center px-6 pt-6 pb-8 sm:p-12 lg:px-20 lg:py-16">
           {/* Mobile Logo */}
           <div className="lg:hidden mb-10 flex items-center gap-2.5 self-start">
             <Image
@@ -234,7 +246,12 @@ export default function ParentSignIn() {
                 <div className="flex justify-end">
                   <button
                     type="button"
-                    onClick={() => { setResetEmail(""); setModal("reset"); }}
+                    onClick={() => {
+                      setResetEmail("");
+                      setResetError(null);
+                      setResetSuccessMessage(null);
+                      setModal("reset");
+                    }}
                     className="text-[13px] text-[#00CED1] underline font-normal cursor-pointer"
                     style={{ fontFamily: "Inter, sans-serif", lineHeight: "20px" }}
                   >
@@ -242,13 +259,34 @@ export default function ParentSignIn() {
                   </button>
                 </div>
 
+                {successMessage && (
+                  <p
+                    className="text-sm text-[#00CED1] text-center"
+                    style={{ fontFamily: "Inter, sans-serif" }}
+                    role="status"
+                  >
+                    {successMessage}
+                  </p>
+                )}
+
+                {error && (
+                  <p
+                    className="text-sm text-red-400 text-center"
+                    style={{ fontFamily: "Inter, sans-serif" }}
+                    role="alert"
+                  >
+                    {error}
+                  </p>
+                )}
+
                 {/* Sign In Button */}
                 <button
                   type="submit"
-                  className="w-full py-3.5 sm:py-4 rounded-full bg-[#00CED1] text-[#111023] text-sm font-semibold uppercase tracking-wide hover:bg-[#00B8BB] transition-colors cursor-pointer"
+                  disabled={loginMutation.isPending}
+                  className="w-full py-3.5 sm:py-4 rounded-full bg-[#00CED1] text-[#111023] text-sm font-semibold uppercase tracking-wide hover:bg-[#00B8BB] transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                   style={{ fontFamily: "Inter, sans-serif" }}
                 >
-                  Sign In
+                  {loginMutation.isPending ? "Signing in…" : "Sign In"}
                 </button>
               </form>
             </div>
@@ -268,7 +306,6 @@ export default function ParentSignIn() {
             </p>
           </div>
         </div>
-      )}
 
       {/* Reset Password Modal */}
       {modal === "reset" && (
@@ -314,11 +351,18 @@ export default function ParentSignIn() {
                 Enter your email address and we&apos;ll send you instructions to reset your password. For security reasons, we do NOT store your password. So rest assured that we will never send your password via email.
               </p>
 
+              {resetError && (
+                <p className="text-sm text-red-400 text-center" role="alert">
+                  {resetError}
+                </p>
+              )}
+
               <button
                 type="submit"
-                className="w-full py-4 rounded-[16px] bg-[#00CED1] text-white text-sm font-semibold uppercase tracking-wide hover:bg-[#00B8BB] transition-colors cursor-pointer"
+                disabled={forgotPasswordMutation.isPending}
+                className="w-full py-4 rounded-[16px] bg-[#00CED1] text-white text-sm font-semibold uppercase tracking-wide hover:bg-[#00B8BB] transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                Send
+                {forgotPasswordMutation.isPending ? "Sending…" : "Send"}
               </button>
             </form>
           </div>
@@ -344,10 +388,11 @@ export default function ParentSignIn() {
             </button>
 
             <h3 className="text-white text-xl font-bold text-center mb-1">
-              Email verification
+              Check your email
             </h3>
-            <p className="text-white/50 text-sm text-center mb-6">
-              We send a reset password link to your email
+            <p className="text-[#00CED1] text-sm text-center mb-6">
+              {resetSuccessMessage ??
+                "If the email exists, a reset link has been sent."}
             </p>
 
             {/* Email Illustration */}
@@ -373,17 +418,20 @@ export default function ParentSignIn() {
             </div>
 
             <p className="text-white/60 text-sm text-center mb-1">
-              We sent an email to <span className="font-semibold text-white">{maskedEmail}</span>
+              Request sent for{" "}
+              <span className="font-semibold text-white">{maskedEmail}</span>
             </p>
             <p className="text-white/40 text-xs text-center mb-6 leading-relaxed">
-              If this email address was used to create an account, instructions to reset your password will be sent to you. Please check your email.
+              Please check your inbox and spam folder. If an account exists with
+              this email, you will receive reset instructions shortly.
             </p>
 
             <button
-              onClick={handleResetPassword}
+              type="button"
+              onClick={() => setModal("none")}
               className="w-full py-4 rounded-[16px] bg-[#00CED1] text-white text-sm font-semibold uppercase tracking-wide hover:bg-[#00B8BB] transition-colors cursor-pointer"
             >
-              Reset Password
+              Back to Sign In
             </button>
           </div>
         </div>
