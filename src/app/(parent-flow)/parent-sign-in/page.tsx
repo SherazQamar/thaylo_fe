@@ -8,7 +8,7 @@ import { useMutation } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import { forgotPassword, getApiErrorMessage, loginParent } from "@/lib/auth-api";
 import { startResendCooldown } from "@/lib/pending-verification";
-import { setUserSession } from "@/lib/auth-session";
+import { logoutParent, setUserSession } from "@/lib/auth-session";
 import { hasCompletedFamilyRegistration } from "@/lib/parent-registration";
 
 type ModalState = "none" | "reset" | "verification";
@@ -45,6 +45,14 @@ export default function ParentSignIn() {
       return user;
     },
     onSuccess: (user) => {
+      if (user.role !== "PARENT") {
+        logoutParent();
+        setError(
+          "This account cannot sign in here. Please use the Wayfinder sign-in page.",
+        );
+        return;
+      }
+
       const params = new URLSearchParams(window.location.search);
       const returnUrl = params.get("returnUrl");
 

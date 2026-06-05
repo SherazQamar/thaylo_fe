@@ -13,3 +13,17 @@ export async function createChild(payload: CreateChildPayload) {
   const { data } = await api.post<ApiResponse<Child>>("/child", payload);
   return data.data;
 }
+
+export interface LoginChildResponseData {
+  child: Child;
+  accessToken: string;
+}
+
+export async function loginChild(userName: string, pin: string) {
+  const { data } = await api.post<ApiResponse<LoginChildResponseData>>(
+    "/child/login",
+    { userName, pin },
+    { authMode: "none" },
+  );
+  return data.data;
+}

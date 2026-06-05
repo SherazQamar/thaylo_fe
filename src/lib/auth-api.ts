@@ -2,7 +2,7 @@ import { isAxiosError } from "axios";
 import { api } from "@/lib/api";
 import type { UserWithChildren } from "@/lib/parent-registration";
 import { useAuthStore } from "@/stores/auth.store";
-import type { ApiResponse, User } from "@/types/api";
+import type { ApiResponse, PortalUserRole, User } from "@/types/api";
 
 export interface RegisterPayload {
   email: string;
@@ -65,14 +65,6 @@ export async function forgotPassword(email: string) {
   return data;
 }
 
-export async function validateResetToken(token: string) {
-  const { data } = await api.get<ApiResponse<null>>(
-    "/auth/validate-reset-token",
-    { params: { token }, authMode: "none" },
-  );
-  return data;
-}
-
 export interface ResetPasswordPayload {
   token: string;
   newPassword: string;
@@ -88,7 +80,7 @@ export async function resetPassword(payload: ResetPasswordPayload) {
   return data;
 }
 
-export async function loginParent(email: string, password: string) {
+export async function loginUser(email: string, password: string) {
   const { data } = await api.post<ApiResponse<LoginResponseData>>(
     "/auth/login",
     { email, password },
@@ -97,9 +89,29 @@ export async function loginParent(email: string, password: string) {
   return data.data;
 }
 
-export async function fetchParentProfile() {
+export async function loginParent(email: string, password: string) {
+  return loginUser(email, password);
+}
+
+export async function fetchUserProfile() {
   const { data } = await api.get<ApiResponse<UserWithChildren>>("/auth/profile");
   return data.data;
+}
+
+export async function fetchParentProfile() {
+  return fetchUserProfile();
+}
+
+export interface ValidateResetTokenData {
+  role: PortalUserRole;
+}
+
+export async function validateResetToken(token: string) {
+  const { data } = await api.get<ApiResponse<ValidateResetTokenData>>(
+    "/auth/validate-reset-token",
+    { params: { token }, authMode: "none" },
+  );
+  return data;
 }
 
 export async function refreshParentSession() {

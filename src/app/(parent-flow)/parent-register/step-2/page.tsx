@@ -20,9 +20,16 @@ export default function ParentRegisterStep2() {
   const [editingChildId, setEditingChildId] = useState<string | null>(null);
   const [studentName, setStudentName] = useState("");
   const [grade, setGrade] = useState("");
-  const [pin, setPin] = useState(["", "", "", ""]);
+  const [pin, setPin] = useState(["", "", "", "", "", ""]);
   const [modalError, setModalError] = useState<string | null>(null);
-  const pinRefs = [useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null)];
+  const pinRefs = [
+    useRef<HTMLInputElement>(null),
+    useRef<HTMLInputElement>(null),
+    useRef<HTMLInputElement>(null),
+    useRef<HTMLInputElement>(null),
+    useRef<HTMLInputElement>(null),
+    useRef<HTMLInputElement>(null),
+  ];
 
   useRedirectIfFamilyRegistered();
 
@@ -35,7 +42,7 @@ export default function ParentRegisterStep2() {
   function resetModalForm() {
     setStudentName("");
     setGrade("");
-    setPin(["", "", "", ""]);
+    setPin(["", "", "", "", "", ""]);
     setModalError(null);
     setEditingChildId(null);
   }
@@ -50,7 +57,7 @@ export default function ParentRegisterStep2() {
     const newPin = [...pin];
     newPin[index] = value;
     setPin(newPin);
-    if (value && index < 3) {
+    if (value && index < pinRefs.length - 1) {
       pinRefs[index + 1].current?.focus();
     }
   }
@@ -76,8 +83,8 @@ export default function ParentRegisterStep2() {
       setModalError("Grade is required");
       return;
     }
-    if (pinStr.length !== 4) {
-      setModalError("PIN must be 4 digits");
+    if (pinStr.length !== 6) {
+      setModalError("PIN must be 6 digits");
       return;
     }
 
@@ -114,7 +121,7 @@ export default function ParentRegisterStep2() {
     setEditingChildId(child.localId);
     setStudentName(child.userName);
     setGrade(child.grade);
-    setPin(child.pin.split("").concat(["", "", "", ""]).slice(0, 4));
+    setPin(child.pin.split("").concat(["", "", "", "", "", ""]).slice(0, 6));
     setModalError(null);
     setShowModal(true);
   }
@@ -402,7 +409,7 @@ export default function ParentRegisterStep2() {
                 <label className="block text-[14px] font-semibold text-white mb-1.5">
                   Pin
                 </label>
-                <div className="grid grid-cols-4 gap-3">
+                <div className="grid grid-cols-6 gap-3">
                   {pin.map((digit, i) => (
                     <input
                       key={i}

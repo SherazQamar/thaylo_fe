@@ -1,6 +1,6 @@
 import axios, { isAxiosError } from "axios";
 import { getChildToken, getUserToken } from "@/lib/auth-cookies";
-import { logoutParent } from "@/lib/auth-session";
+import { logoutParent, logoutUser } from "@/lib/auth-session";
 
 export type AuthMode = "user" | "child" | "none";
 
@@ -44,13 +44,17 @@ api.interceptors.response.use(
       typeof window !== "undefined"
     ) {
       const authMode = error.config?.authMode ?? "user";
-      if (
-        authMode === "user" &&
-        window.location.pathname.startsWith("/parent-dashboard")
-      ) {
-        logoutParent();
-        const returnUrl = encodeURIComponent(window.location.pathname);
-        window.location.href = `/parent-sign-in?returnUrl=${returnUrl}`;
+      if (authMode === "user") {
+        const path = window.location.pathname;
+        if (path.startsWith("/parent-dashboard")) {
+          logoutParent();
+          const returnUrl = encodeURIComponent(path);
+          window.location.href = `/parent-sign-in?returnUrl=${returnUrl}`;
+        } else if (path.startsWith("/dashboard")) {
+          logoutUser();
+          const returnUrl = encodeURIComponent(path);
+          window.location.href = `/wayfinder-sign-in?returnUrl=${returnUrl}`;
+        }
       }
     }
     return Promise.reject(error);

@@ -4,13 +4,18 @@ import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { logoutUser } from "@/lib/auth-session";
+import { useAuthStore } from "@/stores/auth.store";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
 export default function UserDropdown() {
+  const user = useAuthStore((state) => state.user);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const router = useRouter();
+
+  const displayName = user?.name ?? "Wayfinder";
+  const displayEmail = user?.email ?? "";
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -38,7 +43,7 @@ export default function UserDropdown() {
           <Image src="/assets/wayfinder Em.png" alt="Avatar" width={40} height={40} className="w-full h-full object-cover" />
         </div>
         <div className="hidden sm:block text-left">
-          <p style={{ ...inter, fontWeight: 600, fontSize: "16px", lineHeight: "22px", color: "#FFFFFF" }}>Alex Filler</p>
+          <p style={{ ...inter, fontWeight: 600, fontSize: "16px", lineHeight: "22px", color: "#FFFFFF" }}>{displayName}</p>
           <p style={{ ...inter, fontWeight: 400, fontSize: "12px", lineHeight: "16px", color: "rgba(255,255,255,0.5)" }}>Wayfinder</p>
         </div>
         <Image
@@ -54,8 +59,8 @@ export default function UserDropdown() {
       {open && (
         <div className="absolute right-0 top-full mt-2 w-[200px] rounded-[12px] overflow-hidden z-50 shadow-lg" style={{ backgroundColor: "#313044", border: "1px solid rgba(255,255,255,0.1)" }}>
           <div className="px-4 py-3 border-b border-white/10">
-            <p style={{ ...inter, fontWeight: 600, fontSize: "14px", lineHeight: "20px", color: "#FFFFFF" }}>Alex Filler</p>
-            <p style={{ ...inter, fontWeight: 400, fontSize: "12px", lineHeight: "16px", color: "rgba(255,255,255,0.5)" }}>sheraz@gmail.com</p>
+            <p style={{ ...inter, fontWeight: 600, fontSize: "14px", lineHeight: "20px", color: "#FFFFFF" }}>{displayName}</p>
+            <p style={{ ...inter, fontWeight: 400, fontSize: "12px", lineHeight: "16px", color: "rgba(255,255,255,0.5)" }}>{displayEmail}</p>
           </div>
           <button
             onClick={handleLogout}

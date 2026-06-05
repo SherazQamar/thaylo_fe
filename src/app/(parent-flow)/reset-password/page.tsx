@@ -10,6 +10,7 @@ import {
   resetPassword,
   validateResetToken,
 } from "@/lib/auth-api";
+import { getSignInPathForRole } from "@/lib/portal-auth";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
@@ -44,7 +45,8 @@ function ResetPasswordContent() {
       });
     },
     onSuccess: () => {
-      router.push("/parent-sign-in?reset=1");
+      const role = tokenQuery.data?.data?.role;
+      router.push(`${getSignInPathForRole(role)}?reset=1`);
     },
     onError: (err) => {
       setFormError(getApiErrorMessage(err));
@@ -158,13 +160,22 @@ function ResetPasswordContent() {
                   This reset link is missing a token. Request a new password
                   reset email from sign in.
                 </p>
-                <Link
-                  href="/parent-sign-in"
-                  className="inline-block w-full py-4 rounded-[16px] bg-[#00CED1] text-white text-sm font-semibold uppercase tracking-wide hover:bg-[#00B8BB] transition-colors text-center"
-                  style={inter}
-                >
-                  Back to Sign In
-                </Link>
+                <div className="flex flex-col gap-3">
+                  <Link
+                    href="/wayfinder-sign-in"
+                    className="inline-block w-full py-4 rounded-[16px] bg-[#00CED1] text-white text-sm font-semibold uppercase tracking-wide hover:bg-[#00B8BB] transition-colors text-center"
+                    style={inter}
+                  >
+                    Wayfinder Sign In
+                  </Link>
+                  <Link
+                    href="/parent-sign-in"
+                    className="inline-block w-full py-3 rounded-[12px] border border-[#00CED1]/40 text-[#00CED1] text-sm font-semibold uppercase tracking-wide hover:bg-[#00CED1]/10 transition-colors text-center"
+                    style={inter}
+                  >
+                    Parent Sign In
+                  </Link>
+                </div>
               </div>
             )}
 
@@ -191,13 +202,22 @@ function ResetPasswordContent() {
                   Reset links expire after 15 minutes. Request a new one from
                   sign in.
                 </p>
-                <Link
-                  href="/parent-sign-in"
-                  className="inline-block w-full py-4 rounded-[16px] bg-[#00CED1] text-white text-sm font-semibold uppercase tracking-wide hover:bg-[#00B8BB] transition-colors text-center"
-                  style={inter}
-                >
-                  Back to Sign In
-                </Link>
+                <div className="flex flex-col gap-3">
+                  <Link
+                    href="/wayfinder-sign-in"
+                    className="inline-block w-full py-4 rounded-[16px] bg-[#00CED1] text-white text-sm font-semibold uppercase tracking-wide hover:bg-[#00B8BB] transition-colors text-center"
+                    style={inter}
+                  >
+                    Wayfinder Sign In
+                  </Link>
+                  <Link
+                    href="/parent-sign-in"
+                    className="inline-block w-full py-3 rounded-[12px] border border-[#00CED1]/40 text-[#00CED1] text-sm font-semibold uppercase tracking-wide hover:bg-[#00CED1]/10 transition-colors text-center"
+                    style={inter}
+                  >
+                    Parent Sign In
+                  </Link>
+                </div>
               </div>
             )}
 

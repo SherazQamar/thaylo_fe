@@ -27,10 +27,18 @@ export function decodeAccessTokenPayload(
   }
 }
 
-export function isParentAccessTokenValid(token: string): boolean {
+function isAccessTokenValidForRole(token: string, role: string): boolean {
   const payload = decodeAccessTokenPayload(token);
   if (!payload?.sub) return false;
-  if (payload.role !== "PARENT") return false;
+  if (payload.role !== role) return false;
   if (payload.exp != null && payload.exp * 1000 <= Date.now()) return false;
   return true;
+}
+
+export function isParentAccessTokenValid(token: string): boolean {
+  return isAccessTokenValidForRole(token, "PARENT");
+}
+
+export function isWayfinderAccessTokenValid(token: string): boolean {
+  return isAccessTokenValidForRole(token, "WAY_FINDER");
 }

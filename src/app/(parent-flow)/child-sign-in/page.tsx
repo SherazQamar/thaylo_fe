@@ -3,6 +3,10 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useMutation } from "@tanstack/react-query";
+import { loginChild } from "@/lib/child-api";
+import { getApiErrorMessage } from "@/lib/auth-api";
+import { setChildSession } from "@/lib/auth-session";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
@@ -10,27 +14,49 @@ export default function ChildSignIn() {
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [pin, setPin] = useState<number[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  const loginMutation = useMutation({
+    mutationFn: async () => {
+      const name = username.trim();
+      const pinStr = pin.join("");
+
+      if (!name) {
+        throw new Error("Username is required");
+      }
+      if (pinStr.length !== 6) {
+        throw new Error("PIN must be 6 digits");
+      }
+
+      const { child, accessToken } = await loginChild(name, pinStr);
+      setChildSession(accessToken, child);
+      return child;
+    },
+    onSuccess: () => {
+      router.push("/child-dashboard");
+    },
+    onError: (err) => {
+      setError(getApiErrorMessage(err));
+    },
+  });
 
   function handleNumberPress(num: number) {
-    if (pin.length < 4) {
+    if (loginMutation.isPending) return;
+    if (pin.length < 6) {
       const newPin = [...pin, num];
       setPin(newPin);
-      if (newPin.length === 4) {
-        setTimeout(() => {
-          router.push("/child-dashboard");
-        }, 300);
-      }
     }
   }
 
   function handleBackspace() {
+    if (loginMutation.isPending) return;
     setPin((prev) => prev.slice(0, -1));
   }
 
   function handleSubmit() {
-    if (pin.length === 4) {
-      router.push("/parent-dashboard");
-    }
+    if (loginMutation.isPending) return;
+    setError(null);
+    loginMutation.mutate();
   }
 
   const NumButton = ({ num, onClick }: { num: number; onClick: () => void }) => (
@@ -92,7 +118,7 @@ export default function ChildSignIn() {
           className="text-white text-2xl lg:text-[36px] font-bold mb-3"
           style={inter}
         >
-          Alex Filler
+          Ready to learn?
         </h1>
 
         {/* Username Field */}
@@ -121,7 +147,7 @@ export default function ChildSignIn() {
 
           {/* Pin Dots */}
           <div className="flex items-center gap-2.5 mb-4">
-            {[0, 1, 2, 3].map((i) => (
+            {[0, 1, 2, 3, 4, 5].map((i) => (
               <div
                 key={i}
                 className={`w-3 h-3 rounded-full transition-colors ${
@@ -173,8 +199,19 @@ export default function ChildSignIn() {
             </div>
           </div>
 
+          {error && (
+            <p className="text-sm text-red-400 text-center mt-3" role="alert" style={inter}>
+              {error}
+            </p>
+          )}
+
           {/* Forget PIN */}
-          <button className="text-[#00CED1] text-sm font-medium mt-4 cursor-pointer hover:underline" style={inter}>
+          <button
+            type="button"
+            className="text-[#00CED1] text-sm font-medium mt-4 cursor-pointer hover:underline"
+            style={inter}
+            disabled={loginMutation.isPending}
+          >
             Forget PIN?
           </button>
         </div>

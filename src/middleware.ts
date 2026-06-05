@@ -1,17 +1,47 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { isParentAccessTokenValid } from "@/lib/jwt";
+import {
+  isParentAccessTokenValid,
+  isWayfinderAccessTokenValid,
+} from "@/lib/jwt";
 
 const USER_TOKEN_KEY = "thaylo_access_token";
-const SIGN_IN_PATH = "/parent-sign-in";
+
+type ProtectedPortal = {
+  prefix: string;
+  signInPath: string;
+  isValid: (token: string) => boolean;
+};
+
+const PROTECTED_PORTALS: ProtectedPortal[] = [
+  {
+    prefix: "/parent-dashboard",
+    signInPath: "/parent-sign-in",
+    isValid: isParentAccessTokenValid,
+  },
+  {
+    prefix: "/dashboard",
+    signInPath: "/wayfinder-sign-in",
+    isValid: isWayfinderAccessTokenValid,
+  },
+];
 
 export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  const portal = PROTECTED_PORTALS.find((entry) =>
+    pathname.startsWith(entry.prefix),
+  );
+
+  if (!portal) {
+    return NextResponse.next();
+  }
+
   const token = request.cookies.get(USER_TOKEN_KEY)?.value;
-  const isValid = token ? isParentAccessTokenValid(token) : false;
+  const isValid = token ? portal.isValid(token) : false;
 
   if (!isValid) {
-    const signInUrl = new URL(SIGN_IN_PATH, request.url);
-    signInUrl.searchParams.set("returnUrl", request.nextUrl.pathname);
+    const signInUrl = new URL(portal.signInPath, request.url);
+    signInUrl.searchParams.set("returnUrl", pathname);
 
     const response = NextResponse.redirect(signInUrl);
     if (token) {
@@ -28,5 +58,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/parent-dashboard", "/parent-dashboard/:path*"],
+  matcher: ["/parent-dashboard/:path*", "/dashboard/:path*"],
 };
