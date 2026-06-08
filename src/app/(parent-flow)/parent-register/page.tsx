@@ -3,6 +3,28 @@
 import React, { useState, FormEvent } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useMutation } from "@tanstack/react-query";
+import { US_TIMEZONES } from "@/constants/us-timezones";
+import { getApiErrorMessage, registerParent } from "@/lib/auth-api";
+import {
+  setPendingVerification,
+  startResendCooldown,
+} from "@/lib/pending-verification";
+import {
+  PARENT_PASSWORD_REQUIREMENTS,
+  validateParentPassword,
+} from "@/lib/validation/password";
+
+const inter = { fontFamily: "Inter, sans-serif" } as const;
+const COUNTRY = "USA";
+
+const fieldInputClass =
+  "w-full rounded-[40px] bg-[#313044] text-white text-sm outline-none border border-transparent focus:border-[#00CED1]/40 transition-colors placeholder:text-white/30";
+const fieldInputStyle = {
+  fontFamily: "Inter, sans-serif",
+  padding: "12px 20px",
+  height: "44px",
+} as const;
 
 export default function ParentRegister() {
   const router = useRouter();
@@ -12,13 +34,73 @@ export default function ParentRegister() {
   const [guardian2Type, setGuardian2Type] = useState<"parent" | "guardian">("parent");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [country, setCountry] = useState("");
+  const [password, setPassword] = useState("");
+  const [passwordError, setPasswordError] = useState<string | null>(null);
   const [timezone, setTimezone] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  const registerMutation = useMutation({
+    mutationFn: async () => {
+      const name = guardian1Name.trim();
+      const emailTrimmed = email.trim();
+
+      if (!name) {
+        throw new Error("Parent/Guardian name is required");
+      }
+      const passwordValidationError = validateParentPassword(password);
+      if (passwordValidationError) {
+        throw new Error(passwordValidationError);
+      }
+      if (!timezone) {
+        throw new Error("Please select a timezone");
+      }
+
+      return registerParent({
+        email: emailTrimmed,
+        name,
+        password,
+        country: COUNTRY,
+        timeZone: timezone,
+      });
+    },
+    onSuccess: (user) => {
+      setPendingVerification({ userId: user.id, email: user.email });
+      startResendCooldown();
+      const params = new URLSearchParams({
+        id: String(user.id),
+        email: user.email,
+      });
+      router.push(`/verify-email?${params.toString()}`);
+    },
+    onError: (err) => {
+      setError(getApiErrorMessage(err));
+    },
+  });
+
+  function handlePasswordChange(value: string) {
+    setPassword(value);
+    if (passwordError) {
+      setPasswordError(validateParentPassword(value));
+    }
+  }
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    // TODO: integrate with backend
-    router.push("/parent-register/step-2");
+    setError(null);
+
+    const passwordValidationError = validateParentPassword(password);
+    if (passwordValidationError) {
+      setPasswordError(passwordValidationError);
+      return;
+    }
+    setPasswordError(null);
+
+    if (!timezone) {
+      setError("Please select a timezone");
+      return;
+    }
+
+    registerMutation.mutate();
   }
 
   return (
@@ -150,6 +232,7 @@ export default function ParentRegister() {
                     value={guardian1Name}
                     onChange={(e) => setGuardian1Name(e.target.value)}
                     placeholder="Allex filler"
+                    required
                     className="w-full rounded-[40px] bg-[#313044] text-white text-sm outline-none border border-transparent focus:border-[#00CED1]/40 transition-colors placeholder:text-white/30"
                     style={{ fontFamily: "Inter, sans-serif", padding: "12px 20px", height: "44px" }}
                   />
@@ -250,6 +333,7 @@ export default function ParentRegister() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Allex@gmail.com"
+                    required
                     className="w-full rounded-[40px] bg-[#313044] text-white text-sm outline-none border border-transparent focus:border-[#00CED1]/40 transition-colors placeholder:text-white/30"
                     style={{ fontFamily: "Inter, sans-serif", padding: "12px 20px", height: "44px" }}
                   />
@@ -273,6 +357,41 @@ export default function ParentRegister() {
                   />
                 </div>
 
+                {/* Password — same styling as /parent-sign-in */}
+                <div>
+                  <label
+                    htmlFor="password"
+                    className="block text-sm font-medium text-white/70 mb-2"
+                    style={inter}
+                  >
+                    Password
+                  </label>
+                  <input
+                    type="password"
+                    id="password"
+                    value={password}
+                    onChange={(e) => handlePasswordChange(e.target.value)}
+                    onBlur={() => setPasswordError(validateParentPassword(password))}
+                    placeholder="••••••••"
+                    required
+                    aria-invalid={passwordError ? true : undefined}
+                    aria-describedby="password-requirements"
+                    className={`w-full px-4 py-3 sm:py-3.5 rounded-full bg-[#313044] text-white text-sm outline-none border transition-colors placeholder:text-white/30 ${
+                      passwordError
+                        ? "border-red-400/70 focus:border-red-400/70"
+                        : "border-transparent focus:border-[#00CED1]/40"
+                    }`}
+                    style={inter}
+                  />
+                  <p
+                    id="password-requirements"
+                    className={`mt-1.5 text-xs ${passwordError ? "text-red-400" : "text-white/40"}`}
+                    style={inter}
+                  >
+                    {passwordError ?? PARENT_PASSWORD_REQUIREMENTS}
+                  </p>
+                </div>
+
                 {/* Country & Timezone */}
                 <div className="flex gap-2">
                   <div className="flex-1">
@@ -284,38 +403,66 @@ export default function ParentRegister() {
                     </label>
                     <input
                       type="text"
-                      value={country}
-                      onChange={(e) => setCountry(e.target.value)}
-                      placeholder="USA"
-                      className="w-full rounded-[40px] bg-[#313044] text-white text-sm outline-none border border-transparent focus:border-[#00CED1]/40 transition-colors placeholder:text-white/30"
-                      style={{ fontFamily: "Inter, sans-serif", padding: "12px 20px", height: "44px" }}
+                      value={COUNTRY}
+                      readOnly
+                      tabIndex={-1}
+                      className={`${fieldInputClass} text-white/60 cursor-not-allowed`}
+                      style={fieldInputStyle}
                     />
                   </div>
                   <div className="flex-1">
                     <label
+                      htmlFor="timezone"
                       className="block text-[14px] font-semibold text-white mb-1"
                       style={{ fontFamily: "Inter, sans-serif" }}
                     >
                       Timezone
                     </label>
-                    <input
-                      type="text"
+                    <select
+                      id="timezone"
                       value={timezone}
-                      onChange={(e) => setTimezone(e.target.value)}
-                      placeholder="SA (GMT-5)"
-                      className="w-full rounded-[40px] bg-[#313044] text-white text-sm outline-none border border-transparent focus:border-[#00CED1]/40 transition-colors placeholder:text-white/30"
-                      style={{ fontFamily: "Inter, sans-serif", padding: "12px 20px", height: "44px" }}
-                    />
+                      onChange={(e) => {
+                        setTimezone(e.target.value);
+                        if (error) setError(null);
+                      }}
+                      required
+                      className={`${fieldInputClass} cursor-pointer appearance-none`}
+                      style={fieldInputStyle}
+                    >
+                      <option value="" disabled className="bg-[#313044] text-white/50">
+                        Select timezone
+                      </option>
+                      {US_TIMEZONES.map((tz) => (
+                        <option
+                          key={tz.value}
+                          value={tz.value}
+                          className="bg-[#313044] text-white"
+                        >
+                          {tz.label}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
+
+                {error && (
+                  <p
+                    className="text-sm text-red-400 text-center"
+                    style={inter}
+                    role="alert"
+                  >
+                    {error}
+                  </p>
+                )}
 
                 {/* Continue Button */}
                 <button
                   type="submit"
-                  className="w-full py-4 rounded-[16px] bg-[#00CED1] text-white text-sm font-semibold uppercase tracking-wide hover:bg-[#00B8BB] transition-colors cursor-pointer"
+                  disabled={registerMutation.isPending}
+                  className="w-full py-4 rounded-[16px] bg-[#00CED1] text-white text-sm font-semibold uppercase tracking-wide hover:bg-[#00B8BB] transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                   style={{ fontFamily: "Inter, sans-serif" }}
                 >
-                  Continue
+                  {registerMutation.isPending ? "Creating account…" : "Continue"}
                 </button>
               </form>
             </div>

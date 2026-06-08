@@ -1,30 +1,101 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { getUserToken } from "@/lib/auth-cookies";
+import { refreshParentSession } from "@/lib/auth-api";
+import { hasCompletedFamilyRegistration } from "@/lib/parent-registration";
+import { submitRegisterChildren } from "@/lib/submit-register-children";
+import { useRegisterWizardStore } from "@/stores/register-wizard.store";
 
 const consents = [
-  "Learning data usage",
-  "SEL check ins (Bloom Buddy)",
-  "PDF progress reports",
-  "Communication with Wayfinder",
-];
+  { label: "Learning data usage", key: "learningDataUsage" },
+  { label: "SEL check ins (Bloom Buddy)", key: "selCheckIns" },
+  { label: "PDF progress reports", key: "pdfProgressReports" },
+  { label: "Communication with Wayfinder", key: "communicationWithWayfinder" },
+] as const;
 
 export default function ParentRegisterStep4() {
   const router = useRouter();
-  const [checked, setChecked] = useState<boolean[]>(new Array(consents.length).fill(false));
+  const children = useRegisterWizardStore((s) => s.children);
+  const resetWizard = useRegisterWizardStore((s) => s.reset);
+  const [checked, setChecked] = useState<boolean[]>(
+    new Array(consents.length).fill(false),
+  );
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const allChecked = checked.every(Boolean);
+
+  useEffect(() => {
+    if (!getUserToken()) {
+      router.replace("/parent-sign-in");
+      return;
+    }
+    if (children.length === 0) {
+      router.replace("/parent-register/step-2");
+      return;
+    }
+
+    let cancelled = false;
+    refreshParentSession()
+      .then((profile) => {
+        if (cancelled) return;
+        if (hasCompletedFamilyRegistration(profile)) {
+          router.replace("/parent-dashboard");
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, [router, children.length]);
 
   function toggleConsent(index: number) {
-    const newChecked = [...checked];
-    newChecked[index] = !newChecked[index];
-    setChecked(newChecked);
+    setChecked((prev) => {
+      const next = [...prev];
+      next[index] = !next[index];
+      return next;
+    });
   }
 
-  function handleContinue() {
-    // TODO: integrate with backend
-    setSubmitted(true);
+  async function handleContinue() {
+    if (!allChecked || isSubmitting) return;
+
+    setSubmitError(null);
+    setIsSubmitting(true);
+
+    const permission = Object.fromEntries(
+      consents.map((c, i) => [c.key, checked[i]]),
+    );
+
+    try {
+      await submitRegisterChildren(children, permission);
+      resetWizard();
+      await refreshParentSession();
+      router.replace("/parent-dashboard");
+      return;
+    } catch (err: unknown) {
+      const message =
+        err && typeof err === "object" && "response" in err
+          ? (err as { response?: { data?: { message?: string } } }).response
+              ?.data?.message
+          : null;
+      setSubmitError(
+        typeof message === "string"
+          ? message
+          : "Something went wrong. Please try again.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  if (children.length === 0 && !submitted) {
+    return null;
   }
 
   return (
@@ -107,8 +178,10 @@ export default function ParentRegisterStep4() {
             </div>
             <div className="flex items-center justify-between">
               <button
+                type="button"
                 onClick={() => router.back()}
-                className="text-white/70 hover:text-white text-2xl cursor-pointer"
+                disabled={isSubmitting}
+                className="text-white/70 hover:text-white text-2xl cursor-pointer disabled:opacity-40"
                 style={{ fontFamily: "Inter, sans-serif" }}
               >
                 &#8249;
@@ -132,7 +205,6 @@ export default function ParentRegisterStep4() {
 
           <div className="w-full max-w-[420px] lg:max-w-[560px] mx-auto lg:flex-1 lg:flex lg:items-center">
             {submitted ? (
-              /* Submitted Card */
               <div className="w-full rounded-[16px] p-8 border border-[#525162]/50 lg:rounded-[19px] lg:px-10 lg:py-12 flex flex-col items-center justify-center text-center">
                 <div className="w-12 h-12 rounded-[10px] bg-[#FFF8E1] flex items-center justify-center mb-4">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -147,14 +219,21 @@ export default function ParentRegisterStep4() {
                   Submitted!
                 </h2>
                 <p
-                  className="text-white/50 text-sm max-w-[300px]"
+                  className="text-white/50 text-sm max-w-[300px] mb-6"
                   style={{ fontFamily: "Inter, sans-serif" }}
                 >
-                  Thank you for your interest. Your application is under review. We will reach out with next steps.
+                  Your children have been registered. You can manage them from your dashboard.
                 </p>
+                <button
+                  type="button"
+                  onClick={() => router.push("/parent-dashboard")}
+                  className="w-full py-4 rounded-[16px] bg-[#00CED1] text-white text-sm font-semibold uppercase tracking-wide hover:bg-[#00B8BB] transition-colors cursor-pointer"
+                  style={{ fontFamily: "Inter, sans-serif" }}
+                >
+                  Go to dashboard
+                </button>
               </div>
             ) : (
-              /* Form Card */
               <div className="w-full rounded-[16px] p-6 border border-[#525162]/50 lg:bg-transparent lg:rounded-[19px] lg:border lg:border-[#525162]/50 lg:px-8 lg:py-8">
                 <h2
                   className="text-white text-base sm:text-lg font-semibold mb-8 tracking-wide uppercase text-center"
@@ -164,9 +243,9 @@ export default function ParentRegisterStep4() {
                 </h2>
 
                 <div className="space-y-4 mb-8">
-                  {consents.map((label, i) => (
+                  {consents.map((item, i) => (
                     <label
-                      key={i}
+                      key={item.key}
                       className="flex items-center gap-3 cursor-pointer group"
                       onClick={() => toggleConsent(i)}
                     >
@@ -187,20 +266,29 @@ export default function ParentRegisterStep4() {
                         className="text-white/80 text-sm"
                         style={{ fontFamily: "Inter, sans-serif" }}
                       >
-                        {label}
+                        {item.label}
                       </span>
                     </label>
                   ))}
                 </div>
 
-                {/* Continue Button */}
-                <button
-                  onClick={handleContinue}
-                  className="w-full py-4 rounded-[16px] bg-[#00CED1] text-white text-sm font-semibold uppercase tracking-wide hover:bg-[#00B8BB] transition-colors cursor-pointer"
-                  style={{ fontFamily: "Inter, sans-serif" }}
-                >
-                  Continue
-                </button>
+                {submitError && (
+                  <p className="text-sm text-red-400 text-center mb-4" role="alert">
+                    {submitError}
+                  </p>
+                )}
+
+                {allChecked && (
+                  <button
+                    type="button"
+                    onClick={handleContinue}
+                    disabled={isSubmitting}
+                    className="w-full py-4 rounded-[16px] bg-[#00CED1] text-white text-sm font-semibold uppercase tracking-wide hover:bg-[#00B8BB] transition-colors cursor-pointer disabled:opacity-70 disabled:cursor-wait"
+                    style={{ fontFamily: "Inter, sans-serif" }}
+                  >
+                    {isSubmitting ? "Submitting…" : "Continue"}
+                  </button>
+                )}
               </div>
             )}
           </div>
