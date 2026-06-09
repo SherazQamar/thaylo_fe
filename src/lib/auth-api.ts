@@ -120,6 +120,18 @@ export async function refreshParentSession() {
   return profile;
 }
 
+export interface UpdateParentProfilePayload {
+  name: string;
+  phone: string;
+  country: string;
+  timeZone: string;
+}
+
+export async function updateParentProfile(payload: UpdateParentProfilePayload) {
+  await api.put<ApiResponse<User>>("/auth/update", payload);
+  return refreshParentSession();
+}
+
 export function getApiErrorMessage(error: unknown): string {
   if (error instanceof Error && !isAxiosError(error)) {
     return error.message;

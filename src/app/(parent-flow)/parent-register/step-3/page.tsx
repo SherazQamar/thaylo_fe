@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, Suspense } from "react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getUserToken } from "@/lib/auth-cookies";
@@ -92,7 +92,7 @@ function UploadSection({ child }: { child: RegisterChildDraft }) {
   );
 }
 
-export default function ParentRegisterStep3() {
+function ParentRegisterStep3Content() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isAddMode = isAddChildWizardMode(searchParams);
@@ -205,3 +205,18 @@ export default function ParentRegisterStep3() {
   );
 }
 
+export default function ParentRegisterStep3() {
+  return (
+    <Suspense
+      fallback={
+        <div className="h-screen flex items-center justify-center bg-[#111023]">
+          <p className="text-white/50 text-sm" style={{ fontFamily: "Inter, sans-serif" }}>
+            Loading…
+          </p>
+        </div>
+      }
+    >
+      <ParentRegisterStep3Content />
+    </Suspense>
+  );
+}

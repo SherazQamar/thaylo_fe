@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, FormEvent, useEffect } from "react";
+import React, { useState, useRef, FormEvent, useEffect, Suspense } from "react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getUserToken } from "@/lib/auth-cookies";
@@ -15,7 +15,7 @@ import {
 } from "@/stores/register-wizard.store";
 import { useAuthStore } from "@/stores/auth.store";
 
-export default function ParentRegisterStep2() {
+function ParentRegisterStep2Content() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isAddMode = isAddChildWizardMode(searchParams);
@@ -468,5 +468,21 @@ export default function ParentRegisterStep2() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function ParentRegisterStep2() {
+  return (
+    <Suspense
+      fallback={
+        <div className="h-screen flex items-center justify-center bg-[#111023]">
+          <p className="text-white/50 text-sm" style={{ fontFamily: "Inter, sans-serif" }}>
+            Loading…
+          </p>
+        </div>
+      }
+    >
+      <ParentRegisterStep2Content />
+    </Suspense>
   );
 }
