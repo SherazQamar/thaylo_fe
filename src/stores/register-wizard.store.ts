@@ -23,6 +23,13 @@ interface RegisterWizardState {
   reset: () => void;
 }
 
+function createLocalId(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `local-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
 export const useRegisterWizardStore = create<RegisterWizardState>((set) => ({
   children: [],
   addChild: (child) =>
@@ -30,7 +37,7 @@ export const useRegisterWizardStore = create<RegisterWizardState>((set) => ({
       children: [
         ...state.children,
         {
-          localId: crypto.randomUUID(),
+          localId: createLocalId(),
           userName: child.userName,
           grade: child.grade,
           pin: child.pin,

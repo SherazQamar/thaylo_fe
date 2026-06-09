@@ -1,10 +1,12 @@
 "use client";
 
-import React, { useState, useRef, FormEvent, useEffect, Suspense } from "react";
+import React, { useState, useRef, FormEvent, Suspense } from "react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { getUserToken } from "@/lib/auth-cookies";
-import { useRedirectIfFamilyRegistered } from "@/hooks/use-redirect-if-family-registered";
+import RegisterStepLoading, {
+  RegisterStepError,
+} from "@/components/parent/RegisterStepLoading";
+import { useParentRegisterAccess } from "@/hooks/use-parent-register-access";
 import {
   isAddChildWizardMode,
   withAddChildWizardMode,
@@ -19,6 +21,9 @@ function ParentRegisterStep2Content() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isAddMode = isAddChildWizardMode(searchParams);
+  const { status, error } = useParentRegisterAccess({
+    redirectIfRegistered: !isAddMode,
+  });
   const children = useRegisterWizardStore((s) => s.children);
   const addChild = useRegisterWizardStore((s) => s.addChild);
   const updateChild = useRegisterWizardStore((s) => s.updateChild);
@@ -30,22 +35,13 @@ function ParentRegisterStep2Content() {
   const [grade, setGrade] = useState("");
   const [pin, setPin] = useState(["", "", "", "", "", ""]);
   const [modalError, setModalError] = useState<string | null>(null);
-  const pinRefs = [
-    useRef<HTMLInputElement>(null),
-    useRef<HTMLInputElement>(null),
-    useRef<HTMLInputElement>(null),
-    useRef<HTMLInputElement>(null),
-    useRef<HTMLInputElement>(null),
-    useRef<HTMLInputElement>(null),
-  ];
-
-  useRedirectIfFamilyRegistered(!isAddMode);
-
-  useEffect(() => {
-    if (!getUserToken()) {
-      router.replace("/parent-sign-in");
-    }
-  }, [router]);
+  const pinRef0 = useRef<HTMLInputElement>(null);
+  const pinRef1 = useRef<HTMLInputElement>(null);
+  const pinRef2 = useRef<HTMLInputElement>(null);
+  const pinRef3 = useRef<HTMLInputElement>(null);
+  const pinRef4 = useRef<HTMLInputElement>(null);
+  const pinRef5 = useRef<HTMLInputElement>(null);
+  const pinRefs = [pinRef0, pinRef1, pinRef2, pinRef3, pinRef4, pinRef5];
 
   function resetModalForm() {
     setStudentName("");
@@ -153,6 +149,14 @@ function ParentRegisterStep2Content() {
 
   const gradeGroups = ["K-2", "3-5", "6-8"];
   const grades = ["K", "1", "2", "3", "4", "5", "6"];
+
+  if (status === "loading") {
+    return <RegisterStepLoading />;
+  }
+
+  if (status === "error") {
+    return <RegisterStepError message={error ?? "Please try again later."} />;
+  }
 
   return (
     <div className="h-screen flex flex-col lg:flex-row overflow-hidden bg-[#111023]">
@@ -270,13 +274,9 @@ function ParentRegisterStep2Content() {
               {children.length === 0 ? (
                 /* Empty State */
                 <div className="flex flex-col items-center py-8">
-                  <Image
-                    src="/assets/add child.png"
-                    alt="No child yet"
-                    width={80}
-                    height={80}
-                    className="mb-4 opacity-60"
-                  />
+                  <div className="mb-4 text-5xl opacity-60" aria-hidden>
+                    👶
+                  </div>
                   <p
                     className="text-white/40 text-sm"
                     style={{ fontFamily: "Inter, sans-serif" }}
@@ -473,15 +473,7 @@ function ParentRegisterStep2Content() {
 
 export default function ParentRegisterStep2() {
   return (
-    <Suspense
-      fallback={
-        <div className="h-screen flex items-center justify-center bg-[#111023]">
-          <p className="text-white/50 text-sm" style={{ fontFamily: "Inter, sans-serif" }}>
-            Loading…
-          </p>
-        </div>
-      }
-    >
+    <Suspense fallback={<RegisterStepLoading />}>
       <ParentRegisterStep2Content />
     </Suspense>
   );

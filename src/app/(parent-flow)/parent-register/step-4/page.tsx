@@ -4,10 +4,12 @@ import React, { useEffect, useState, Suspense } from "react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { getUserToken } from "@/lib/auth-cookies";
 import { refreshParentSession } from "@/lib/auth-api";
+import RegisterStepLoading, {
+  RegisterStepError,
+} from "@/components/parent/RegisterStepLoading";
+import { useParentRegisterAccess } from "@/hooks/use-parent-register-access";
 import {
-  hasCompletedFamilyRegistration,
   isAddChildWizardMode,
   withAddChildWizardMode,
 } from "@/lib/parent-registration";
@@ -26,6 +28,9 @@ function ParentRegisterStep4Content() {
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const isAddMode = isAddChildWizardMode(searchParams);
+  const { status, error: accessError } = useParentRegisterAccess({
+    redirectIfRegistered: !isAddMode,
+  });
   const children = useRegisterWizardStore((s) => s.children);
   const resetWizard = useRegisterWizardStore((s) => s.reset);
   const [checked, setChecked] = useState<boolean[]>(
@@ -38,35 +43,15 @@ function ParentRegisterStep4Content() {
   const allChecked = checked.every(Boolean);
 
   useEffect(() => {
-    if (!getUserToken()) {
-      router.replace("/parent-sign-in");
-      return;
-    }
+    if (status !== "ready") return;
     if (children.length === 0) {
       router.replace(
         isAddMode
           ? withAddChildWizardMode("/parent-register/step-2")
           : "/parent-register/step-2",
       );
-      return;
     }
-
-    if (isAddMode) return;
-
-    let cancelled = false;
-    refreshParentSession()
-      .then((profile) => {
-        if (cancelled) return;
-        if (hasCompletedFamilyRegistration(profile)) {
-          router.replace("/parent-dashboard");
-        }
-      })
-      .catch(() => {});
-
-    return () => {
-      cancelled = true;
-    };
-  }, [router, children.length, isAddMode]);
+  }, [router, children.length, isAddMode, status]);
 
   function toggleConsent(index: number) {
     setChecked((prev) => {
@@ -110,8 +95,16 @@ function ParentRegisterStep4Content() {
     }
   }
 
+  if (status === "loading") {
+    return <RegisterStepLoading />;
+  }
+
+  if (status === "error") {
+    return <RegisterStepError message={accessError ?? "Please try again later."} />;
+  }
+
   if (children.length === 0 && !submitted) {
-    return null;
+    return <RegisterStepLoading />;
   }
 
   return (
@@ -316,15 +309,7 @@ function ParentRegisterStep4Content() {
 
 export default function ParentRegisterStep4() {
   return (
-    <Suspense
-      fallback={
-        <div className="h-screen flex items-center justify-center bg-[#111023]">
-          <p className="text-white/50 text-sm" style={{ fontFamily: "Inter, sans-serif" }}>
-            Loading…
-          </p>
-        </div>
-      }
-    >
+    <Suspense fallback={<RegisterStepLoading />}>
       <ParentRegisterStep4Content />
     </Suspense>
   );

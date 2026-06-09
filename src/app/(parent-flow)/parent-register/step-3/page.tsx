@@ -3,8 +3,10 @@
 import React, { useEffect, useRef, useState, Suspense } from "react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { getUserToken } from "@/lib/auth-cookies";
-import { useRedirectIfFamilyRegistered } from "@/hooks/use-redirect-if-family-registered";
+import RegisterStepLoading, {
+  RegisterStepError,
+} from "@/components/parent/RegisterStepLoading";
+import { useParentRegisterAccess } from "@/hooks/use-parent-register-access";
 import {
   isAddChildWizardMode,
   withAddChildWizardMode,
@@ -96,15 +98,13 @@ function ParentRegisterStep3Content() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isAddMode = isAddChildWizardMode(searchParams);
+  const { status, error } = useParentRegisterAccess({
+    redirectIfRegistered: !isAddMode,
+  });
   const children = useRegisterWizardStore((s) => s.children);
 
-  useRedirectIfFamilyRegistered(!isAddMode);
-
   useEffect(() => {
-    if (!getUserToken()) {
-      router.replace("/parent-sign-in");
-      return;
-    }
+    if (status !== "ready") return;
     if (children.length === 0) {
       router.replace(
         isAddMode
@@ -112,10 +112,18 @@ function ParentRegisterStep3Content() {
           : "/parent-register/step-2",
       );
     }
-  }, [router, children.length, isAddMode]);
+  }, [router, children.length, isAddMode, status]);
+
+  if (status === "loading") {
+    return <RegisterStepLoading />;
+  }
+
+  if (status === "error") {
+    return <RegisterStepError message={error ?? "Please try again later."} />;
+  }
 
   if (children.length === 0) {
-    return null;
+    return <RegisterStepLoading />;
   }
 
   return (
@@ -207,15 +215,7 @@ function ParentRegisterStep3Content() {
 
 export default function ParentRegisterStep3() {
   return (
-    <Suspense
-      fallback={
-        <div className="h-screen flex items-center justify-center bg-[#111023]">
-          <p className="text-white/50 text-sm" style={{ fontFamily: "Inter, sans-serif" }}>
-            Loading…
-          </p>
-        </div>
-      }
-    >
+    <Suspense fallback={<RegisterStepLoading />}>
       <ParentRegisterStep3Content />
     </Suspense>
   );

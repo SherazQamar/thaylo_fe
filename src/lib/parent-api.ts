@@ -52,7 +52,7 @@ export interface SubscriptionPlan {
   priceId: string;
   amount: number;
   currency: string;
-  interval: "day" | "week" | "month" | "year";
+  interval: string;
   intervalCount: number;
   productName: string;
   productDescription: string | null;
