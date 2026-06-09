@@ -33,6 +33,7 @@ export interface User {
   IsFamilyRegister?: boolean;
   isChildRegister?: boolean;
   isEmailVerified?: boolean;
+  children?: Child[];
 }
 
 export interface Child {

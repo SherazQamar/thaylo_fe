@@ -2,9 +2,13 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { getUserToken } from "@/lib/auth-cookies";
 import { useRedirectIfFamilyRegistered } from "@/hooks/use-redirect-if-family-registered";
+import {
+  isAddChildWizardMode,
+  withAddChildWizardMode,
+} from "@/lib/parent-registration";
 import {
   useRegisterWizardStore,
   type RegisterChildDraft,
@@ -90,9 +94,11 @@ function UploadSection({ child }: { child: RegisterChildDraft }) {
 
 export default function ParentRegisterStep3() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isAddMode = isAddChildWizardMode(searchParams);
   const children = useRegisterWizardStore((s) => s.children);
 
-  useRedirectIfFamilyRegistered();
+  useRedirectIfFamilyRegistered(!isAddMode);
 
   useEffect(() => {
     if (!getUserToken()) {
@@ -100,9 +106,13 @@ export default function ParentRegisterStep3() {
       return;
     }
     if (children.length === 0) {
-      router.replace("/parent-register/step-2");
+      router.replace(
+        isAddMode
+          ? withAddChildWizardMode("/parent-register/step-2")
+          : "/parent-register/step-2",
+      );
     }
-  }, [router, children.length]);
+  }, [router, children.length, isAddMode]);
 
   if (children.length === 0) {
     return null;
@@ -175,7 +185,13 @@ export default function ParentRegisterStep3() {
 
               <button
                 type="button"
-                onClick={() => router.push("/parent-register/step-4")}
+                onClick={() =>
+                  router.push(
+                    isAddMode
+                      ? withAddChildWizardMode("/parent-register/step-4")
+                      : "/parent-register/step-4",
+                  )
+                }
                 className="w-full py-4 rounded-[16px] bg-[#00CED1] text-white text-sm font-semibold uppercase tracking-wide hover:bg-[#00B8BB] transition-colors cursor-pointer mt-6"
                 style={{ fontFamily: "Inter, sans-serif" }}
               >

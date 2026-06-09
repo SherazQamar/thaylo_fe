@@ -2,10 +2,15 @@
 
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { getUserToken } from "@/lib/auth-cookies";
 import { refreshParentSession } from "@/lib/auth-api";
-import { hasCompletedFamilyRegistration } from "@/lib/parent-registration";
+import {
+  hasCompletedFamilyRegistration,
+  isAddChildWizardMode,
+  withAddChildWizardMode,
+} from "@/lib/parent-registration";
 import { submitRegisterChildren } from "@/lib/submit-register-children";
 import { useRegisterWizardStore } from "@/stores/register-wizard.store";
 
@@ -18,6 +23,9 @@ const consents = [
 
 export default function ParentRegisterStep4() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
+  const isAddMode = isAddChildWizardMode(searchParams);
   const children = useRegisterWizardStore((s) => s.children);
   const resetWizard = useRegisterWizardStore((s) => s.reset);
   const [checked, setChecked] = useState<boolean[]>(
@@ -35,9 +43,15 @@ export default function ParentRegisterStep4() {
       return;
     }
     if (children.length === 0) {
-      router.replace("/parent-register/step-2");
+      router.replace(
+        isAddMode
+          ? withAddChildWizardMode("/parent-register/step-2")
+          : "/parent-register/step-2",
+      );
       return;
     }
+
+    if (isAddMode) return;
 
     let cancelled = false;
     refreshParentSession()
@@ -52,7 +66,7 @@ export default function ParentRegisterStep4() {
     return () => {
       cancelled = true;
     };
-  }, [router, children.length]);
+  }, [router, children.length, isAddMode]);
 
   function toggleConsent(index: number) {
     setChecked((prev) => {
@@ -76,7 +90,9 @@ export default function ParentRegisterStep4() {
       await submitRegisterChildren(children, permission);
       resetWizard();
       await refreshParentSession();
-      router.replace("/parent-dashboard");
+      await queryClient.invalidateQueries({ queryKey: ["parent-children"] });
+      await queryClient.invalidateQueries({ queryKey: ["parent-dashboard-stats"] });
+      router.replace(isAddMode ? "/parent-dashboard/children" : "/parent-dashboard");
       return;
     } catch (err: unknown) {
       const message =

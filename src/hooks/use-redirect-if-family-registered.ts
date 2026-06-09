@@ -5,11 +5,11 @@ import { refreshParentSession } from "@/lib/auth-api";
 import { hasCompletedFamilyRegistration } from "@/lib/parent-registration";
 
 /** Sends parents who already have children to the dashboard instead of the wizard. */
-export function useRedirectIfFamilyRegistered() {
+export function useRedirectIfFamilyRegistered(enabled = true) {
   const router = useRouter();
 
   useEffect(() => {
-    if (!getUserToken()) return;
+    if (!enabled || !getUserToken()) return;
 
     let cancelled = false;
     refreshParentSession()
@@ -24,5 +24,5 @@ export function useRedirectIfFamilyRegistered() {
     return () => {
       cancelled = true;
     };
-  }, [router]);
+  }, [router, enabled]);
 }

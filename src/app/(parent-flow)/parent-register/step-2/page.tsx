@@ -2,20 +2,28 @@
 
 import React, { useState, useRef, FormEvent, useEffect } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { getUserToken } from "@/lib/auth-cookies";
 import { useRedirectIfFamilyRegistered } from "@/hooks/use-redirect-if-family-registered";
+import {
+  isAddChildWizardMode,
+  withAddChildWizardMode,
+} from "@/lib/parent-registration";
 import {
   useRegisterWizardStore,
   type RegisterChildDraft,
 } from "@/stores/register-wizard.store";
+import { useAuthStore } from "@/stores/auth.store";
 
 export default function ParentRegisterStep2() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isAddMode = isAddChildWizardMode(searchParams);
   const children = useRegisterWizardStore((s) => s.children);
   const addChild = useRegisterWizardStore((s) => s.addChild);
   const updateChild = useRegisterWizardStore((s) => s.updateChild);
   const removeChild = useRegisterWizardStore((s) => s.removeChild);
+  const existingChildren = useAuthStore((s) => s.user?.children ?? []);
   const [showModal, setShowModal] = useState(false);
   const [editingChildId, setEditingChildId] = useState<string | null>(null);
   const [studentName, setStudentName] = useState("");
@@ -31,7 +39,7 @@ export default function ParentRegisterStep2() {
     useRef<HTMLInputElement>(null),
   ];
 
-  useRedirectIfFamilyRegistered();
+  useRedirectIfFamilyRegistered(!isAddMode);
 
   useEffect(() => {
     if (!getUserToken()) {
@@ -93,8 +101,11 @@ export default function ParentRegisterStep2() {
         c.userName.toLowerCase() === userName.toLowerCase() &&
         c.localId !== editingChildId,
     );
-    if (duplicate) {
-      setModalError("A child with this name already exists in your list");
+    const duplicateExisting = existingChildren.some(
+      (c) => c.userName.toLowerCase() === userName.toLowerCase(),
+    );
+    if (duplicate || duplicateExisting) {
+      setModalError("A child with this name already exists");
       return;
     }
 
@@ -109,7 +120,19 @@ export default function ParentRegisterStep2() {
 
   function handleContinue() {
     if (children.length === 0) return;
-    router.push("/parent-register/step-3");
+    router.push(
+      isAddMode
+        ? withAddChildWizardMode("/parent-register/step-3")
+        : "/parent-register/step-3",
+    );
+  }
+
+  function handleBack() {
+    if (isAddMode) {
+      router.push("/parent-dashboard/children");
+      return;
+    }
+    router.back();
   }
 
   function openAddModal() {
@@ -211,7 +234,7 @@ export default function ParentRegisterStep2() {
             </div>
             <div className="flex items-center justify-between">
               <button
-                onClick={() => router.back()}
+                onClick={handleBack}
                 className="text-white/70 hover:text-white text-2xl cursor-pointer"
                 style={{ fontFamily: "Inter, sans-serif" }}
               >
