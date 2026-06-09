@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
@@ -21,7 +21,7 @@ const consents = [
   { label: "Communication with Wayfinder", key: "communicationWithWayfinder" },
 ] as const;
 
-export default function ParentRegisterStep4() {
+function ParentRegisterStep4Content() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
@@ -311,5 +311,21 @@ export default function ParentRegisterStep4() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ParentRegisterStep4() {
+  return (
+    <Suspense
+      fallback={
+        <div className="h-screen flex items-center justify-center bg-[#111023]">
+          <p className="text-white/50 text-sm" style={{ fontFamily: "Inter, sans-serif" }}>
+            Loading…
+          </p>
+        </div>
+      }
+    >
+      <ParentRegisterStep4Content />
+    </Suspense>
   );
 }

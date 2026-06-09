@@ -47,3 +47,49 @@ export async function fetchParentDashboardStats() {
   );
   return data.data;
 }
+
+export interface SubscriptionPlan {
+  priceId: string;
+  amount: number;
+  currency: string;
+  interval: "day" | "week" | "month" | "year";
+  intervalCount: number;
+  productName: string;
+  productDescription: string | null;
+}
+
+export interface ParentSubscriptionStatus {
+  status: string | null;
+  planLabel: string;
+  isActive: boolean;
+  currentPeriodEnd: string | null;
+  childrenCount: number;
+  monthlyPlan: SubscriptionPlan | null;
+  annualPlan: SubscriptionPlan | null;
+}
+
+export async function fetchParentSubscription() {
+  const { data } = await api.get<ApiResponse<ParentSubscriptionStatus>>(
+    "/parent/subscription",
+  );
+  return data.data;
+}
+
+export async function createParentSubscriptionCheckout(options?: {
+  priceId?: string;
+  planType?: "monthly" | "annual";
+}) {
+  const { data } = await api.post<ApiResponse<{ url: string }>>(
+    "/parent/subscription/checkout",
+    options ?? {},
+  );
+  return data.data;
+}
+
+export async function confirmParentSubscriptionCheckout(sessionId: string) {
+  const { data } = await api.post<ApiResponse<ParentSubscriptionStatus>>(
+    "/parent/subscription/confirm",
+    { sessionId },
+  );
+  return data.data;
+}
