@@ -1,18 +1,49 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import ChildUserDropdown from "@/components/child/ChildUserDropdown";
+import { useChildAuthStore } from "@/stores/child-auth.store";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
+function formatChildGrade(grade: string | null | undefined): string {
+  if (!grade?.trim()) return "—";
+  if (/^grade\s/i.test(grade.trim())) return grade.trim();
+  return `Grade ${grade.trim()}`;
+}
+
+function splitDisplayName(userName: string | null | undefined): {
+  firstName: string;
+  lastName: string;
+} {
+  const trimmed = userName?.trim();
+  if (!trimmed) {
+    return { firstName: "—", lastName: "—" };
+  }
+
+  const parts = trimmed.split(/\s+/);
+  if (parts.length === 1) {
+    return { firstName: parts[0], lastName: "—" };
+  }
+
+  return {
+    firstName: parts[0],
+    lastName: parts.slice(1).join(" "),
+  };
+}
+
 export default function ChildSettingsPage() {
+  const child = useChildAuthStore((state) => state.child);
   const [activeTab, setActiveTab] = useState<"general" | "preferences">("general");
   const [soundEffects, setSoundEffects] = useState(true);
   const [speakingExercises, setSpeakingExercises] = useState(true);
 
+  const displayName = child?.userName?.trim() || "Student";
+  const { firstName, lastName } = splitDisplayName(child?.userName);
+  const gradeLabel = formatChildGrade(child?.grade);
+
   return (
     <div className="p-4 md:p-5 lg:p-6 overflow-y-auto scrollbar-hide h-full">
-      {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h1 className="uppercase" style={{ ...inter, fontWeight: 700, fontSize: "22px", letterSpacing: "0.8px", color: "#DCE6EC" }}>
           Settings
@@ -22,9 +53,9 @@ export default function ChildSettingsPage() {
         </div>
       </div>
 
-      {/* Tabs */}
       <div className="flex gap-6 mb-6 border-b border-white/10">
         <button
+          type="button"
           onClick={() => setActiveTab("general")}
           className={`pb-2.5 cursor-pointer transition-colors ${activeTab === "general" ? "border-b-2 border-[#00CED1] text-[#00CED1]" : "text-white/40 hover:text-white/60"}`}
           style={{ ...inter, fontWeight: 500, fontSize: "14px" }}
@@ -32,6 +63,7 @@ export default function ChildSettingsPage() {
           General Settings
         </button>
         <button
+          type="button"
           onClick={() => setActiveTab("preferences")}
           className={`pb-2.5 cursor-pointer transition-colors ${activeTab === "preferences" ? "border-b-2 border-[#00CED1] text-[#00CED1]" : "text-white/40 hover:text-white/60"}`}
           style={{ ...inter, fontWeight: 500, fontSize: "14px" }}
@@ -42,7 +74,6 @@ export default function ChildSettingsPage() {
 
       {activeTab === "general" ? (
         <>
-          {/* General Settings */}
           <div className="mb-6">
             <h2 style={{ ...inter, fontWeight: 700, fontSize: "20px", color: "#FFFFFF", marginBottom: "4px" }}>General Settings</h2>
             <p style={{ ...inter, fontWeight: 400, fontSize: "14px", color: "rgba(255,255,255,0.5)" }}>
@@ -50,25 +81,25 @@ export default function ChildSettingsPage() {
             </p>
           </div>
 
-          {/* Profile Card */}
           <div className="rounded-[16px] p-5 mb-6" style={{ backgroundColor: "#313044" }}>
             <div className="flex items-center gap-4">
               <div
-                className="w-[80px] h-[80px] rounded-full flex items-center justify-center flex-shrink-0"
+                className="w-[80px] h-[80px] rounded-full flex items-center justify-center flex-shrink-0 text-3xl"
                 style={{ border: "2px dashed #00CED1" }}
               >
-                <div className="w-8 h-8 rounded-full bg-[#525162] flex items-center justify-center">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-                  </svg>
-                </div>
+                🧒
               </div>
               <div>
-                <p style={{ ...inter, fontWeight: 700, fontSize: "18px", color: "#FFFFFF" }}>Allex Filler</p>
-                <p style={{ ...inter, fontWeight: 400, fontSize: "14px", color: "rgba(255,255,255,0.5)", marginTop: "2px" }}>AllexFiller705842@gmail.com</p>
+                <p style={{ ...inter, fontWeight: 700, fontSize: "18px", color: "#FFFFFF" }}>{displayName}</p>
+                <p style={{ ...inter, fontWeight: 400, fontSize: "14px", color: "rgba(255,255,255,0.5)", marginTop: "2px" }}>
+                  {gradeLabel}
+                </p>
                 <button
-                  className="rounded-full px-4 py-1.5 mt-2 cursor-pointer hover:opacity-90 transition-opacity"
+                  type="button"
+                  disabled
+                  className="rounded-full px-4 py-1.5 mt-2 cursor-not-allowed opacity-50"
                   style={{ backgroundColor: "#00CED1", ...inter, fontWeight: 600, fontSize: "12px", color: "#111023" }}
+                  title="Photo upload coming soon"
                 >
                   Upload Photo
                 </button>
@@ -76,7 +107,6 @@ export default function ChildSettingsPage() {
             </div>
           </div>
 
-          {/* Personal Information */}
           <div>
             <div className="flex items-center gap-2 mb-1">
               <h3 style={{ ...inter, fontWeight: 700, fontSize: "16px", color: "#FFFFFF" }}>Personal Information</h3>
@@ -89,7 +119,6 @@ export default function ChildSettingsPage() {
             </div>
 
             <div className="border-t border-white/10 pt-5">
-              {/* First Name + Last Name */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div>
                   <label style={{ ...inter, fontWeight: 500, fontSize: "13px", color: "rgba(255,255,255,0.7)", display: "block", marginBottom: "6px" }}>
@@ -97,10 +126,10 @@ export default function ChildSettingsPage() {
                   </label>
                   <input
                     type="text"
-                    defaultValue="Allex"
-                    className="w-full rounded-full px-5 py-3 outline-none text-white/50"
-                    style={{ backgroundColor: "#313044", border: "1px solid #525162", ...inter, fontSize: "14px" }}
+                    value={firstName}
                     readOnly
+                    className="w-full rounded-full px-5 py-3 outline-none text-white/50 cursor-not-allowed"
+                    style={{ backgroundColor: "#313044", border: "1px solid #525162", ...inter, fontSize: "14px" }}
                   />
                 </div>
                 <div>
@@ -109,25 +138,37 @@ export default function ChildSettingsPage() {
                   </label>
                   <input
                     type="text"
-                    defaultValue="Filler"
-                    className="w-full rounded-full px-5 py-3 outline-none text-white/50"
-                    style={{ backgroundColor: "#313044", border: "1px solid #525162", ...inter, fontSize: "14px" }}
+                    value={lastName}
                     readOnly
+                    className="w-full rounded-full px-5 py-3 outline-none text-white/50 cursor-not-allowed"
+                    style={{ backgroundColor: "#313044", border: "1px solid #525162", ...inter, fontSize: "14px" }}
                   />
                 </div>
               </div>
 
-              {/* Email */}
-              <div>
+              <div className="mb-4">
                 <label style={{ ...inter, fontWeight: 500, fontSize: "13px", color: "rgba(255,255,255,0.7)", display: "block", marginBottom: "6px" }}>
-                  Email Address
+                  Username
                 </label>
                 <input
-                  type="email"
-                  defaultValue="AllexFiller705842@gmail.com"
-                  className="w-full rounded-full px-5 py-3 outline-none text-white/50"
-                  style={{ backgroundColor: "#313044", border: "1px solid #525162", ...inter, fontSize: "14px" }}
+                  type="text"
+                  value={displayName}
                   readOnly
+                  className="w-full rounded-full px-5 py-3 outline-none text-white/50 cursor-not-allowed"
+                  style={{ backgroundColor: "#313044", border: "1px solid #525162", ...inter, fontSize: "14px" }}
+                />
+              </div>
+
+              <div>
+                <label style={{ ...inter, fontWeight: 500, fontSize: "13px", color: "rgba(255,255,255,0.7)", display: "block", marginBottom: "6px" }}>
+                  Grade
+                </label>
+                <input
+                  type="text"
+                  value={gradeLabel}
+                  readOnly
+                  className="w-full rounded-full px-5 py-3 outline-none text-white/50 cursor-not-allowed"
+                  style={{ backgroundColor: "#313044", border: "1px solid #525162", ...inter, fontSize: "14px" }}
                 />
               </div>
             </div>
@@ -135,7 +176,6 @@ export default function ChildSettingsPage() {
         </>
       ) : (
         <>
-          {/* Learning Preferences */}
           <div className="mb-6">
             <h2 style={{ ...inter, fontWeight: 700, fontSize: "20px", color: "#FFFFFF", marginBottom: "12px" }}>Preferences</h2>
             <div className="flex items-center gap-2 rounded-[10px] px-4 py-2.5 mb-6" style={{ backgroundColor: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)" }}>
@@ -148,7 +188,6 @@ export default function ChildSettingsPage() {
             </div>
 
             <div className="rounded-[16px] p-5" style={{ backgroundColor: "#313044" }}>
-              {/* Sound Effects */}
               <div className="flex items-center justify-between py-3">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-[#111023] flex items-center justify-center flex-shrink-0">
@@ -162,9 +201,11 @@ export default function ChildSettingsPage() {
                   </div>
                 </div>
                 <button
+                  type="button"
                   onClick={() => setSoundEffects(!soundEffects)}
                   className="w-[44px] h-[24px] rounded-full relative cursor-pointer transition-colors flex-shrink-0"
                   style={{ backgroundColor: soundEffects ? "#00CED1" : "#525162" }}
+                  aria-pressed={soundEffects}
                 >
                   <div
                     className="w-[20px] h-[20px] rounded-full bg-white absolute top-[2px] transition-all"
@@ -175,7 +216,6 @@ export default function ChildSettingsPage() {
 
               <div className="border-t border-white/5" />
 
-              {/* Speaking Exercises */}
               <div className="flex items-center justify-between py-3">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-[#111023] flex items-center justify-center flex-shrink-0">
@@ -195,9 +235,11 @@ export default function ChildSettingsPage() {
                   </div>
                 </div>
                 <button
+                  type="button"
                   onClick={() => setSpeakingExercises(!speakingExercises)}
                   className="w-[44px] h-[24px] rounded-full relative cursor-pointer transition-colors flex-shrink-0"
                   style={{ backgroundColor: speakingExercises ? "#00CED1" : "#525162" }}
+                  aria-pressed={speakingExercises}
                 >
                   <div
                     className="w-[20px] h-[20px] rounded-full bg-white absolute top-[2px] transition-all"

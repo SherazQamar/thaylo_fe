@@ -28,9 +28,7 @@ function ParentRegisterStep4Content() {
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const isAddMode = isAddChildWizardMode(searchParams);
-  const { status, error: accessError } = useParentRegisterAccess({
-    redirectIfRegistered: !isAddMode,
-  });
+  const { status, error: accessError } = useParentRegisterAccess(!isAddMode);
   const children = useRegisterWizardStore((s) => s.children);
   const resetWizard = useRegisterWizardStore((s) => s.reset);
   const [checked, setChecked] = useState<boolean[]>(

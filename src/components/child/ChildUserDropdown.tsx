@@ -1,16 +1,31 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { logoutChild } from "@/lib/auth-session";
+import { useChildAuthStore } from "@/stores/child-auth.store";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
+function formatChildGrade(grade: string | null | undefined): string {
+  if (!grade?.trim()) return "Student";
+  if (/^grade\s/i.test(grade.trim())) return grade.trim();
+  return `Grade ${grade.trim()}`;
+}
+
+function getInitials(userName: string | null | undefined): string {
+  if (!userName?.trim()) return "?";
+  return userName.trim().charAt(0).toUpperCase();
+}
+
 export default function ChildUserDropdown() {
+  const child = useChildAuthStore((state) => state.child);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const router = useRouter();
+
+  const displayName = child?.userName?.trim() || "Student";
+  const displayGrade = formatChildGrade(child?.grade);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -29,12 +44,14 @@ export default function ChildUserDropdown() {
   return (
     <div className="relative" ref={ref}>
       <button onClick={() => setOpen(!open)} className="flex items-center gap-3 cursor-pointer hover:opacity-90 transition-opacity">
-        <div className="w-10 h-10 rounded-full bg-[#525162] overflow-hidden flex-shrink-0">
-          <Image src="/assets/wayfinder Em.png" alt="Avatar" width={40} height={40} className="w-full h-full object-cover" />
+        <div className="w-10 h-10 rounded-full bg-[#525162] flex items-center justify-center flex-shrink-0">
+          <span style={{ ...inter, fontWeight: 600, fontSize: "16px", color: "#FFFFFF" }}>
+            {getInitials(child?.userName)}
+          </span>
         </div>
         <div className="hidden sm:block text-left">
-          <p style={{ ...inter, fontWeight: 600, fontSize: "16px", lineHeight: "22px", color: "#FFFFFF" }}>Alex Filler</p>
-          <p style={{ ...inter, fontWeight: 400, fontSize: "12px", lineHeight: "16px", color: "rgba(255,255,255,0.5)" }}>Grade 4</p>
+          <p style={{ ...inter, fontWeight: 600, fontSize: "16px", lineHeight: "22px", color: "#FFFFFF" }}>{displayName}</p>
+          <p style={{ ...inter, fontWeight: 400, fontSize: "12px", lineHeight: "16px", color: "rgba(255,255,255,0.5)" }}>{displayGrade}</p>
         </div>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" className={`opacity-50 transition-transform duration-200 ${open ? "rotate-180" : ""}`}>
           <polyline points="6 9 12 15 18 9" />
@@ -44,8 +61,8 @@ export default function ChildUserDropdown() {
       {open && (
         <div className="absolute right-0 top-full mt-2 w-[200px] rounded-[12px] overflow-hidden z-50 shadow-lg" style={{ backgroundColor: "#313044", border: "1px solid rgba(255,255,255,0.1)" }}>
           <div className="px-4 py-3 border-b border-white/10">
-            <p style={{ ...inter, fontWeight: 600, fontSize: "14px", color: "#FFFFFF" }}>Alex Filler</p>
-            <p style={{ ...inter, fontWeight: 400, fontSize: "12px", color: "rgba(255,255,255,0.5)" }}>alex@thaylo.com</p>
+            <p style={{ ...inter, fontWeight: 600, fontSize: "14px", color: "#FFFFFF" }}>{displayName}</p>
+            <p style={{ ...inter, fontWeight: 400, fontSize: "12px", color: "rgba(255,255,255,0.5)" }}>{displayGrade}</p>
           </div>
           <button onClick={handleLogout} className="w-full px-4 py-3 flex items-center gap-3 text-left hover:bg-white/5 transition-colors cursor-pointer">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

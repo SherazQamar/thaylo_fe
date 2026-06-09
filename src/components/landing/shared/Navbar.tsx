@@ -64,9 +64,11 @@ export default function Navbar() {
               <Image src="/assets/profile-circle.png" alt="Sign in" width={20} height={20} className="w-5 h-5 object-contain" unoptimized />
               Sign in
             </Link>
-            <Button variant="primary" className="!rounded-xl px-8 py-3 text-sm font-normal shadow-lg shadow-green-500/25">
-              {pathname === "/" ? "Join The Pilot" : "Sign Up"}
-            </Button>
+            <Link href="/parent-register">
+              <Button variant="primary" className="!rounded-xl px-8 py-3 text-sm font-normal shadow-lg shadow-green-500/25">
+                {pathname === "/" ? "Join The Pilot" : "Sign Up"}
+              </Button>
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
@@ -114,9 +116,11 @@ export default function Navbar() {
               <Image src="/assets/profile-circle.png" alt="Sign in" width={20} height={20} className="w-5 h-5 object-contain" unoptimized />
               Sign in
             </Link>
-            <Button variant="primary" className="mt-2 w-full">
-              Join The Pilot
-            </Button>
+            <Link href="/parent-register" onClick={() => setMobileOpen(false)}>
+              <Button variant="primary" className="mt-2 w-full">
+                {pathname === "/" ? "Join The Pilot" : "Sign Up"}
+              </Button>
+            </Link>
           </div>
         </div>
       )}

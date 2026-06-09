@@ -98,9 +98,7 @@ function ParentRegisterStep3Content() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isAddMode = isAddChildWizardMode(searchParams);
-  const { status, error } = useParentRegisterAccess({
-    redirectIfRegistered: !isAddMode,
-  });
+  const { status, error } = useParentRegisterAccess(!isAddMode);
   const children = useRegisterWizardStore((s) => s.children);
 
   useEffect(() => {

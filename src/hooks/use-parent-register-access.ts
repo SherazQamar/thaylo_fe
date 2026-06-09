@@ -7,26 +7,40 @@ import {
 import { getUserToken } from "@/lib/auth-cookies";
 import { hasCompletedFamilyRegistration } from "@/lib/parent-registration";
 import { logoutParent } from "@/lib/auth-session";
+import { useAuthStore } from "@/stores/auth.store";
 
 type AccessStatus = "loading" | "ready" | "error";
 
-export function useParentRegisterAccess(options?: {
-  redirectIfRegistered?: boolean;
-}) {
+export function useParentRegisterAccess(redirectIfRegistered = false) {
   const router = useRouter();
   const [status, setStatus] = useState<AccessStatus>("loading");
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!getUserToken()) {
-      router.replace("/parent-sign-in");
-      return;
-    }
-
     let cancelled = false;
 
-    refreshParentSession()
-      .then((profile) => {
+    async function validateAccess() {
+      if (!getUserToken()) {
+        router.replace("/parent-sign-in");
+        return;
+      }
+
+      const cachedUser = useAuthStore.getState().user;
+      if (cachedUser?.role === "PARENT") {
+        if (
+          redirectIfRegistered &&
+          hasCompletedFamilyRegistration(cachedUser)
+        ) {
+          router.replace("/parent-dashboard");
+          return;
+        }
+
+        // Parent just signed in — show the wizard while profile refreshes.
+        setStatus("ready");
+      }
+
+      try {
+        const profile = await refreshParentSession();
         if (cancelled) return;
 
         if (profile.role !== "PARENT") {
@@ -36,7 +50,7 @@ export function useParentRegisterAccess(options?: {
         }
 
         if (
-          options?.redirectIfRegistered &&
+          redirectIfRegistered &&
           hasCompletedFamilyRegistration(profile)
         ) {
           router.replace("/parent-dashboard");
@@ -44,17 +58,19 @@ export function useParentRegisterAccess(options?: {
         }
 
         setStatus("ready");
-      })
-      .catch((err) => {
+      } catch (err) {
         if (cancelled) return;
         setError(getApiErrorMessage(err));
         setStatus("error");
-      });
+      }
+    }
+
+    void validateAccess();
 
     return () => {
       cancelled = true;
     };
-  }, [router, options?.redirectIfRegistered]);
+  }, [redirectIfRegistered]);
 
   return { status, error };
 }

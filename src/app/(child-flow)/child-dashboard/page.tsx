@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import ChildUserDropdown from "@/components/child/ChildUserDropdown";
+import { useChildAuthStore } from "@/stores/child-auth.store";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
@@ -21,6 +22,9 @@ const pathNodes2 = [
 
 export default function ChildProgressPage() {
   const router = useRouter();
+  const child = useChildAuthStore((state) => state.child);
+  const greetingName = child?.userName?.trim() || "Student";
+
   return (
     <div className="flex flex-col h-full">
       {/* Header - full width */}
@@ -42,7 +46,7 @@ export default function ChildProgressPage() {
         >
           <div>
             <p style={{ ...inter, fontWeight: 400, fontSize: "14px", color: "rgba(255,255,255,0.8)" }}>
-              Welcome back, Allex Filler
+              Welcome back, {greetingName}
             </p>
             <p style={{ ...inter, fontWeight: 700, fontSize: "20px", color: "#FFFFFF", marginTop: "4px" }}>
               Here&apos;s your learning path today

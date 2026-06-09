@@ -16,19 +16,22 @@ import {
   type RegisterChildDraft,
 } from "@/stores/register-wizard.store";
 import { useAuthStore } from "@/stores/auth.store";
+import type { Child } from "@/types/api";
+
+const EMPTY_CHILDREN: Child[] = [];
 
 function ParentRegisterStep2Content() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isAddMode = isAddChildWizardMode(searchParams);
-  const { status, error } = useParentRegisterAccess({
-    redirectIfRegistered: !isAddMode,
-  });
+  const { status, error } = useParentRegisterAccess(!isAddMode);
   const children = useRegisterWizardStore((s) => s.children);
   const addChild = useRegisterWizardStore((s) => s.addChild);
   const updateChild = useRegisterWizardStore((s) => s.updateChild);
   const removeChild = useRegisterWizardStore((s) => s.removeChild);
-  const existingChildren = useAuthStore((s) => s.user?.children ?? []);
+  const existingChildren = useAuthStore(
+    (s) => s.user?.children ?? EMPTY_CHILDREN,
+  );
   const [showModal, setShowModal] = useState(false);
   const [editingChildId, setEditingChildId] = useState<string | null>(null);
   const [studentName, setStudentName] = useState("");

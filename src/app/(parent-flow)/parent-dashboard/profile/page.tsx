@@ -1,225 +1,629 @@
 "use client";
 
-import { useState } from "react";
-import Image from "next/image";
+import { FormEvent, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { US_TIMEZONES } from "@/constants/us-timezones";
+import {
+  getApiErrorMessage,
+  updateParentProfile,
+} from "@/lib/auth-api";
+import { fetchParentChildren } from "@/lib/parent-api";
+import { useAuthStore } from "@/stores/auth.store";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
-const children = [
-  { name: "Alex Filler", grade: "Grade 4", status: "NEEDS ATTENTION", statusColor: "#F59E0B" },
-  { name: "Alex Filler", grade: "Grade 4", status: "ON TRACK", statusColor: "#00CED1" },
-  { name: "Alex Filler", grade: "Grade 4", status: "ON TRACK", statusColor: "#00CED1" },
-];
+function formatDisplayValue(value: string | null | undefined): string {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : "—";
+}
+
+function formatTimezoneLabel(timeZone: string | null | undefined): string {
+  if (!timeZone?.trim()) return "—";
+  const match = US_TIMEZONES.find((tz) => tz.value === timeZone);
+  return match ? match.label : timeZone;
+}
+
+function formatChildGrade(grade: string | null | undefined): string {
+  if (!grade?.trim()) return "—";
+  if (/^grade\s/i.test(grade.trim())) return grade.trim();
+  return `Grade ${grade.trim()}`;
+}
+
+function getInitials(name: string | null | undefined): string {
+  if (!name?.trim()) return "?";
+  return name.trim().charAt(0).toUpperCase();
+}
+
+function plantStatusColor(status: string): string {
+  const normalized = status.toLowerCase();
+  if (normalized.includes("attention") || normalized.includes("needs")) {
+    return "#F59E0B";
+  }
+  if (
+    normalized.includes("track") ||
+    normalized.includes("progress") ||
+    normalized.includes("started")
+  ) {
+    return "#00CED1";
+  }
+  return "rgba(255,255,255,0.5)";
+}
+
+interface EditFormState {
+  name: string;
+  phone: string;
+  country: string;
+  timeZone: string;
+}
 
 export default function ParentProfilePage() {
+  const queryClient = useQueryClient();
+  const user = useAuthStore((state) => state.user);
   const [showEdit, setShowEdit] = useState(false);
+  const [form, setForm] = useState<EditFormState>({
+    name: "",
+    phone: "",
+    country: "",
+    timeZone: "",
+  });
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  const { data: children = [], isLoading: childrenLoading } = useQuery({
+    queryKey: ["parent-children"],
+    queryFn: fetchParentChildren,
+  });
+
+  const saveMutation = useMutation({
+    mutationFn: () =>
+      updateParentProfile({
+        name: form.name.trim(),
+        phone: form.phone.trim(),
+        country: form.country.trim(),
+        timeZone: form.timeZone.trim(),
+      }),
+    onSuccess: () => {
+      setSaveError(null);
+      setShowEdit(false);
+      void queryClient.invalidateQueries({ queryKey: ["parent-children"] });
+    },
+    onError: (err) => {
+      setSaveError(getApiErrorMessage(err));
+    },
+  });
+
+  function openEdit() {
+    setForm({
+      name: user?.name ?? "",
+      phone: user?.phone ?? "",
+      country: user?.country ?? "USA",
+      timeZone: user?.timeZone ?? "",
+    });
+    setSaveError(null);
+    setShowEdit(true);
+  }
+
+  function closeEdit() {
+    if (saveMutation.isPending) return;
+    setShowEdit(false);
+    setSaveError(null);
+  }
+
+  function handleSave(e: FormEvent) {
+    e.preventDefault();
+    setSaveError(null);
+
+    if (!form.name.trim()) {
+      setSaveError("Full name is required");
+      return;
+    }
+    if (!form.phone.trim()) {
+      setSaveError("Phone is required");
+      return;
+    }
+    if (!form.country.trim()) {
+      setSaveError("Country is required");
+      return;
+    }
+    if (!form.timeZone.trim()) {
+      setSaveError("Timezone is required");
+      return;
+    }
+
+    saveMutation.mutate();
+  }
+
+  const profileRows = [
+    { label: "Country", value: formatDisplayValue(user?.country) },
+    { label: "Timezone", value: formatTimezoneLabel(user?.timeZone) },
+  ];
 
   return (
     <div className="p-4 md:p-6 lg:p-10">
-      {/* Title */}
       <div className="mb-8">
-        <h1 style={{ ...inter, fontWeight: 700, fontSize: "28px", lineHeight: "36px", color: "#FFFFFF", marginBottom: "8px" }}>
+        <h1
+          style={{
+            ...inter,
+            fontWeight: 700,
+            fontSize: "28px",
+            lineHeight: "36px",
+            color: "#FFFFFF",
+            marginBottom: "8px",
+          }}
+        >
           Parent Profile
         </h1>
-        <p style={{ ...inter, fontWeight: 400, fontSize: "15px", lineHeight: "24px", color: "rgba(255,255,255,0.5)" }}>
+        <p
+          style={{
+            ...inter,
+            fontWeight: 400,
+            fontSize: "15px",
+            lineHeight: "24px",
+            color: "rgba(255,255,255,0.5)",
+          }}
+        >
           Update your account details, preferences, and family settings.
         </p>
       </div>
 
-      {/* Profile Card */}
-      <div className="rounded-[12px] p-5 md:p-6 mb-6" style={{ backgroundColor: "#313044" }}>
-        {/* Header row */}
+      <div
+        className="rounded-[12px] p-5 md:p-6 mb-6"
+        style={{ backgroundColor: "#313044" }}
+      >
         <div className="flex items-start justify-between mb-5">
           <div>
-            <h2 style={{ ...inter, fontWeight: 700, fontSize: "18px", lineHeight: "26px", color: "#FFFFFF" }}>Profile</h2>
-            <p style={{ ...inter, fontWeight: 400, fontSize: "13px", lineHeight: "20px", color: "rgba(255,255,255,0.5)" }}>
+            <h2
+              style={{
+                ...inter,
+                fontWeight: 700,
+                fontSize: "18px",
+                lineHeight: "26px",
+                color: "#FFFFFF",
+              }}
+            >
+              Profile
+            </h2>
+            <p
+              style={{
+                ...inter,
+                fontWeight: 400,
+                fontSize: "13px",
+                lineHeight: "20px",
+                color: "rgba(255,255,255,0.5)",
+              }}
+            >
               Basic info shown across your dashboards and reports.
             </p>
           </div>
           <button
-            onClick={() => setShowEdit(true)}
+            type="button"
+            onClick={openEdit}
             className="rounded-[12px] px-6 py-2.5 cursor-pointer hover:opacity-90 transition-opacity flex-shrink-0"
-            style={{ backgroundColor: "#00CED1", ...inter, fontWeight: 600, fontSize: "14px", lineHeight: "20px", color: "#FFFFFF" }}
+            style={{
+              backgroundColor: "#00CED1",
+              ...inter,
+              fontWeight: 600,
+              fontSize: "14px",
+              lineHeight: "20px",
+              color: "#FFFFFF",
+            }}
           >
             Edit
           </button>
         </div>
 
-        {/* User info */}
         <div className="flex items-center gap-3 mb-6">
           <div className="w-[50px] h-[50px] rounded-full bg-[#525162] flex items-center justify-center flex-shrink-0">
-            <span style={{ ...inter, fontWeight: 600, fontSize: "22px", color: "#FFFFFF" }}>S</span>
+            <span
+              style={{
+                ...inter,
+                fontWeight: 600,
+                fontSize: "22px",
+                color: "#FFFFFF",
+              }}
+            >
+              {getInitials(user?.name)}
+            </span>
           </div>
           <div>
-            <p style={{ ...inter, fontWeight: 600, fontSize: "16px", lineHeight: "22px", color: "#FFFFFF" }}>Sarah Ahmed</p>
-            <p style={{ ...inter, fontWeight: 400, fontSize: "13px", lineHeight: "18px", color: "rgba(255,255,255,0.5)" }}>sarah@email.com</p>
-            <p style={{ ...inter, fontWeight: 400, fontSize: "13px", lineHeight: "18px", color: "rgba(255,255,255,0.5)" }}>+92 3XX XXX XXXX</p>
+            <p
+              style={{
+                ...inter,
+                fontWeight: 600,
+                fontSize: "16px",
+                lineHeight: "22px",
+                color: "#FFFFFF",
+              }}
+            >
+              {formatDisplayValue(user?.name)}
+            </p>
+            <p
+              style={{
+                ...inter,
+                fontWeight: 400,
+                fontSize: "13px",
+                lineHeight: "18px",
+                color: "rgba(255,255,255,0.5)",
+              }}
+            >
+              {formatDisplayValue(user?.email)}
+            </p>
+            <p
+              style={{
+                ...inter,
+                fontWeight: 400,
+                fontSize: "13px",
+                lineHeight: "18px",
+                color: "rgba(255,255,255,0.5)",
+              }}
+            >
+              {formatDisplayValue(user?.phone)}
+            </p>
           </div>
         </div>
 
-        {/* Info rows */}
         <div className="flex flex-col gap-2.5">
-          {[
-            { label: "Country", value: "Pakistan" },
-            { label: "Timezone", value: "Asia/Karachi" },
-            { label: "Preferred language", value: "English" },
-          ].map((item, i) => (
+          {profileRows.map((item) => (
             <div
-              key={i}
+              key={item.label}
               className="flex items-center justify-between rounded-[12px] px-4 py-3"
               style={{ backgroundColor: "#525162" }}
             >
-              <span style={{ ...inter, fontWeight: 500, fontSize: "14px", lineHeight: "20px", color: "rgba(255,255,255,0.7)" }}>{item.label}</span>
-              <span style={{ ...inter, fontWeight: 600, fontSize: "14px", lineHeight: "20px", color: "#FFFFFF" }}>{item.value}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Children Card */}
-      <div className="rounded-[12px] p-5 md:p-6" style={{ backgroundColor: "#313044" }}>
-        <h2 style={{ ...inter, fontWeight: 700, fontSize: "18px", lineHeight: "26px", color: "#FFFFFF", marginBottom: "4px" }}>Children</h2>
-        <p style={{ ...inter, fontWeight: 400, fontSize: "13px", lineHeight: "20px", color: "rgba(255,255,255,0.5)", marginBottom: "16px" }}>
-          At-a-glance list (full details live in dashboards/reports).
-        </p>
-
-        <div className="flex flex-col gap-2.5">
-          {children.map((child, i) => (
-            <div
-              key={i}
-              className="flex items-center justify-between rounded-[12px] px-4 py-3"
-              style={{ backgroundColor: "#525162" }}
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-[#313044] overflow-hidden flex-shrink-0">
-                  <Image src="/assets/wayfinder Em.png" alt={child.name} width={36} height={36} className="w-full h-full object-cover" />
-                </div>
-                <div>
-                  <p style={{ ...inter, fontWeight: 600, fontSize: "14px", lineHeight: "20px", color: "#FFFFFF" }}>{child.name}</p>
-                  <p style={{ ...inter, fontWeight: 400, fontSize: "12px", lineHeight: "16px", color: "rgba(255,255,255,0.5)" }}>{child.grade}</p>
-                </div>
-              </div>
               <span
-                className="uppercase"
-                style={{ ...inter, fontWeight: 700, fontSize: "12px", lineHeight: "16px", letterSpacing: "0.5px", color: child.statusColor }}
+                style={{
+                  ...inter,
+                  fontWeight: 500,
+                  fontSize: "14px",
+                  lineHeight: "20px",
+                  color: "rgba(255,255,255,0.7)",
+                }}
               >
-                {child.status}
+                {item.label}
+              </span>
+              <span
+                style={{
+                  ...inter,
+                  fontWeight: 600,
+                  fontSize: "14px",
+                  lineHeight: "20px",
+                  color: "#FFFFFF",
+                }}
+              >
+                {item.value}
               </span>
             </div>
           ))}
         </div>
       </div>
 
-      {/* ===== EDIT MODAL ===== */}
+      <div
+        className="rounded-[12px] p-5 md:p-6"
+        style={{ backgroundColor: "#313044" }}
+      >
+        <h2
+          style={{
+            ...inter,
+            fontWeight: 700,
+            fontSize: "18px",
+            lineHeight: "26px",
+            color: "#FFFFFF",
+            marginBottom: "4px",
+          }}
+        >
+          Children
+        </h2>
+        <p
+          style={{
+            ...inter,
+            fontWeight: 400,
+            fontSize: "13px",
+            lineHeight: "20px",
+            color: "rgba(255,255,255,0.5)",
+            marginBottom: "16px",
+          }}
+        >
+          At-a-glance list (full details live in dashboards/reports).
+        </p>
+
+        {childrenLoading ? (
+          <p
+            style={{
+              ...inter,
+              fontWeight: 400,
+              fontSize: "14px",
+              lineHeight: "22px",
+              color: "rgba(255,255,255,0.5)",
+            }}
+          >
+            Loading children…
+          </p>
+        ) : children.length === 0 ? (
+          <p
+            style={{
+              ...inter,
+              fontWeight: 400,
+              fontSize: "14px",
+              lineHeight: "22px",
+              color: "rgba(255,255,255,0.5)",
+            }}
+          >
+            No children registered yet.
+          </p>
+        ) : (
+          <div className="flex flex-col gap-2.5">
+            {children.map((child) => (
+              <div
+                key={child.id}
+                className="flex items-center justify-between rounded-[12px] px-4 py-3"
+                style={{ backgroundColor: "#525162" }}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-[#313044] overflow-hidden flex-shrink-0 flex items-center justify-center text-lg">
+                    🧒
+                  </div>
+                  <div>
+                    <p
+                      style={{
+                        ...inter,
+                        fontWeight: 600,
+                        fontSize: "14px",
+                        lineHeight: "20px",
+                        color: "#FFFFFF",
+                      }}
+                    >
+                      {child.userName}
+                    </p>
+                    <p
+                      style={{
+                        ...inter,
+                        fontWeight: 400,
+                        fontSize: "12px",
+                        lineHeight: "16px",
+                        color: "rgba(255,255,255,0.5)",
+                      }}
+                    >
+                      {formatChildGrade(child.grade)}
+                    </p>
+                  </div>
+                </div>
+                <span
+                  className="uppercase"
+                  style={{
+                    ...inter,
+                    fontWeight: 700,
+                    fontSize: "12px",
+                    lineHeight: "16px",
+                    letterSpacing: "0.5px",
+                    color: plantStatusColor(child.plantStatus),
+                  }}
+                >
+                  {child.plantStatus}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       {showEdit && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4" style={{ backgroundColor: "rgba(0,0,0,0.7)" }}>
-          <div className="w-full max-w-[680px] rounded-[16px] p-5 md:p-7 relative" style={{ backgroundColor: "#313044" }}>
-            {/* Close */}
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center px-4"
+          style={{ backgroundColor: "rgba(0,0,0,0.7)" }}
+        >
+          <div
+            className="w-full max-w-[680px] rounded-[16px] p-5 md:p-7 relative"
+            style={{ backgroundColor: "#313044" }}
+          >
             <button
-              onClick={() => setShowEdit(false)}
-              className="absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center cursor-pointer hover:opacity-80"
+              type="button"
+              onClick={closeEdit}
+              disabled={saveMutation.isPending}
+              className="absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center cursor-pointer hover:opacity-80 disabled:opacity-50"
               style={{ backgroundColor: "#525162" }}
+              aria-label="Close"
             >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="white"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
               </svg>
             </button>
 
-            <h3 style={{ ...inter, fontWeight: 700, fontSize: "18px", lineHeight: "26px", color: "#FFFFFF", marginBottom: "4px" }}>
+            <h3
+              style={{
+                ...inter,
+                fontWeight: 700,
+                fontSize: "18px",
+                lineHeight: "26px",
+                color: "#FFFFFF",
+                marginBottom: "4px",
+              }}
+            >
               Account information
             </h3>
-            <p style={{ ...inter, fontWeight: 400, fontSize: "13px", lineHeight: "20px", color: "rgba(255,255,255,0.5)", marginBottom: "20px" }}>
+            <p
+              style={{
+                ...inter,
+                fontWeight: 400,
+                fontSize: "13px",
+                lineHeight: "20px",
+                color: "rgba(255,255,255,0.5)",
+                marginBottom: "20px",
+              }}
+            >
               Keep this accurate for reports, support, and billing.
             </p>
 
-            <div className="flex flex-col gap-2.5">
-              {/* Full name */}
+            <form onSubmit={handleSave} className="flex flex-col gap-2.5">
               <div>
-                <label style={{ ...inter, fontWeight: 600, fontSize: "13px", lineHeight: "20px", color: "#FFFFFF", display: "block", marginBottom: "4px" }}>
+                <label
+                  style={{
+                    ...inter,
+                    fontWeight: 600,
+                    fontSize: "13px",
+                    lineHeight: "20px",
+                    color: "#FFFFFF",
+                    display: "block",
+                    marginBottom: "4px",
+                  }}
+                >
                   Full name
                 </label>
                 <input
                   type="text"
-                  defaultValue="Sarah Ahmed"
+                  value={form.name}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, name: e.target.value }))
+                  }
+                  required
                   className="w-full rounded-[12px] px-4 py-2.5 outline-none text-white"
                   style={{ backgroundColor: "#525162", ...inter, fontSize: "14px" }}
                 />
               </div>
 
-              {/* Email */}
               <div>
-                <label style={{ ...inter, fontWeight: 600, fontSize: "13px", lineHeight: "20px", color: "#FFFFFF", display: "block", marginBottom: "4px" }}>
+                <label
+                  style={{
+                    ...inter,
+                    fontWeight: 600,
+                    fontSize: "13px",
+                    lineHeight: "20px",
+                    color: "#FFFFFF",
+                    display: "block",
+                    marginBottom: "4px",
+                  }}
+                >
                   Email
                 </label>
                 <input
                   type="email"
-                  defaultValue="sarah@gmail.com"
-                  className="w-full rounded-[12px] px-4 py-2.5 outline-none text-white"
+                  value={user?.email ?? ""}
+                  readOnly
+                  className="w-full rounded-[12px] px-4 py-2.5 outline-none text-white/60 cursor-not-allowed"
                   style={{ backgroundColor: "#525162", ...inter, fontSize: "14px" }}
                 />
               </div>
 
-              {/* Phone */}
               <div>
-                <label style={{ ...inter, fontWeight: 600, fontSize: "13px", lineHeight: "20px", color: "#FFFFFF", display: "block", marginBottom: "4px" }}>
+                <label
+                  style={{
+                    ...inter,
+                    fontWeight: 600,
+                    fontSize: "13px",
+                    lineHeight: "20px",
+                    color: "#FFFFFF",
+                    display: "block",
+                    marginBottom: "4px",
+                  }}
+                >
                   Phone
                 </label>
                 <input
                   type="text"
-                  defaultValue="92 3XX XXX XXX"
+                  value={form.phone}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, phone: e.target.value }))
+                  }
+                  required
                   className="w-full rounded-[12px] px-4 py-2.5 outline-none text-white"
                   style={{ backgroundColor: "#525162", ...inter, fontSize: "14px" }}
                 />
               </div>
 
-              {/* Preferred language */}
               <div>
-                <label style={{ ...inter, fontWeight: 600, fontSize: "13px", lineHeight: "20px", color: "#FFFFFF", display: "block", marginBottom: "4px" }}>
-                  Preferred language
-                </label>
-                <input
-                  type="text"
-                  defaultValue="English"
-                  className="w-full rounded-[12px] px-4 py-2.5 outline-none text-white"
-                  style={{ backgroundColor: "#525162", ...inter, fontSize: "14px" }}
-                />
-              </div>
-
-              {/* Country */}
-              <div>
-                <label style={{ ...inter, fontWeight: 600, fontSize: "13px", lineHeight: "20px", color: "#FFFFFF", display: "block", marginBottom: "4px" }}>
+                <label
+                  style={{
+                    ...inter,
+                    fontWeight: 600,
+                    fontSize: "13px",
+                    lineHeight: "20px",
+                    color: "#FFFFFF",
+                    display: "block",
+                    marginBottom: "4px",
+                  }}
+                >
                   Country
                 </label>
                 <input
                   type="text"
-                  defaultValue="Pakistan"
+                  value={form.country}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, country: e.target.value }))
+                  }
+                  required
                   className="w-full rounded-[12px] px-4 py-2.5 outline-none text-white"
                   style={{ backgroundColor: "#525162", ...inter, fontSize: "14px" }}
                 />
               </div>
 
-              {/* Timezone */}
               <div>
-                <label style={{ ...inter, fontWeight: 600, fontSize: "13px", lineHeight: "20px", color: "#FFFFFF", display: "block", marginBottom: "4px" }}>
+                <label
+                  style={{
+                    ...inter,
+                    fontWeight: 600,
+                    fontSize: "13px",
+                    lineHeight: "20px",
+                    color: "#FFFFFF",
+                    display: "block",
+                    marginBottom: "4px",
+                  }}
+                >
                   Timezone
                 </label>
-                <input
-                  type="text"
-                  defaultValue="Asia/Karachii"
+                <select
+                  value={form.timeZone}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, timeZone: e.target.value }))
+                  }
+                  required
                   className="w-full rounded-[12px] px-4 py-2.5 outline-none text-white"
                   style={{ backgroundColor: "#525162", ...inter, fontSize: "14px" }}
-                />
+                >
+                  <option value="" disabled>
+                    Select timezone
+                  </option>
+                  {US_TIMEZONES.map((tz) => (
+                    <option key={tz.value} value={tz.value}>
+                      {tz.label}
+                    </option>
+                  ))}
+                </select>
               </div>
-            </div>
 
-            {/* Save button */}
-            <button
-              onClick={() => setShowEdit(false)}
-              className="w-full rounded-[16px] py-3 mt-4 cursor-pointer hover:opacity-90 transition-opacity"
-              style={{ backgroundColor: "#00CED1", ...inter, fontWeight: 700, fontSize: "16px", lineHeight: "22px", color: "#FFFFFF", letterSpacing: "1px" }}
-            >
-              SAVE CHANGES
-            </button>
+              {saveError && (
+                <p
+                  className="text-sm text-red-400 text-center"
+                  role="alert"
+                  style={inter}
+                >
+                  {saveError}
+                </p>
+              )}
+
+              <button
+                type="submit"
+                disabled={saveMutation.isPending}
+                className="w-full rounded-[16px] py-3 mt-4 cursor-pointer hover:opacity-90 transition-opacity disabled:opacity-60 disabled:cursor-wait"
+                style={{
+                  backgroundColor: "#00CED1",
+                  ...inter,
+                  fontWeight: 700,
+                  fontSize: "16px",
+                  lineHeight: "22px",
+                  color: "#FFFFFF",
+                  letterSpacing: "1px",
+                }}
+              >
+                {saveMutation.isPending ? "SAVING…" : "SAVE CHANGES"}
+              </button>
+            </form>
           </div>
         </div>
       )}

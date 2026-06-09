@@ -42,5 +42,8 @@ export interface Child {
   grade: string | null;
   documentUrls: string[];
   permission: Record<string, unknown> | null;
-  userId: number;
+  userId?: number;
+  parentId?: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
