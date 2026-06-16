@@ -1,5 +1,6 @@
 import axios, { isAxiosError } from "axios";
 import { getChildToken, getUserToken } from "@/lib/auth-cookies";
+import { PORTAL_SIGN_IN_PATHS } from "@/lib/auth-agent";
 import { logoutChild, logoutParent, logoutUser } from "@/lib/auth-session";
 
 export type AuthMode = "user" | "child" | "none";
@@ -49,17 +50,17 @@ api.interceptors.response.use(
         if (path.startsWith("/parent-dashboard")) {
           logoutParent();
           const returnUrl = encodeURIComponent(path);
-          window.location.href = `/parent-sign-in?returnUrl=${returnUrl}`;
+          window.location.href = `${PORTAL_SIGN_IN_PATHS.parent}?returnUrl=${returnUrl}`;
         } else if (path.startsWith("/dashboard")) {
           logoutUser();
           const returnUrl = encodeURIComponent(path);
-          window.location.href = `/wayfinder-sign-in?returnUrl=${returnUrl}`;
+          window.location.href = `${PORTAL_SIGN_IN_PATHS.wayfinder}?returnUrl=${returnUrl}`;
         }
       } else if (authMode === "child") {
         const path = window.location.pathname;
         if (path.startsWith("/child-dashboard")) {
           logoutChild();
-          window.location.href = "/child-sign-in";
+          window.location.href = PORTAL_SIGN_IN_PATHS.child;
         }
       }
     }

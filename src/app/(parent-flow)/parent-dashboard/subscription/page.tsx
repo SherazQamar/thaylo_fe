@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import ParentUserDropdown from "@/components/parent/ParentUserDropdown";
+import Breadcrumbs from "@/components/shared/Breadcrumbs";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
@@ -38,17 +39,25 @@ export default function SubscriptionPage() {
     return (
       <div className="p-4 md:p-6 lg:p-10">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6 md:mb-8">
+        <div className="flex items-center justify-between mb-2 md:mb-3">
           <h1
             className="uppercase"
             style={{ ...inter, fontWeight: 700, fontSize: "24px", lineHeight: "25px", letterSpacing: "0.8px", color: "#DCE6EC" }}
           >
-            Message
+            Subscription
           </h1>
           <div className="hidden md:block">
             <ParentUserDropdown />
           </div>
         </div>
+
+        <Breadcrumbs
+          showHome={false}
+          items={[
+            { href: "/parent-dashboard", label: "Parent Dashboard" },
+            { href: "/parent-dashboard/subscription", label: "Subscription" },
+          ]}
+        />
 
         {/* Title */}
         <div className="mb-8">
@@ -203,17 +212,25 @@ export default function SubscriptionPage() {
   return (
     <div className="p-4 md:p-6 lg:p-10">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6 md:mb-8">
+      <div className="flex items-center justify-between mb-2 md:mb-3">
         <h1
           className="uppercase"
           style={{ ...inter, fontWeight: 700, fontSize: "24px", lineHeight: "25px", letterSpacing: "0.8px", color: "#DCE6EC" }}
         >
-          Message
+          Subscription
         </h1>
         <div className="hidden md:block">
           <ParentUserDropdown />
         </div>
       </div>
+
+      <Breadcrumbs
+        showHome={false}
+        items={[
+          { href: "/parent-dashboard", label: "Parent Dashboard" },
+          { href: "/parent-dashboard/subscription", label: "Subscription" },
+        ]}
+      />
 
       {/* Title */}
       <div className="mb-8">
@@ -261,8 +278,11 @@ export default function SubscriptionPage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Monthly Plan */}
-          <div
-            className="rounded-[12px] p-5 md:p-6 flex flex-col"
+          <button
+            type="button"
+            onClick={() => handleSelectPlan("monthly")}
+            aria-pressed={selectedPlan === "monthly"}
+            className="rounded-[12px] p-5 md:p-6 flex flex-col text-left cursor-pointer hover:opacity-95 transition-opacity w-full"
             style={{ backgroundColor: "#313044", border: selectedPlan === "monthly" ? "1px solid #00CED1" : "1px solid #525162" }}
           >
             <div className="flex items-center justify-between mb-4">
@@ -280,27 +300,24 @@ export default function SubscriptionPage() {
                 ))}
               </ul>
             </div>
-            {selectedPlan === "monthly" ? (
-              <button
-                className="w-full rounded-[16px] py-3 cursor-pointer hover:opacity-90 transition-opacity"
-                style={{ backgroundColor: "#00CED1", ...inter, fontWeight: 600, fontSize: "15px", lineHeight: "22px", color: "#FFFFFF" }}
-              >
-                Selected
-              </button>
-            ) : (
-              <button
-                onClick={() => handleSelectPlan("monthly")}
-                className="w-full rounded-[16px] py-3 cursor-pointer hover:opacity-90 transition-opacity"
-                style={{ backgroundColor: "transparent", border: "1px solid #525162", ...inter, fontWeight: 600, fontSize: "15px", lineHeight: "22px", color: "#FFFFFF" }}
-              >
-                Select
-              </button>
-            )}
-          </div>
+            <div
+              className="w-full rounded-[16px] py-3 pointer-events-none"
+              style={
+                selectedPlan === "monthly"
+                  ? { backgroundColor: "#00CED1", ...inter, fontWeight: 600, fontSize: "15px", lineHeight: "22px", color: "#FFFFFF", textAlign: "center" }
+                  : { backgroundColor: "transparent", border: "1px solid #525162", ...inter, fontWeight: 600, fontSize: "15px", lineHeight: "22px", color: "#FFFFFF", textAlign: "center" }
+              }
+            >
+              {selectedPlan === "monthly" ? "Selected" : "Select"}
+            </div>
+          </button>
 
           {/* Annual Plan */}
-          <div
-            className="rounded-[12px] p-5 md:p-6 flex flex-col"
+          <button
+            type="button"
+            onClick={() => handleSelectPlan("annual")}
+            aria-pressed={selectedPlan === "annual"}
+            className="rounded-[12px] p-5 md:p-6 flex flex-col text-left cursor-pointer hover:opacity-95 transition-opacity w-full"
             style={{ backgroundColor: "#313044", border: selectedPlan === "annual" ? "1px solid #00CED1" : "1px solid #525162" }}
           >
             <div className="flex items-center justify-between mb-4">
@@ -318,23 +335,17 @@ export default function SubscriptionPage() {
                 ))}
               </ul>
             </div>
-            {selectedPlan === "annual" ? (
-              <button
-                className="w-full rounded-[16px] py-3 cursor-pointer hover:opacity-90 transition-opacity"
-                style={{ backgroundColor: "#00CED1", ...inter, fontWeight: 600, fontSize: "15px", lineHeight: "22px", color: "#FFFFFF" }}
-              >
-                Selected
-              </button>
-            ) : (
-              <button
-                onClick={() => handleSelectPlan("annual")}
-                className="w-full rounded-[16px] py-3 cursor-pointer hover:opacity-90 transition-opacity"
-                style={{ backgroundColor: "transparent", border: "1px solid #525162", ...inter, fontWeight: 600, fontSize: "15px", lineHeight: "22px", color: "#FFFFFF" }}
-              >
-                Select
-              </button>
-            )}
-          </div>
+            <div
+              className="w-full rounded-[16px] py-3 pointer-events-none"
+              style={
+                selectedPlan === "annual"
+                  ? { backgroundColor: "#00CED1", ...inter, fontWeight: 600, fontSize: "15px", lineHeight: "22px", color: "#FFFFFF", textAlign: "center" }
+                  : { backgroundColor: "transparent", border: "1px solid #525162", ...inter, fontWeight: 600, fontSize: "15px", lineHeight: "22px", color: "#FFFFFF", textAlign: "center" }
+              }
+            >
+              {selectedPlan === "annual" ? "Selected" : "Select"}
+            </div>
+          </button>
         </div>
       </div>
 

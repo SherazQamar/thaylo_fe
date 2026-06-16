@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import UserDropdown from "@/components/wayfinder/UserDropdown";
+import Breadcrumbs from "@/components/shared/Breadcrumbs";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
@@ -42,7 +43,7 @@ export default function LiveSessionsPage() {
   return (
     <div className="p-4 md:p-6 lg:p-10">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6 md:mb-8">
+      <div className="flex items-center justify-between mb-2 md:mb-3">
         <h1
           className="uppercase"
           style={{ ...inter, fontWeight: 700, fontSize: "24px", lineHeight: "25px", letterSpacing: "0.8px", color: "#DCE6EC" }}
@@ -54,8 +55,16 @@ export default function LiveSessionsPage() {
         </div>
       </div>
 
+      <Breadcrumbs
+        showHome={false}
+        items={[
+          { href: "/dashboard", label: "Wayfinder Dashboard" },
+          { href: "/dashboard/live-sessions", label: "Live Sessions" },
+        ]}
+      />
+
       {/* Student List Card */}
-      <div className="rounded-[12px] p-4 md:p-6" style={{ backgroundColor: "rgba(255,255,255,0.05)" }}>
+      <div className="rounded-[12px] p-4 md:p-6 mt-6 md:mt-8" style={{ backgroundColor: "rgba(255,255,255,0.05)" }}>
         {/* List Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4 md:mb-5">
           <h2 style={{ ...inter, fontWeight: 700, fontSize: "20px", lineHeight: "24px", color: "#FFFFFF" }}>

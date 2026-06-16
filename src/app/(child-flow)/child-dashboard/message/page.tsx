@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import ChildUserDropdown from "@/components/child/ChildUserDropdown";
+import Breadcrumbs from "@/components/shared/Breadcrumbs";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
@@ -12,13 +13,22 @@ export default function ChildMessagePage() {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 md:px-6 pt-4 pb-2 flex-shrink-0">
-        <h1 className="uppercase" style={{ ...inter, fontWeight: 700, fontSize: "22px", letterSpacing: "0.8px", color: "#DCE6EC" }}>
-          Message
-        </h1>
-        <div className="hidden md:block">
-          <ChildUserDropdown />
+      <div className="flex flex-col gap-1 px-4 md:px-6 pt-4 pb-2 flex-shrink-0">
+        <div className="flex items-center justify-between">
+          <h1 className="uppercase" style={{ ...inter, fontWeight: 700, fontSize: "22px", letterSpacing: "0.8px", color: "#DCE6EC" }}>
+            Message
+          </h1>
+          <div className="hidden md:block">
+            <ChildUserDropdown />
+          </div>
         </div>
+        <Breadcrumbs
+          showHome={false}
+          items={[
+            { href: "/child-dashboard", label: "Student Dashboard" },
+            { href: "/child-dashboard/message", label: "Message" },
+          ]}
+        />
       </div>
 
       {/* Chat Area */}

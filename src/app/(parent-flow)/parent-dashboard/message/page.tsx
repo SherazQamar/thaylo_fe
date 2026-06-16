@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import ParentUserDropdown from "@/components/parent/ParentUserDropdown";
+import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import { fetchParentChildren } from "@/lib/parent-api";
 import { useAuthStore } from "@/stores/auth.store";
 
@@ -252,7 +253,8 @@ export default function ParentMessagePage() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-4 md:px-6 lg:px-10 py-4 md:py-5 flex-shrink-0">
+      <div className="flex flex-col gap-1 px-4 md:px-6 lg:px-10 py-4 md:py-5 flex-shrink-0">
+        <div className="flex items-center justify-between">
         <h1
           className="uppercase"
           style={{
@@ -269,6 +271,14 @@ export default function ParentMessagePage() {
         <div className="hidden md:block">
           <ParentUserDropdown />
         </div>
+        </div>
+        <Breadcrumbs
+          showHome={false}
+          items={[
+            { href: "/parent-dashboard", label: "Parent Dashboard" },
+            { href: "/parent-dashboard/message", label: "Message" },
+          ]}
+        />
       </div>
 
       <div

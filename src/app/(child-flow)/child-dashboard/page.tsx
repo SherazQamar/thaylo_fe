@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import ChildUserDropdown from "@/components/child/ChildUserDropdown";
+import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import { useChildAuthStore } from "@/stores/child-auth.store";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
@@ -28,11 +29,20 @@ export default function ChildProgressPage() {
   return (
     <div className="flex flex-col h-full">
       {/* Header - full width */}
-      <div className="flex items-center justify-between px-4 md:px-5 lg:px-6 pt-4 md:pt-5 lg:pt-6 pb-3 flex-shrink-0">
-        <h1 style={{ ...inter, fontWeight: 600, fontSize: "22px", color: "#DCE6EC" }}>Progress</h1>
-        <div className="hidden md:block">
-          <ChildUserDropdown />
+      <div className="flex flex-col gap-1 px-4 md:px-5 lg:px-6 pt-4 md:pt-5 lg:pt-6 pb-3 flex-shrink-0">
+        <div className="flex items-center justify-between">
+          <h1 style={{ ...inter, fontWeight: 600, fontSize: "22px", color: "#DCE6EC" }}>Progress</h1>
+          <div className="hidden md:block">
+            <ChildUserDropdown />
+          </div>
         </div>
+        <Breadcrumbs
+          showHome={false}
+          items={[
+            { href: "/child-dashboard", label: "Student Dashboard" },
+            { href: "/child-dashboard", label: "Progress" },
+          ]}
+        />
       </div>
 
       {/* Two column layout */}

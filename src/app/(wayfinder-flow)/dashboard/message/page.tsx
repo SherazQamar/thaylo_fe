@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import UserDropdown from "@/components/wayfinder/UserDropdown";
+import Breadcrumbs from "@/components/shared/Breadcrumbs";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
@@ -30,13 +31,22 @@ export default function MessagePage() {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 md:px-6 lg:px-10 py-4 md:py-5 flex-shrink-0">
-        <h1 className="uppercase" style={{ ...inter, fontWeight: 700, fontSize: "24px", lineHeight: "25px", letterSpacing: "0.8px", color: "#DCE6EC" }}>
-          Message
-        </h1>
-        <div className="hidden md:block">
-          <UserDropdown />
+      <div className="flex flex-col gap-1 px-4 md:px-6 lg:px-10 py-4 md:py-5 flex-shrink-0">
+        <div className="flex items-center justify-between">
+          <h1 className="uppercase" style={{ ...inter, fontWeight: 700, fontSize: "24px", lineHeight: "25px", letterSpacing: "0.8px", color: "#DCE6EC" }}>
+            Message
+          </h1>
+          <div className="hidden md:block">
+            <UserDropdown />
+          </div>
         </div>
+        <Breadcrumbs
+          showHome={false}
+          items={[
+            { href: "/dashboard", label: "Wayfinder Dashboard" },
+            { href: "/dashboard/message", label: "Message" },
+          ]}
+        />
       </div>
 
       {/* Chat Area */}

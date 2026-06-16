@@ -23,7 +23,7 @@ export default function Navbar() {
       <nav className="absolute top-0 left-0 right-0 z-50 px-6 sm:px-8 lg:px-12 xl:px-16 py-5">
         <div className="max-w-[1400px] mx-auto flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5 flex-shrink-0">
+          <Link href="/" className="flex items-center gap-2.5 flex-shrink-0 cursor-pointer hover:opacity-90 transition-opacity">
             <Image
               src="/assets/logo.png"
               alt="Thaylo Logo"

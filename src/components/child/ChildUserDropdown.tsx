@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import PortalAvatar from "@/components/shared/PortalAvatar";
 import { logoutChild } from "@/lib/auth-session";
 import { useChildAuthStore } from "@/stores/child-auth.store";
 
@@ -13,16 +13,10 @@ function formatChildGrade(grade: string | null | undefined): string {
   return `Grade ${grade.trim()}`;
 }
 
-function getInitials(userName: string | null | undefined): string {
-  if (!userName?.trim()) return "?";
-  return userName.trim().charAt(0).toUpperCase();
-}
-
 export default function ChildUserDropdown() {
   const child = useChildAuthStore((state) => state.child);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const router = useRouter();
 
   const displayName = child?.userName?.trim() || "Student";
   const displayGrade = formatChildGrade(child?.grade);
@@ -37,18 +31,13 @@ export default function ChildUserDropdown() {
 
   function handleLogout() {
     setOpen(false);
-    logoutChild();
-    router.push("/child-sign-in");
+    logoutChild(true);
   }
 
   return (
     <div className="relative" ref={ref}>
       <button onClick={() => setOpen(!open)} className="flex items-center gap-3 cursor-pointer hover:opacity-90 transition-opacity">
-        <div className="w-10 h-10 rounded-full bg-[#525162] flex items-center justify-center flex-shrink-0">
-          <span style={{ ...inter, fontWeight: 600, fontSize: "16px", color: "#FFFFFF" }}>
-            {getInitials(child?.userName)}
-          </span>
-        </div>
+        <PortalAvatar name={displayName} />
         <div className="hidden sm:block text-left">
           <p style={{ ...inter, fontWeight: 600, fontSize: "16px", lineHeight: "22px", color: "#FFFFFF" }}>{displayName}</p>
           <p style={{ ...inter, fontWeight: 400, fontSize: "12px", lineHeight: "16px", color: "rgba(255,255,255,0.5)" }}>{displayGrade}</p>

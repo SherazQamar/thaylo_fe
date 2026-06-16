@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import PortalAvatar from "@/components/shared/PortalAvatar";
 import { logoutUser } from "@/lib/auth-session";
 import { useAuthStore } from "@/stores/auth.store";
 
@@ -12,7 +12,6 @@ export default function UserDropdown() {
   const user = useAuthStore((state) => state.user);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const router = useRouter();
 
   const displayName = user?.name ?? "Wayfinder";
   const displayEmail = user?.email ?? "";
@@ -29,8 +28,7 @@ export default function UserDropdown() {
 
   function handleLogout() {
     setOpen(false);
-    logoutUser();
-    router.push("/wayfinder-sign-in");
+    logoutUser(true);
   }
 
   return (
@@ -39,9 +37,7 @@ export default function UserDropdown() {
         onClick={() => setOpen(!open)}
         className="flex items-center gap-3 cursor-pointer hover:opacity-90 transition-opacity"
       >
-        <div className="w-10 h-10 rounded-full bg-[#525162] overflow-hidden flex-shrink-0">
-          <Image src="/assets/wayfinder Em.png" alt="Avatar" width={40} height={40} className="w-full h-full object-cover" />
-        </div>
+        <PortalAvatar name={displayName} />
         <div className="hidden sm:block text-left">
           <p style={{ ...inter, fontWeight: 600, fontSize: "16px", lineHeight: "22px", color: "#FFFFFF" }}>{displayName}</p>
           <p style={{ ...inter, fontWeight: 400, fontSize: "12px", lineHeight: "16px", color: "rgba(255,255,255,0.5)" }}>Wayfinder</p>
