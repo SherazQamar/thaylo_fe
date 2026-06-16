@@ -7,6 +7,7 @@ import { useMutation } from "@tanstack/react-query";
 import { loginChild } from "@/lib/child-api";
 import { getApiErrorMessage } from "@/lib/auth-api";
 import { setChildSession } from "@/lib/auth-session";
+import ThayloBrandLink from "@/components/shared/ThayloBrandLink";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
@@ -82,30 +83,7 @@ export default function ChildSignIn() {
     <div className="h-screen flex flex-col overflow-hidden bg-[#111023] relative">
       {/* Logo */}
       <div className="px-6 pt-3 lg:px-10 lg:pt-4 flex-shrink-0">
-        <div className="flex items-center gap-2.5">
-          <Image
-            src="/assets/logo.png"
-            alt="Thaylo"
-            width={48}
-            height={48}
-            className="w-10 h-10 lg:w-12 lg:h-12 object-contain"
-          />
-          <div className="leading-none">
-            <span
-              className="block text-[18px] lg:text-[20px] font-medium tracking-[0.08em]"
-              style={{
-                background: "linear-gradient(90deg, #60D624, #00A19A)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-              }}
-            >
-              THAYLO
-            </span>
-            <span className="block text-[7px] lg:text-[8px] tracking-[0.2em] text-[#60D624]/70 uppercase mt-0.5">
-              GLOBAL AI SCHOOL
-            </span>
-          </div>
-        </div>
+        <ThayloBrandLink size="sm" className="lg:[&_img]:w-12 lg:[&_img]:h-12" />
       </div>
 
       {/* Main Content */}

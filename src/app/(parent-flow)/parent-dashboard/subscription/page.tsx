@@ -261,8 +261,11 @@ export default function SubscriptionPage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Monthly Plan */}
-          <div
-            className="rounded-[12px] p-5 md:p-6 flex flex-col"
+          <button
+            type="button"
+            onClick={() => handleSelectPlan("monthly")}
+            aria-pressed={selectedPlan === "monthly"}
+            className="rounded-[12px] p-5 md:p-6 flex flex-col text-left cursor-pointer hover:opacity-95 transition-opacity w-full"
             style={{ backgroundColor: "#313044", border: selectedPlan === "monthly" ? "1px solid #00CED1" : "1px solid #525162" }}
           >
             <div className="flex items-center justify-between mb-4">
@@ -280,27 +283,24 @@ export default function SubscriptionPage() {
                 ))}
               </ul>
             </div>
-            {selectedPlan === "monthly" ? (
-              <button
-                className="w-full rounded-[16px] py-3 cursor-pointer hover:opacity-90 transition-opacity"
-                style={{ backgroundColor: "#00CED1", ...inter, fontWeight: 600, fontSize: "15px", lineHeight: "22px", color: "#FFFFFF" }}
-              >
-                Selected
-              </button>
-            ) : (
-              <button
-                onClick={() => handleSelectPlan("monthly")}
-                className="w-full rounded-[16px] py-3 cursor-pointer hover:opacity-90 transition-opacity"
-                style={{ backgroundColor: "transparent", border: "1px solid #525162", ...inter, fontWeight: 600, fontSize: "15px", lineHeight: "22px", color: "#FFFFFF" }}
-              >
-                Select
-              </button>
-            )}
-          </div>
+            <div
+              className="w-full rounded-[16px] py-3 pointer-events-none"
+              style={
+                selectedPlan === "monthly"
+                  ? { backgroundColor: "#00CED1", ...inter, fontWeight: 600, fontSize: "15px", lineHeight: "22px", color: "#FFFFFF", textAlign: "center" }
+                  : { backgroundColor: "transparent", border: "1px solid #525162", ...inter, fontWeight: 600, fontSize: "15px", lineHeight: "22px", color: "#FFFFFF", textAlign: "center" }
+              }
+            >
+              {selectedPlan === "monthly" ? "Selected" : "Select"}
+            </div>
+          </button>
 
           {/* Annual Plan */}
-          <div
-            className="rounded-[12px] p-5 md:p-6 flex flex-col"
+          <button
+            type="button"
+            onClick={() => handleSelectPlan("annual")}
+            aria-pressed={selectedPlan === "annual"}
+            className="rounded-[12px] p-5 md:p-6 flex flex-col text-left cursor-pointer hover:opacity-95 transition-opacity w-full"
             style={{ backgroundColor: "#313044", border: selectedPlan === "annual" ? "1px solid #00CED1" : "1px solid #525162" }}
           >
             <div className="flex items-center justify-between mb-4">
@@ -318,23 +318,17 @@ export default function SubscriptionPage() {
                 ))}
               </ul>
             </div>
-            {selectedPlan === "annual" ? (
-              <button
-                className="w-full rounded-[16px] py-3 cursor-pointer hover:opacity-90 transition-opacity"
-                style={{ backgroundColor: "#00CED1", ...inter, fontWeight: 600, fontSize: "15px", lineHeight: "22px", color: "#FFFFFF" }}
-              >
-                Selected
-              </button>
-            ) : (
-              <button
-                onClick={() => handleSelectPlan("annual")}
-                className="w-full rounded-[16px] py-3 cursor-pointer hover:opacity-90 transition-opacity"
-                style={{ backgroundColor: "transparent", border: "1px solid #525162", ...inter, fontWeight: 600, fontSize: "15px", lineHeight: "22px", color: "#FFFFFF" }}
-              >
-                Select
-              </button>
-            )}
-          </div>
+            <div
+              className="w-full rounded-[16px] py-3 pointer-events-none"
+              style={
+                selectedPlan === "annual"
+                  ? { backgroundColor: "#00CED1", ...inter, fontWeight: 600, fontSize: "15px", lineHeight: "22px", color: "#FFFFFF", textAlign: "center" }
+                  : { backgroundColor: "transparent", border: "1px solid #525162", ...inter, fontWeight: 600, fontSize: "15px", lineHeight: "22px", color: "#FFFFFF", textAlign: "center" }
+              }
+            >
+              {selectedPlan === "annual" ? "Selected" : "Select"}
+            </div>
+          </button>
         </div>
       </div>
 

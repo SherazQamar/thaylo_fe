@@ -19,6 +19,9 @@ export const metadata: Metadata = {
   title: "Thaylo - Global AI School",
   description:
     "Rooted in Learning, Blooming into Brilliance. Mastery-based learning powered by AI, guided by human pedagogy.",
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({

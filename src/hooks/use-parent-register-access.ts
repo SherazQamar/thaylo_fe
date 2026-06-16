@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { isAuthAgent } from "@/lib/auth-agent";
 import {
   getApiErrorMessage,
   refreshParentSession,
@@ -20,6 +21,11 @@ export function useParentRegisterAccess(redirectIfRegistered = false) {
     let cancelled = false;
 
     async function validateAccess() {
+      if (!isAuthAgent("parent")) {
+        router.replace("/");
+        return;
+      }
+
       if (!getUserToken()) {
         router.replace("/parent-sign-in");
         return;

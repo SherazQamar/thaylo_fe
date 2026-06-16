@@ -11,6 +11,7 @@ import {
   validateResetToken,
 } from "@/lib/auth-api";
 import { getSignInPathForRole } from "@/lib/portal-auth";
+import ThayloBrandLink from "@/components/shared/ThayloBrandLink";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
@@ -75,30 +76,7 @@ function ResetPasswordContent() {
     <div className="h-screen flex flex-col lg:flex-row overflow-hidden bg-[#111023]">
       <div className="relative hidden lg:flex w-1/2 bg-[#313044] flex-col pt-16 px-16 pb-0 overflow-hidden">
         <div className="relative z-10">
-          <div className="flex items-center gap-2.5">
-            <Image
-              src="/assets/logo.png"
-              alt="Thaylo"
-              width={48}
-              height={48}
-              className="w-12 h-12 object-contain"
-            />
-            <div className="leading-none">
-              <span
-                className="block text-[20px] font-medium tracking-[0.08em]"
-                style={{
-                  background: "linear-gradient(90deg, #60D624, #00A19A)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                }}
-              >
-                THAYLO
-              </span>
-              <span className="block text-[8px] tracking-[0.2em] text-[#60D624]/70 uppercase mt-0.5">
-                GLOBAL AI SCHOOL
-              </span>
-            </div>
-          </div>
+          <ThayloBrandLink />
           <h1
             className="text-white text-[36px] font-semibold leading-[1.1] tracking-tight max-w-[400px] mt-6"
             style={inter}
@@ -126,24 +104,8 @@ function ResetPasswordContent() {
       </div>
 
       <div className="w-full lg:w-1/2 flex-1 flex flex-col items-center justify-center px-6 py-8 sm:p-12 lg:px-20">
-        <div className="lg:hidden mb-8 flex items-center gap-2.5 self-start">
-          <Image
-            src="/assets/logo.png"
-            alt="Thaylo"
-            width={40}
-            height={40}
-            className="w-10 h-10 object-contain"
-          />
-          <span
-            className="text-[18px] font-medium tracking-[0.08em]"
-            style={{
-              background: "linear-gradient(90deg, #60D624, #00A19A)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-            }}
-          >
-            THAYLO
-          </span>
+        <div className="lg:hidden mb-8 self-start">
+          <ThayloBrandLink size="sm" />
         </div>
 
         <div className="w-full max-w-[420px] lg:max-w-[480px]">

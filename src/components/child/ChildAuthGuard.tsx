@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { isAuthAgent } from "@/lib/auth-agent";
 import { fetchChildProfile } from "@/lib/child-api";
 import { getChildToken } from "@/lib/auth-cookies";
 import { logoutChild } from "@/lib/auth-session";
@@ -18,6 +19,11 @@ export default function ChildAuthGuard({
   const [status, setStatus] = useState<AuthStatus>("loading");
 
   useEffect(() => {
+    if (!isAuthAgent("child")) {
+      router.replace("/");
+      return;
+    }
+
     const token = getChildToken();
     if (!token) {
       router.replace("/child-sign-in");
