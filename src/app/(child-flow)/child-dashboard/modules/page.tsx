@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import ChildUserDropdown from "@/components/child/ChildUserDropdown";
+import Breadcrumbs from "@/components/shared/Breadcrumbs";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
@@ -35,13 +36,22 @@ export default function ModulesPage() {
   return (
     <div className="p-4 md:p-5 lg:p-6 overflow-y-auto scrollbar-hide h-full">
       {/* Header */}
-      <div className="flex items-center justify-between mb-5">
-        <h1 className="uppercase" style={{ ...inter, fontWeight: 700, fontSize: "22px", letterSpacing: "0.8px", color: "#DCE6EC" }}>
-          Modules
-        </h1>
-        <div className="hidden md:block">
-          <ChildUserDropdown />
+      <div className="flex flex-col gap-1 mb-5">
+        <div className="flex items-center justify-between">
+          <h1 className="uppercase" style={{ ...inter, fontWeight: 700, fontSize: "22px", letterSpacing: "0.8px", color: "#DCE6EC" }}>
+            Modules
+          </h1>
+          <div className="hidden md:block">
+            <ChildUserDropdown />
+          </div>
         </div>
+        <Breadcrumbs
+          showHome={false}
+          items={[
+            { href: "/child-dashboard", label: "Student Dashboard" },
+            { href: "/child-dashboard/modules", label: "Modules" },
+          ]}
+        />
       </div>
 
       {/* Hero Card */}

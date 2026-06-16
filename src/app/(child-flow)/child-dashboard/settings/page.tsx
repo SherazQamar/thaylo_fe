@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import ChildUserDropdown from "@/components/child/ChildUserDropdown";
+import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import { useChildAuthStore } from "@/stores/child-auth.store";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
@@ -44,13 +45,22 @@ export default function ChildSettingsPage() {
 
   return (
     <div className="p-4 md:p-5 lg:p-6 overflow-y-auto scrollbar-hide h-full">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="uppercase" style={{ ...inter, fontWeight: 700, fontSize: "22px", letterSpacing: "0.8px", color: "#DCE6EC" }}>
-          Settings
-        </h1>
-        <div className="hidden md:block">
-          <ChildUserDropdown />
+      <div className="flex flex-col gap-1 mb-4">
+        <div className="flex items-center justify-between">
+          <h1 className="uppercase" style={{ ...inter, fontWeight: 700, fontSize: "22px", letterSpacing: "0.8px", color: "#DCE6EC" }}>
+            Settings
+          </h1>
+          <div className="hidden md:block">
+            <ChildUserDropdown />
+          </div>
         </div>
+        <Breadcrumbs
+          showHome={false}
+          items={[
+            { href: "/child-dashboard", label: "Student Dashboard" },
+            { href: "/child-dashboard/settings", label: "Settings" },
+          ]}
+        />
       </div>
 
       <div className="flex gap-6 mb-6 border-b border-white/10">

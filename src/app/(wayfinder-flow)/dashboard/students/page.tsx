@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import UserDropdown from "@/components/wayfinder/UserDropdown";
+import Breadcrumbs from "@/components/shared/Breadcrumbs";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
@@ -40,7 +41,7 @@ export default function StudentsPage() {
   return (
     <div className="p-4 md:p-6 lg:p-10">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6 md:mb-8">
+      <div className="flex items-center justify-between mb-2 md:mb-3">
         <h1
           className="uppercase"
           style={{ ...inter, fontWeight: 700, fontSize: "24px", lineHeight: "25px", letterSpacing: "0.8px", color: "#DCE6EC" }}
@@ -52,8 +53,16 @@ export default function StudentsPage() {
         </div>
       </div>
 
+      <Breadcrumbs
+        showHome={false}
+        items={[
+          { href: "/dashboard", label: "Wayfinder Dashboard" },
+          { href: "/dashboard/students", label: "Students" },
+        ]}
+      />
+
       {/* Student Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-6 md:mt-8">
         {students.map((student, i) => (
           <Link
             key={i}

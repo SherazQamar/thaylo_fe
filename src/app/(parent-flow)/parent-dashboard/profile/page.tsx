@@ -8,6 +8,7 @@ import {
   updateParentProfile,
 } from "@/lib/auth-api";
 import { fetchParentChildren } from "@/lib/parent-api";
+import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import { useAuthStore } from "@/stores/auth.store";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
@@ -152,6 +153,13 @@ export default function ParentProfilePage() {
         >
           Parent Profile
         </h1>
+        <Breadcrumbs
+          showHome={false}
+          items={[
+            { href: "/parent-dashboard", label: "Parent Dashboard" },
+            { href: "/parent-dashboard/profile", label: "Profile" },
+          ]}
+        />
         <p
           style={{
             ...inter,

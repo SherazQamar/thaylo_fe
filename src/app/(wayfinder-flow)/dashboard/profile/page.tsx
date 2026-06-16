@@ -8,6 +8,7 @@ import {
   updateParentProfile,
 } from "@/lib/auth-api";
 import UserDropdown from "@/components/wayfinder/UserDropdown";
+import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import { useAuthStore } from "@/stores/auth.store";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
@@ -130,6 +131,14 @@ export default function ProfilePage() {
           <UserDropdown />
         </div>
       </div>
+
+      <Breadcrumbs
+        showHome={false}
+        items={[
+          { href: "/dashboard", label: "Wayfinder Dashboard" },
+          { href: "/dashboard/profile", label: "Profile" },
+        ]}
+      />
 
       <p
         style={{
