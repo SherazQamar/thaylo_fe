@@ -9,6 +9,14 @@ import {
 } from "@/lib/auth-api";
 import UserDropdown from "@/components/wayfinder/UserDropdown";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
+import {
+  formatPhoneDisplay,
+  formatPhoneInput,
+  isValidPhoneDigits,
+  normalizePhoneDigits,
+  PHONE_INPUT_PLACEHOLDER,
+  PHONE_VALIDATION_MESSAGE,
+} from "@/lib/validation/phone";
 import { useAuthStore } from "@/stores/auth.store";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
@@ -51,7 +59,7 @@ export default function ProfilePage() {
     mutationFn: () =>
       updateParentProfile({
         name: form.name.trim(),
-        phone: form.phone.trim(),
+        phone: normalizePhoneDigits(form.phone),
         country: form.country.trim(),
         timeZone: form.timeZone.trim(),
       }),
@@ -67,7 +75,7 @@ export default function ProfilePage() {
   function openEdit() {
     setForm({
       name: user?.name ?? "",
-      phone: user?.phone ?? "",
+      phone: formatPhoneInput(user?.phone ?? ""),
       country: user?.country ?? "USA",
       timeZone: user?.timeZone ?? "",
     });
@@ -89,8 +97,8 @@ export default function ProfilePage() {
       setSaveError("Full name is required");
       return;
     }
-    if (!form.phone.trim()) {
-      setSaveError("Phone is required");
+    if (!isValidPhoneDigits(form.phone)) {
+      setSaveError(PHONE_VALIDATION_MESSAGE);
       return;
     }
     if (!form.country.trim()) {
@@ -243,7 +251,7 @@ export default function ProfilePage() {
                 color: "rgba(255,255,255,0.5)",
               }}
             >
-              {formatDisplayValue(user?.phone)}
+              {formatPhoneDisplay(user?.phone)}
             </p>
           </div>
         </div>
@@ -453,11 +461,14 @@ export default function ProfilePage() {
                   Phone
                 </label>
                 <input
-                  type="text"
+                  type="tel"
+                  inputMode="numeric"
                   value={form.phone}
                   onChange={(e) =>
-                    setForm((prev) => ({ ...prev, phone: e.target.value }))
+                    setForm((prev) => ({ ...prev, phone: formatPhoneInput(e.target.value) }))
                   }
+                  placeholder={PHONE_INPUT_PLACEHOLDER}
+                  maxLength={12}
                   required
                   className="w-full rounded-[12px] px-4 py-2.5 outline-none text-white"
                   style={{

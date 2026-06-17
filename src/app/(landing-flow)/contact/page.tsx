@@ -6,6 +6,12 @@ import Navbar from "@/components/landing/shared/Navbar";
 import Footer from "@/components/landing/shared/Footer";
 import FAQ from "@/components/landing/home/FAQ";
 import CTABanner from "@/components/landing/shared/CTABanner";
+import {
+  formatPhoneInput,
+  isValidPhoneDigits,
+  PHONE_INPUT_PLACEHOLDER,
+  PHONE_VALIDATION_MESSAGE,
+} from "@/lib/validation/phone";
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -16,15 +22,31 @@ export default function ContactPage() {
     message: "",
   });
   const [submitted, setSubmitted] = useState(false);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
 
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    if (name === "phone") {
+      setPhoneError(null);
+      setFormData({ ...formData, phone: formatPhoneInput(value) });
+      return;
+    }
+
+    setFormData({ ...formData, [name]: value });
   }
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
+
+    if (formData.phone.trim() && !isValidPhoneDigits(formData.phone)) {
+      setPhoneError(PHONE_VALIDATION_MESSAGE);
+      return;
+    }
+
+    setPhoneError(null);
     // TODO: integrate with backend / email service
     setSubmitted(true);
   }
@@ -240,13 +262,20 @@ export default function ContactPage() {
                       </label>
                       <input
                         type="tel"
+                        inputMode="numeric"
                         id="phone"
                         name="phone"
                         value={formData.phone}
                         onChange={handleChange}
+                        placeholder={PHONE_INPUT_PLACEHOLDER}
+                        maxLength={12}
+                        aria-invalid={phoneError ? true : undefined}
                         className="w-full px-4 bg-white outline-none focus:border-[#14B8A6] transition-colors text-[#1A2B3D]"
                         style={{ border: "1.12px solid #CED3D2", borderRadius: "11.17px", height: "61px", fontSize: "16px" }}
                       />
+                      {phoneError && (
+                        <p className="mt-2 text-sm text-red-600">{phoneError}</p>
+                      )}
                     </div>
                   </div>
 

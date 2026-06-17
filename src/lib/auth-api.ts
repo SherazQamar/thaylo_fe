@@ -3,6 +3,7 @@ import { api } from "@/lib/api";
 import type { UserWithChildren } from "@/lib/parent-registration";
 import { useAuthStore } from "@/stores/auth.store";
 import type { ApiResponse, PortalUserRole, User } from "@/types/api";
+import type { GuardianRelationInput } from "@/lib/guardian";
 
 export interface RegisterPayload {
   email: string;
@@ -10,6 +11,9 @@ export interface RegisterPayload {
   password: string;
   country: string;
   timeZone: string;
+  guardianType: GuardianRelationInput;
+  secondaryGuardianName?: string;
+  secondaryGuardianType?: GuardianRelationInput;
 }
 
 interface LoginResponseData {
@@ -26,6 +30,13 @@ export async function registerParent(payload: RegisterPayload) {
       password: payload.password,
       country: payload.country,
       timeZone: payload.timeZone,
+      guardianType: payload.guardianType,
+      ...(payload.secondaryGuardianName
+        ? {
+            secondaryGuardianName: payload.secondaryGuardianName,
+            secondaryGuardianType: payload.secondaryGuardianType,
+          }
+        : {}),
     },
     { authMode: "none" },
   );

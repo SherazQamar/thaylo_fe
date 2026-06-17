@@ -13,6 +13,8 @@ export async function submitRegisterChildren(
         : [];
 
     await createChild({
+      firstName: child.firstName,
+      secondName: child.secondName,
       userName: child.userName,
       grade: child.grade,
       pin: child.pin,

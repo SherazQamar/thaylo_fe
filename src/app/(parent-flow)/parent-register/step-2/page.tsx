@@ -17,9 +17,12 @@ import {
 } from "@/stores/register-wizard.store";
 import { useAuthStore } from "@/stores/auth.store";
 import type { Child } from "@/types/api";
+import ParentUserDropdown from "@/components/parent/ParentUserDropdown";
 import ThayloBrandLink from "@/components/shared/ThayloBrandLink";
 
 const EMPTY_CHILDREN: Child[] = [];
+const DEFAULT_GRADE = "K4";
+const USERNAME_REGEX = /^[a-z0-9]{5,12}$/;
 
 function ParentRegisterStep2Content() {
   const router = useRouter();
@@ -35,8 +38,10 @@ function ParentRegisterStep2Content() {
   );
   const [showModal, setShowModal] = useState(false);
   const [editingChildId, setEditingChildId] = useState<string | null>(null);
-  const [studentName, setStudentName] = useState("");
-  const [grade, setGrade] = useState("");
+  const [studentFirstName, setStudentFirstName] = useState("");
+  const [studentSecondName, setStudentSecondName] = useState("");
+  const [studentUserName, setStudentUserName] = useState("");
+  const [grade, setGrade] = useState(DEFAULT_GRADE);
   const [pin, setPin] = useState(["", "", "", "", "", ""]);
   const [modalError, setModalError] = useState<string | null>(null);
   const pinRef0 = useRef<HTMLInputElement>(null);
@@ -48,8 +53,10 @@ function ParentRegisterStep2Content() {
   const pinRefs = [pinRef0, pinRef1, pinRef2, pinRef3, pinRef4, pinRef5];
 
   function resetModalForm() {
-    setStudentName("");
-    setGrade("");
+    setStudentFirstName("");
+    setStudentSecondName("");
+    setStudentUserName("");
+    setGrade(DEFAULT_GRADE);
     setPin(["", "", "", "", "", ""]);
     setModalError(null);
     setEditingChildId(null);
@@ -80,11 +87,27 @@ function ParentRegisterStep2Content() {
     e.preventDefault();
     setModalError(null);
 
-    const userName = studentName.trim();
+    const firstName = studentFirstName.trim();
+    const secondName = studentSecondName.trim();
+    const userName = studentUserName.trim();
     const pinStr = pin.join("");
 
+    if (!firstName) {
+      setModalError("Student first name is required");
+      return;
+    }
+    if (!secondName) {
+      setModalError("Student second name is required");
+      return;
+    }
     if (!userName) {
-      setModalError("Student name is required");
+      setModalError("Student user name is required");
+      return;
+    }
+    if (!USERNAME_REGEX.test(userName)) {
+      setModalError(
+        "Student user name must be 5-12 characters and contain only lowercase letters and numbers",
+      );
       return;
     }
     if (!grade) {
@@ -105,14 +128,26 @@ function ParentRegisterStep2Content() {
       (c) => c.userName.toLowerCase() === userName.toLowerCase(),
     );
     if (duplicate || duplicateExisting) {
-      setModalError("A child with this name already exists");
+      setModalError("A child with this user name already exists");
       return;
     }
 
     if (editingChildId) {
-      updateChild(editingChildId, { userName, grade, pin: pinStr });
+      updateChild(editingChildId, {
+        firstName,
+        secondName,
+        userName,
+        grade,
+        pin: pinStr,
+      });
     } else {
-      addChild({ userName, grade, pin: pinStr });
+      addChild({
+        firstName,
+        secondName,
+        userName,
+        grade,
+        pin: pinStr,
+      });
     }
 
     closeModal();
@@ -142,8 +177,10 @@ function ParentRegisterStep2Content() {
 
   function openEditModal(child: RegisterChildDraft) {
     setEditingChildId(child.localId);
-    setStudentName(child.userName);
-    setGrade(child.grade);
+    setStudentFirstName(child.firstName ?? "");
+    setStudentSecondName(child.secondName ?? "");
+    setStudentUserName(child.userName);
+    setGrade(child.grade || DEFAULT_GRADE);
     setPin(child.pin.split("").concat(["", "", "", "", "", ""]).slice(0, 6));
     setModalError(null);
     setShowModal(true);
@@ -151,8 +188,7 @@ function ParentRegisterStep2Content() {
 
   const isEditing = editingChildId !== null;
 
-  const gradeGroups = ["K-2", "3-5", "6-8"];
-  const grades = ["K", "1", "2", "3", "4", "5", "6"];
+  const grades = ["K4", "K5", "K6", "K7", "K8", "K9", "K10"];
 
   if (status === "loading") {
     return <RegisterStepLoading />;
@@ -204,6 +240,17 @@ function ParentRegisterStep2Content() {
           <div className="lg:hidden mb-3">
             <ThayloBrandLink size="sm" />
           </div>
+
+          {isAddMode && (
+            <div className="w-full max-w-[420px] lg:max-w-[560px] mx-auto mb-4 flex items-center justify-between">
+              <h2 className="text-white text-base sm:text-lg font-semibold uppercase tracking-[0.12em]" style={{ fontFamily: "Inter, sans-serif" }}>
+                Add Child
+              </h2>
+              <div className="hidden md:block">
+                <ParentUserDropdown />
+              </div>
+            </div>
+          )}
 
           {/* Step Progress Bar */}
           <div className="w-full max-w-[420px] lg:max-w-[560px] mx-auto mb-4">
@@ -269,6 +316,9 @@ function ParentRegisterStep2Content() {
                         </div>
                         <div>
                           <p className="text-white text-sm font-semibold" style={{ fontFamily: "Inter, sans-serif" }}>{child.userName}</p>
+                          <p className="text-white/50 text-xs" style={{ fontFamily: "Inter, sans-serif" }}>
+                            {child.firstName} {child.secondName}
+                          </p>
                           <p className="text-white/50 text-xs" style={{ fontFamily: "Inter, sans-serif" }}>Grade {child.grade ?? "—"}</p>
                         </div>
                       </div>
@@ -342,56 +392,77 @@ function ParentRegisterStep2Content() {
             </h3>
 
             <form onSubmit={handleSaveChild} className="space-y-5">
-              {/* Student Name */}
+              {/* Student First Name */}
               <div>
                 <label className="block text-[14px] font-semibold text-white mb-1.5">
-                  Student name
+                  Student First Name
                 </label>
                 <input
                   type="text"
-                  value={studentName}
-                  onChange={(e) => setStudentName(e.target.value)}
-                  placeholder="Allex filler"
+                  value={studentFirstName}
+                  onChange={(e) => setStudentFirstName(e.target.value)}
+                  placeholder="Alex"
                   required
                   className="w-full rounded-[40px] bg-[#111023] text-white text-sm outline-none border border-transparent focus:border-[#00CED1]/40 transition-colors placeholder:text-white/30"
                   style={{ padding: "12px 20px", height: "44px" }}
                 />
               </div>
 
-              {/* Grade - grouped on mobile, individual on desktop */}
+              {/* Student Second Name */}
+              <div>
+                <label className="block text-[14px] font-semibold text-white mb-1.5">
+                  Student Second Name
+                </label>
+                <input
+                  type="text"
+                  value={studentSecondName}
+                  onChange={(e) => setStudentSecondName(e.target.value)}
+                  placeholder="Smith"
+                  required
+                  className="w-full rounded-[40px] bg-[#111023] text-white text-sm outline-none border border-transparent focus:border-[#00CED1]/40 transition-colors placeholder:text-white/30"
+                  style={{ padding: "12px 20px", height: "44px" }}
+                />
+              </div>
+
+              {/* Student User Name */}
+              <div>
+                <label className="block text-[14px] font-semibold text-white mb-1.5">
+                  Student User Name
+                </label>
+                <input
+                  type="text"
+                  value={studentUserName}
+                  onChange={(e) =>
+                    setStudentUserName(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 12))
+                  }
+                  placeholder="alex01"
+                  minLength={5}
+                  maxLength={12}
+                  required
+                  className="w-full rounded-[40px] bg-[#111023] text-white text-sm outline-none border border-transparent focus:border-[#00CED1]/40 transition-colors placeholder:text-white/30"
+                  style={{ padding: "12px 20px", height: "44px" }}
+                />
+                <p className="mt-1 text-xs text-white/50">
+                  5-12 characters, letters and numbers only.
+                </p>
+              </div>
+
+              {/* Grade - fixed to K4 */}
               <div>
                 <label className="block text-[14px] font-semibold text-white mb-1.5">
                   Grade
                 </label>
-                {/* Mobile: grouped radio buttons */}
-                <div className="flex flex-col gap-2 lg:hidden">
-                  {gradeGroups.map((g) => (
-                    <button
-                      key={g}
-                      type="button"
-                      onClick={() => setGrade(g)}
-                      className={`flex items-center gap-2.5 rounded-[40px] px-5 py-2.5 text-sm font-medium transition-colors cursor-pointer ${
-                        grade === g
-                          ? "bg-[#111023] text-white border border-[#00CED1]"
-                          : "bg-[#111023] text-white/50 border border-transparent"
-                      }`}
-                    >
-                      <span className={`w-3 h-3 rounded-full border-2 ${grade === g ? "border-[#00CED1] bg-[#00CED1]" : "border-white/30"}`} />
-                      {g}
-                    </button>
-                  ))}
-                </div>
-                {/* Desktop: individual grade buttons */}
-                <div className="hidden lg:flex gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {grades.map((g) => (
                     <button
                       key={g}
                       type="button"
-                      onClick={() => setGrade(g)}
-                      className={`flex-1 flex items-center justify-center gap-1.5 rounded-[40px] py-2.5 text-xs font-medium transition-colors cursor-pointer ${
+                      disabled={g !== DEFAULT_GRADE}
+                      aria-disabled={g !== DEFAULT_GRADE}
+                      className={`flex items-center justify-center gap-1.5 rounded-[40px] py-2.5 text-xs font-medium transition-colors ${
                         grade === g
                           ? "bg-[#111023] text-white border border-[#00CED1]"
-                          : "bg-[#111023] text-white/50 border border-transparent"
+                          : "bg-[#111023] text-white/40 border border-transparent"
                       }`}
                     >
                       <span className={`w-2.5 h-2.5 rounded-full border-2 ${grade === g ? "border-[#00CED1] bg-[#00CED1]" : "border-white/30"}`} />

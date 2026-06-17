@@ -8,7 +8,17 @@ import {
   updateParentProfile,
 } from "@/lib/auth-api";
 import { fetchParentChildren } from "@/lib/parent-api";
+import ParentUserDropdown from "@/components/parent/ParentUserDropdown";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
+import {
+  formatPhoneDisplay,
+  formatPhoneInput,
+  isValidPhoneDigits,
+  normalizePhoneDigits,
+  PHONE_INPUT_PLACEHOLDER,
+  PHONE_VALIDATION_MESSAGE,
+} from "@/lib/validation/phone";
+import { formatGuardianRelationLabel } from "@/lib/guardian";
 import { useAuthStore } from "@/stores/auth.store";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
@@ -78,7 +88,7 @@ export default function ParentProfilePage() {
     mutationFn: () =>
       updateParentProfile({
         name: form.name.trim(),
-        phone: form.phone.trim(),
+        phone: normalizePhoneDigits(form.phone),
         country: form.country.trim(),
         timeZone: form.timeZone.trim(),
       }),
@@ -95,7 +105,7 @@ export default function ParentProfilePage() {
   function openEdit() {
     setForm({
       name: user?.name ?? "",
-      phone: user?.phone ?? "",
+      phone: formatPhoneInput(user?.phone ?? ""),
       country: user?.country ?? "USA",
       timeZone: user?.timeZone ?? "",
     });
@@ -117,8 +127,8 @@ export default function ParentProfilePage() {
       setSaveError("Full name is required");
       return;
     }
-    if (!form.phone.trim()) {
-      setSaveError("Phone is required");
+    if (!isValidPhoneDigits(form.phone)) {
+      setSaveError(PHONE_VALIDATION_MESSAGE);
       return;
     }
     if (!form.country.trim()) {
@@ -134,6 +144,19 @@ export default function ParentProfilePage() {
   }
 
   const profileRows = [
+    { label: "Primary contact type", value: formatGuardianRelationLabel(user?.guardianType) },
+    ...(user?.secondaryGuardianName?.trim()
+      ? [
+          {
+            label: "Second parent/guardian",
+            value: user.secondaryGuardianName.trim(),
+          },
+          {
+            label: "Second contact type",
+            value: formatGuardianRelationLabel(user?.secondaryGuardianType),
+          },
+        ]
+      : []),
     { label: "Country", value: formatDisplayValue(user?.country) },
     { label: "Timezone", value: formatTimezoneLabel(user?.timeZone) },
   ];
@@ -141,18 +164,22 @@ export default function ParentProfilePage() {
   return (
     <div className="p-4 md:p-6 lg:p-10">
       <div className="mb-8">
-        <h1
-          style={{
-            ...inter,
-            fontWeight: 700,
-            fontSize: "28px",
-            lineHeight: "36px",
-            color: "#FFFFFF",
-            marginBottom: "8px",
-          }}
-        >
-          Parent Profile
-        </h1>
+        <div className="flex items-center justify-between mb-2 md:mb-3">
+          <h1
+            style={{
+              ...inter,
+              fontWeight: 700,
+              fontSize: "28px",
+              lineHeight: "36px",
+              color: "#FFFFFF",
+            }}
+          >
+            Parent Profile
+          </h1>
+          <div className="hidden md:block">
+            <ParentUserDropdown />
+          </div>
+        </div>
         <Breadcrumbs
           showHome={false}
           items={[
@@ -264,7 +291,7 @@ export default function ParentProfilePage() {
                 color: "rgba(255,255,255,0.5)",
               }}
             >
-              {formatDisplayValue(user?.phone)}
+              {formatPhoneDisplay(user?.phone)}
             </p>
           </div>
         </div>
@@ -534,11 +561,14 @@ export default function ParentProfilePage() {
                   Phone
                 </label>
                 <input
-                  type="text"
+                  type="tel"
+                  inputMode="numeric"
                   value={form.phone}
                   onChange={(e) =>
-                    setForm((prev) => ({ ...prev, phone: e.target.value }))
+                    setForm((prev) => ({ ...prev, phone: formatPhoneInput(e.target.value) }))
                   }
+                  placeholder={PHONE_INPUT_PLACEHOLDER}
+                  maxLength={12}
                   required
                   className="w-full rounded-[12px] px-4 py-2.5 outline-none text-white"
                   style={{ backgroundColor: "#525162", ...inter, fontSize: "14px" }}
