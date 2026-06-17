@@ -2,6 +2,8 @@ import { create } from "zustand";
 
 export interface RegisterChildDraft {
   localId: string;
+  firstName: string;
+  secondName: string;
   userName: string;
   grade: string;
   pin: string;
@@ -9,6 +11,8 @@ export interface RegisterChildDraft {
 }
 
 interface ChildFields {
+  firstName: string;
+  secondName: string;
   userName: string;
   grade: string;
   pin: string;
@@ -38,6 +42,8 @@ export const useRegisterWizardStore = create<RegisterWizardState>((set) => ({
         ...state.children,
         {
           localId: createLocalId(),
+          firstName: child.firstName,
+          secondName: child.secondName,
           userName: child.userName,
           grade: child.grade,
           pin: child.pin,
@@ -51,6 +57,8 @@ export const useRegisterWizardStore = create<RegisterWizardState>((set) => ({
         c.localId === localId
           ? {
               ...c,
+              firstName: child.firstName,
+              secondName: child.secondName,
               userName: child.userName,
               grade: child.grade,
               pin: child.pin,

@@ -3,6 +3,8 @@ import { useChildAuthStore } from "@/stores/child-auth.store";
 import type { ApiResponse, Child } from "@/types/api";
 
 export interface CreateChildPayload {
+  firstName: string;
+  secondName: string;
   userName: string;
   grade?: string;
   pin: string;

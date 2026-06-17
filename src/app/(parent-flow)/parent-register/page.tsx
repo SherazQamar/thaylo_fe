@@ -14,6 +14,10 @@ import {
   PARENT_PASSWORD_REQUIREMENTS,
   validateParentPassword,
 } from "@/lib/validation/password";
+import {
+  formatPhoneInput,
+  PHONE_INPUT_PLACEHOLDER,
+} from "@/lib/validation/phone";
 import ThayloBrandLink from "@/components/shared/ThayloBrandLink";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
@@ -62,6 +66,13 @@ export default function ParentRegister() {
         password,
         country: COUNTRY,
         timeZone: timezone,
+        guardianType: guardian1Type,
+        ...(guardian2Name.trim()
+          ? {
+              secondaryGuardianName: guardian2Name.trim(),
+              secondaryGuardianType: guardian2Type,
+            }
+          : {}),
       });
     },
     onSuccess: (user) => {
@@ -320,9 +331,11 @@ export default function ParentRegister() {
                   </label>
                   <input
                     type="tel"
+                    inputMode="numeric"
                     value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="00-123-456-789"
+                    onChange={(e) => setPhone(formatPhoneInput(e.target.value))}
+                    placeholder={PHONE_INPUT_PLACEHOLDER}
+                    maxLength={12}
                     className="w-full rounded-[40px] bg-[#313044] text-white text-sm outline-none border border-transparent focus:border-[#00CED1]/40 transition-colors placeholder:text-white/30"
                     style={{ fontFamily: "Inter, sans-serif", padding: "12px 20px", height: "44px" }}
                   />

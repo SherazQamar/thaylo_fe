@@ -5,6 +5,26 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+function AlertIcon({ active }: { active: boolean }) {
+  return (
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={active ? "text-[#00CED1]" : "text-white/60"}
+    >
+      <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+      <line x1="12" y1="9" x2="12" y2="13" />
+      <line x1="12" y1="17" x2="12.01" y2="17" />
+    </svg>
+  );
+}
+
 const navItems = [
   {
     label: "DASHBOARD",
@@ -23,6 +43,13 @@ const navItems = [
     href: "/dashboard/live-sessions",
     matchPaths: ["/dashboard/live-sessions"],
     iconSrc: "/assets/live.png",
+  },
+  {
+    label: "ALERTS CENTER",
+    href: "/dashboard/alerts",
+    matchPaths: ["/dashboard/alerts"],
+    icon: "alert" as const,
+    badge: 3,
   },
   {
     label: "MESSAGE",
@@ -77,7 +104,7 @@ export default function Sidebar() {
         <nav className="flex-1 flex flex-col gap-1 px-3">
           {navItems.map((item) => {
             const isActive = item.matchPaths
-              ? item.matchPaths.some((p: string) => pathname === p)
+              ? item.matchPaths.some((p: string) => pathname === p || pathname.startsWith(`${p}/`))
               : pathname === item.href;
             return (
               <Link
@@ -92,23 +119,35 @@ export default function Sidebar() {
                 }`}
               >
                 <span className="flex-shrink-0">
-                  <Image
-                    src={item.iconSrc}
-                    alt={item.label}
-                    width={22}
-                    height={22}
-                    className={`w-[22px] h-[22px] object-contain ${isActive ? "brightness-0 invert-0" : "opacity-60"}`}
-                    style={isActive ? { filter: "brightness(0) saturate(100%) invert(72%) sepia(52%) saturate(2894%) hue-rotate(139deg) brightness(96%) contrast(101%)" } : {}}
-                    unoptimized
-                  />
+                  {"icon" in item && item.icon === "alert" ? (
+                    <AlertIcon active={isActive} />
+                  ) : (
+                    <Image
+                      src={item.iconSrc!}
+                      alt={item.label}
+                      width={22}
+                      height={22}
+                      className={`w-[22px] h-[22px] object-contain ${isActive ? "brightness-0 invert-0" : "opacity-60"}`}
+                      style={isActive ? { filter: "brightness(0) saturate(100%) invert(72%) sepia(52%) saturate(2894%) hue-rotate(139deg) brightness(96%) contrast(101%)" } : {}}
+                      unoptimized
+                    />
+                  )}
                 </span>
                 {!collapsed && (
                   <span
-                    className="text-[13px] font-medium tracking-wider"
+                    className="text-[13px] font-medium tracking-wider flex-1"
                     style={{ fontFamily: "Inter, sans-serif" }}
                   >
                     {item.label}
                   </span>
+                )}
+                {"badge" in item && item.badge && !collapsed && (
+                  <span className="ml-auto min-w-[18px] h-[18px] px-1.5 rounded-full bg-[#FF6F6F] text-white text-[10px] font-bold flex items-center justify-center">
+                    {item.badge}
+                  </span>
+                )}
+                {"badge" in item && item.badge && collapsed && (
+                  <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#FF6F6F]" />
                 )}
               </Link>
             );
@@ -181,27 +220,33 @@ export default function Sidebar() {
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#313044] border-t border-white/10 flex items-center justify-around px-2 py-2">
         {navItems.map((item) => {
           const isActive = item.matchPaths
-            ? item.matchPaths.some((p: string) => pathname === p)
+            ? item.matchPaths.some((p: string) => pathname === p || pathname.startsWith(`${p}/`))
             : pathname === item.href;
           return (
             <Link
               key={item.label}
               href={item.href}
-              className={`flex items-center justify-center w-12 h-12 rounded-xl transition-all ${
-                isActive
-                  ? "text-[#00CED1] bg-[#111023]"
-                  : "text-white/40"
+              aria-label={item.label}
+              className={`relative flex items-center justify-center w-12 h-12 rounded-xl transition-all ${
+                isActive ? "text-[#00CED1] bg-[#111023]" : "text-white/40"
               }`}
             >
-              <Image
-                src={item.iconSrc}
-                alt={item.label}
-                width={22}
-                height={22}
-                className="w-[22px] h-[22px] object-contain"
-                style={isActive ? { filter: "brightness(0) saturate(100%) invert(72%) sepia(52%) saturate(2894%) hue-rotate(139deg) brightness(96%) contrast(101%)" } : { opacity: 0.4 }}
-                unoptimized
-              />
+              {"icon" in item && item.icon === "alert" ? (
+                <AlertIcon active={isActive} />
+              ) : (
+                <Image
+                  src={item.iconSrc!}
+                  alt={item.label}
+                  width={22}
+                  height={22}
+                  className="w-[22px] h-[22px] object-contain"
+                  style={isActive ? { filter: "brightness(0) saturate(100%) invert(72%) sepia(52%) saturate(2894%) hue-rotate(139deg) brightness(96%) contrast(101%)" } : { opacity: 0.4 }}
+                  unoptimized
+                />
+              )}
+              {"badge" in item && item.badge ? (
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#FF6F6F]" />
+              ) : null}
             </Link>
           );
         })}
