@@ -125,6 +125,21 @@ export async function validateResetToken(token: string) {
   return data;
 }
 
+export interface SetWayfinderPasswordPayload {
+  token: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+export async function setWayfinderPassword(payload: SetWayfinderPasswordPayload) {
+  const { data } = await api.post<ApiResponse<null>>(
+    "/auth/wayfinder/set-password",
+    payload,
+    { authMode: "none" },
+  );
+  return data;
+}
+
 export async function refreshParentSession() {
   const profile = await fetchParentProfile();
   useAuthStore.getState().setUser(profile);
