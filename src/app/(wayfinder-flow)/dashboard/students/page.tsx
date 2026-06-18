@@ -1,46 +1,36 @@
 "use client";
 
-import Link from "next/link";
-import Image from "next/image";
+import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import UserDropdown from "@/components/wayfinder/UserDropdown";
+import WayfinderStudentCard from "@/components/wayfinder/WayfinderStudentCard";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
+import ListPagination from "@/components/shared/ListPagination";
+import { getApiErrorMessage } from "@/lib/auth-api";
+import { fetchWayfinderStudents, wayfinderQueryKeys } from "@/lib/wayfinder-api";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
-const students = [
-  {
-    name: "Fatima",
-    grade: "Grade 4",
-    status: "Fatima's growing!",
-    statusColor: "#00CED1",
-    badges: 4,
-  },
-  {
-    name: "Ali",
-    grade: "Grade 2",
-    status: "Fatima is struggling to grow!",
-    statusColor: "#EF4444",
-    badges: 4,
-  },
-  {
-    name: "Sara",
-    grade: "Grade 5",
-    status: "Fatima is growing slowly",
-    statusColor: "#F59E0B",
-    badges: 4,
-  },
-];
-
-function PlantIcon() {
-  return (
-    <Image src="/assets/s0.png" alt="Plant" width={48} height={48} className="w-12 h-12 object-contain" unoptimized />
-  );
-}
-
 export default function StudentsPage() {
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedSearch(search.trim()), 300);
+    return () => window.clearTimeout(timer);
+  }, [search]);
+
+  const studentsQuery = useQuery({
+    queryKey: wayfinderQueryKeys.students({ page, search: debouncedSearch || undefined }),
+    queryFn: () => fetchWayfinderStudents({ page, search: debouncedSearch || undefined }),
+  });
+
+  const students = studentsQuery.data?.items ?? [];
+  const meta = studentsQuery.data?.meta ?? null;
+
   return (
     <div className="p-4 md:p-6 lg:p-10">
-      {/* Header */}
       <div className="flex items-center justify-between mb-2 md:mb-3">
         <h1
           className="uppercase"
@@ -61,42 +51,69 @@ export default function StudentsPage() {
         ]}
       />
 
-      {/* Student Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-6 md:mt-8">
-        {students.map((student, i) => (
-          <Link
-            key={i}
-            href="/dashboard/student"
-            className="rounded-[12px] p-6 flex flex-col items-center hover:bg-[#3a3954] transition-colors"
-            style={{ backgroundColor: "#313044" }}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-6 md:mt-8 mb-5">
+        <p style={{ ...inter, fontWeight: 500, fontSize: "14px", lineHeight: "20px", color: "rgba(255,255,255,0.5)" }}>
+          Students assigned to your caseload
+        </p>
+        <div className="relative w-full sm:w-[280px]">
+          <svg
+            className="absolute left-3.5 top-1/2 -translate-y-1/2"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="rgba(255,255,255,0.4)"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           >
-            <p style={{ ...inter, fontWeight: 600, fontSize: "16px", lineHeight: "24px", color: "#FFFFFF", marginBottom: "16px" }}>
-              {student.name}
-            </p>
-            <div className="w-[100px] h-[100px] rounded-full border-4 border-[#525162] flex items-center justify-center mb-4 relative">
-              <div className="w-[80px] h-[80px] rounded-full flex items-center justify-center" style={{ border: "3px solid #00CED1", borderTopColor: "transparent" }}>
-                <PlantIcon />
-              </div>
-            </div>
-            <p style={{ ...inter, fontWeight: 700, fontSize: "20px", lineHeight: "28px", color: "#FFFFFF" }}>{student.grade}</p>
-            <p style={{ ...inter, fontWeight: 500, fontSize: "13px", lineHeight: "20px", color: student.statusColor, marginTop: "4px" }}>{student.status}</p>
-            <div className="w-full h-px bg-white/10 my-4" />
-            <div className="flex items-center gap-2 mb-2">
-              {["/assets/s1.png", "/assets/s2.png", "/assets/s3.png"].map((src, j) => (
-                <div key={j} className="w-7 h-7 rounded-full flex items-center justify-center" style={{ backgroundColor: "#525162" }}>
-                  <Image src={src} alt="badge" width={19} height={19} className="w-[19px] h-[19px] object-contain" unoptimized />
-                </div>
-              ))}
-              <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ backgroundColor: "#525162" }}>
-                <span style={{ fontFamily: "Inter, sans-serif", fontWeight: 500, fontSize: "16px", lineHeight: "100%", color: "#00CED1" }}>+1</span>
-              </div>
-            </div>
-            <p style={{ ...inter, fontWeight: 500, fontSize: "12px", lineHeight: "16px", color: "rgba(255,255,255,0.5)" }}>
-              {student.badges} Badges Earned
-            </p>
-          </Link>
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <input
+            type="search"
+            placeholder="Search by name or grade"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            className="w-full pl-9 pr-4 py-2.5 rounded-full bg-[#313044] text-white text-sm outline-none border border-[#525162] focus:border-[#00CED1]/40 placeholder:text-white/40"
+            style={inter}
+          />
+        </div>
+      </div>
+
+      {studentsQuery.isLoading && (
+        <p style={{ ...inter, fontWeight: 400, fontSize: "14px", color: "rgba(255,255,255,0.5)" }} className="py-12 text-center">
+          Loading students…
+        </p>
+      )}
+
+      {studentsQuery.isError && (
+        <p style={{ ...inter, fontWeight: 400, fontSize: "14px", color: "#EF4444" }} className="py-12 text-center" role="alert">
+          {getApiErrorMessage(studentsQuery.error)}
+        </p>
+      )}
+
+      {!studentsQuery.isLoading && !studentsQuery.isError && students.length === 0 && (
+        <p style={{ ...inter, fontWeight: 400, fontSize: "14px", color: "rgba(255,255,255,0.5)" }} className="py-12 text-center">
+          {debouncedSearch ? "No students match your search." : "No students assigned to you yet."}
+        </p>
+      )}
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {students.map((student) => (
+          <WayfinderStudentCard key={student.id} student={student} />
         ))}
       </div>
+
+      <ListPagination
+        meta={meta}
+        onPageChange={setPage}
+        isLoading={studentsQuery.isFetching}
+        itemLabel="students"
+      />
     </div>
   );
 }
