@@ -34,6 +34,11 @@ export default function WayfinderSignIn() {
         "Password reset successfully. Sign in with your new password.",
       );
     }
+    if (params.get("setup") === "1") {
+      setSuccessMessage(
+        "Password set successfully. Sign in with your email and new password.",
+      );
+    }
   }, []);
 
   const loginMutation = useMutation({
