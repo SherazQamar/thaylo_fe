@@ -93,3 +93,34 @@ export async function confirmParentSubscriptionCheckout(sessionId: string) {
   );
   return data.data;
 }
+
+export interface ParentChildDetail {
+  id: number;
+  firstName?: string | null;
+  secondName?: string | null;
+  userName: string;
+  grade?: string | null;
+  createdAt: string;
+}
+
+export async function fetchParentChild(childId: number) {
+  const { data } = await api.get<ApiResponse<ParentChildDetail>>(
+    `/parent/children/${childId}`,
+  );
+  return data.data;
+}
+
+export async function archiveParentChild(childId: number) {
+  const { data } = await api.delete<ApiResponse<{ id: number }>>(
+    `/parent/children/${childId}`,
+  );
+  return data.data;
+}
+
+export async function resetParentChildPin(childId: number, pin: string) {
+  const { data } = await api.post<ApiResponse<{ id: number }>>(
+    `/parent/children/${childId}/reset-pin`,
+    { pin },
+  );
+  return data.data;
+}

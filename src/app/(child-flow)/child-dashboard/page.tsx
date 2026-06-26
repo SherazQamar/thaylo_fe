@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import ChildUserDropdown from "@/components/child/ChildUserDropdown";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
+import { needsOnboardingBeforeClass } from "@/lib/onboarding-api";
 import { useChildAuthStore } from "@/stores/child-auth.store";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
@@ -65,7 +66,18 @@ export default function ChildProgressPage() {
           <button
             className="rounded-[14px] px-6 py-3 cursor-pointer hover:opacity-90 transition-opacity flex-shrink-0 ml-4"
             style={{ backgroundColor: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.25)", backdropFilter: "blur(4px)", ...inter, fontWeight: 700, fontSize: "14px", color: "#FFFFFF" }}
-            onClick={() => router.push("/child-dashboard/lesson")}
+            onClick={async () => {
+              try {
+                const needsAssessment = await needsOnboardingBeforeClass();
+                if (needsAssessment) {
+                  router.push("/child-onboarding?returnTo=lesson");
+                  return;
+                }
+              } catch {
+                // If status check fails, allow continuing to lesson.
+              }
+              router.push("/child-dashboard/lesson");
+            }}
           >
             Start NOW
           </button>
