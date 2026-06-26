@@ -65,8 +65,30 @@ const navItems = [
   },
 ];
 
+function matchesNavPath(pathname: string, path: string) {
+  return pathname === path || pathname.startsWith(`${path}/`);
+}
+
+function getActiveNavHref(pathname: string) {
+  let activeHref: string | null = null;
+  let longestMatch = -1;
+
+  for (const item of navItems) {
+    const paths = item.matchPaths ?? [item.href];
+    for (const path of paths) {
+      if (matchesNavPath(pathname, path) && path.length > longestMatch) {
+        longestMatch = path.length;
+        activeHref = item.href;
+      }
+    }
+  }
+
+  return activeHref;
+}
+
 export default function Sidebar() {
   const pathname = usePathname();
+  const activeHref = getActiveNavHref(pathname);
   const [collapsed, setCollapsed] = useState(false);
 
   return (
@@ -103,9 +125,7 @@ export default function Sidebar() {
         {/* Navigation */}
         <nav className="flex-1 flex flex-col gap-1 px-3">
           {navItems.map((item) => {
-            const isActive = item.matchPaths
-              ? item.matchPaths.some((p: string) => pathname === p || pathname.startsWith(`${p}/`))
-              : pathname === item.href;
+            const isActive = activeHref === item.href;
             return (
               <Link
                 key={item.label}
@@ -219,9 +239,7 @@ export default function Sidebar() {
       {/* Mobile Bottom Navigation */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#313044] border-t border-white/10 flex items-center justify-around px-2 py-2">
         {navItems.map((item) => {
-          const isActive = item.matchPaths
-            ? item.matchPaths.some((p: string) => pathname === p || pathname.startsWith(`${p}/`))
-            : pathname === item.href;
+          const isActive = activeHref === item.href;
           return (
             <Link
               key={item.label}

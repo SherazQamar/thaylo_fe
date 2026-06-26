@@ -17,7 +17,7 @@ export default function Hero() {
       <div className="hidden lg:flex absolute right-0 lg:right-[5%] xl:right-[8%] top-[5%] bottom-0 w-[45%] z-[5] justify-center">
         <Image
           src="/assets/green-robot-hero.png"
-          alt="Thaylo AI Character"
+          alt="Calyx, your Bloom Buddy"
           width={800}
           height={900}
           className="w-full h-[110%] object-cover object-top drop-shadow-2xl"
@@ -73,7 +73,7 @@ export default function Hero() {
         <div className="flex lg:hidden justify-center mt-4 flex-1 items-end overflow-hidden">
           <Image
             src="/assets/green-robot-hero.png"
-            alt="Thaylo AI Character"
+            alt="Calyx, your Bloom Buddy"
             width={400}
             height={450}
             className="w-[320px] sm:w-[360px] h-auto object-contain drop-shadow-2xl mb-[-40px]"

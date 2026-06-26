@@ -33,7 +33,7 @@ export default function ChildSignIn() {
       setChildSession(accessToken, child);
       return child;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       router.push("/child-dashboard");
     },
     onError: (err) => {
