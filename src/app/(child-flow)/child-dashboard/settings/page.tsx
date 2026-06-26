@@ -3,6 +3,7 @@
 import { useState } from "react";
 import ChildUserDropdown from "@/components/child/ChildUserDropdown";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
+import OnboardingResultsPanel from "@/components/onboarding/OnboardingResultsPanel";
 import { useChildAuthStore } from "@/stores/child-auth.store";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
@@ -257,6 +258,13 @@ export default function ChildSettingsPage() {
                   />
                 </button>
               </div>
+            </div>
+
+            <div className="rounded-[16px] p-5" style={{ backgroundColor: "#313044" }}>
+              <OnboardingResultsPanel
+                mode={{ portal: "child" }}
+                emptyMessage="Complete your onboarding assessment to see results here."
+              />
             </div>
           </div>
         </>

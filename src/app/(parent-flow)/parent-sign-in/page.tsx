@@ -8,6 +8,7 @@ import { useMutation } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import ThayloBrandLink from "@/components/shared/ThayloBrandLink";
 import { forgotPassword, getApiErrorMessage, loginParent } from "@/lib/auth-api";
+import { fetchOnboardingStatus } from "@/lib/onboarding-api";
 import { startResendCooldown } from "@/lib/pending-verification";
 import { logoutParent, setParentSession } from "@/lib/auth-session";
 import { hasCompletedFamilyRegistration } from "@/lib/parent-registration";
@@ -45,7 +46,7 @@ export default function ParentSignIn() {
       setParentSession(accessToken, user);
       return user;
     },
-    onSuccess: (user) => {
+    onSuccess: async (user) => {
       if (user.role !== "PARENT") {
         logoutParent();
         setError(
@@ -57,6 +58,32 @@ export default function ParentSignIn() {
       const params = new URLSearchParams(window.location.search);
       const returnUrl = params.get("returnUrl");
 
+      if (!hasCompletedFamilyRegistration(user)) {
+        router.push("/parent-register/step-2");
+        return;
+      }
+
+      let onboardingComplete = true;
+      try {
+        const status = await fetchOnboardingStatus("parent");
+        onboardingComplete = status.isComplete;
+      } catch {
+        onboardingComplete = true;
+      }
+
+      if (!onboardingComplete) {
+        router.push("/parent-onboarding");
+        return;
+      }
+
+      if (
+        returnUrl?.startsWith("/child-onboarding") &&
+        hasCompletedFamilyRegistration(user)
+      ) {
+        router.push(returnUrl);
+        return;
+      }
+
       if (
         returnUrl?.startsWith("/parent-dashboard") &&
         hasCompletedFamilyRegistration(user)
@@ -65,10 +92,6 @@ export default function ParentSignIn() {
         return;
       }
 
-      if (!hasCompletedFamilyRegistration(user)) {
-        router.push("/parent-register/step-2");
-        return;
-      }
       router.push("/parent-dashboard");
     },
     onError: (err) => {
