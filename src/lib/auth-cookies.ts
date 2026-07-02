@@ -49,9 +49,10 @@ export function clearAllAuthTokens(): void {
   clearChildToken();
 }
 
-/** Removes legacy Zustand persist keys from localStorage. */
+/** Removes legacy Zustand persist keys and portal agent marker from localStorage. */
 export function clearLegacyAuthStorage(): void {
   if (typeof window === "undefined") return;
   localStorage.removeItem("thaylo-auth");
   localStorage.removeItem("thaylo-child-auth");
+  localStorage.removeItem("thaylo_agent");
 }

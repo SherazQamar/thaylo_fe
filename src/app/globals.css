@@ -15,6 +15,7 @@
 
 html {
   scroll-behavior: smooth;
+  cursor: default;
 }
 
 body {
@@ -23,9 +24,18 @@ body {
   background: #ffffff;
   overflow-x: hidden;
   cursor: default;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
-/* Arrow cursor on regular text; pointer on interactive elements */
+/* Inherit cursor from parent so static text never falls back to I-beam (auto) */
+*,
+*::before,
+*::after {
+  cursor: inherit;
+}
+
+/* Pointer on interactive elements */
 a[href],
 button:not(:disabled),
 label[for],
@@ -42,9 +52,14 @@ input[type="file"],
   cursor: pointer;
 }
 
+/* Text cursor + selection only on real editable fields */
 textarea,
-input:not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]) {
+input:not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+[contenteditable="true"],
+.select-text {
   cursor: text;
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 

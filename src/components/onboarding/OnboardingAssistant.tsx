@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { isAxiosError } from "axios";
 import { useSpeechSynthesis } from "@/hooks/use-speech-synthesis";
+import { useAiSettings } from "@/hooks/use-ai-settings";
 import { useSpeechRecognition } from "@/hooks/use-speech-recognition";
 import { getChildToken, getUserToken } from "@/lib/auth-cookies";
 import { applyVoiceToDraft } from "@/lib/onboarding-voice.util";
@@ -86,8 +87,9 @@ export default function OnboardingAssistant({
   dashboardPath,
 }: OnboardingAssistantProps) {
   const router = useRouter();
+  const { settings: aiSettings } = useAiSettings(portal === "child" ? "child" : "user");
   const { speak, stop: stopSpeaking, speaking, supported: ttsSupported } =
-    useSpeechSynthesis();
+    useSpeechSynthesis(aiSettings.voice, portal === "child" ? "child" : "user");
   const {
     supported: sttSupported,
     listening,

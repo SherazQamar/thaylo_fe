@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { isAuthAgent } from "@/lib/auth-agent";
 import { fetchParentProfile } from "@/lib/auth-api";
 import { getUserToken } from "@/lib/auth-cookies";
 import { logoutParent } from "@/lib/auth-session";
+import { isParentAccessTokenValid } from "@/lib/jwt";
 import { useAuthStore } from "@/stores/auth.store";
 
 type AuthStatus = "loading" | "authenticated";
@@ -19,14 +19,15 @@ export default function ParentAuthGuard({
   const [status, setStatus] = useState<AuthStatus>("loading");
 
   useEffect(() => {
-    if (!isAuthAgent("parent")) {
-      router.replace("/");
-      return;
-    }
-
     const token = getUserToken();
     if (!token) {
       router.replace("/parent-sign-in");
+      return;
+    }
+
+    if (!isParentAccessTokenValid(token)) {
+      logoutParent();
+      router.replace("/");
       return;
     }
 
@@ -38,7 +39,7 @@ export default function ParentAuthGuard({
 
         if (profile.role !== "PARENT") {
           logoutParent();
-          router.replace("/parent-sign-in");
+          router.replace("/");
           return;
         }
 

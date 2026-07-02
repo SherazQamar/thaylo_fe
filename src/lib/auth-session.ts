@@ -6,12 +6,7 @@ import {
   setChildToken,
   setUserToken,
 } from "@/lib/auth-cookies";
-import {
-  clearAuthAgent,
-  PORTAL_SIGN_IN_PATHS,
-  setAuthAgent,
-  type PortalAgent,
-} from "@/lib/auth-agent";
+import { LANDING_PATH, type PortalAgent } from "@/lib/auth-agent";
 import { useAuthStore } from "@/stores/auth.store";
 import { useChildAuthStore } from "@/stores/child-auth.store";
 import { useRegisterWizardStore } from "@/stores/register-wizard.store";
@@ -27,7 +22,6 @@ export function setParentSession(accessToken: string, user: User): void {
   clearChildToken();
   setUserToken(accessToken);
   useAuthStore.getState().setUser(user);
-  setAuthAgent("parent");
 }
 
 export function setWayfinderSession(accessToken: string, user: User): void {
@@ -35,7 +29,6 @@ export function setWayfinderSession(accessToken: string, user: User): void {
   clearChildToken();
   setUserToken(accessToken);
   useAuthStore.getState().setUser(user);
-  setAuthAgent("wayfinder");
 }
 
 /** @deprecated Use setParentSession or setWayfinderSession */
@@ -47,7 +40,6 @@ export function clearUserSession(): void {
   clearUserToken();
   useAuthStore.getState().clearUser();
   clearLegacyAuthStorage();
-  clearAuthAgent();
 }
 
 export function setChildSession(accessToken: string, child: Child): void {
@@ -56,14 +48,12 @@ export function setChildSession(accessToken: string, child: Child): void {
   useAuthStore.getState().clearUser();
   setChildToken(accessToken);
   useChildAuthStore.getState().setChild(child);
-  setAuthAgent("child");
 }
 
 export function clearChildSession(): void {
   clearChildToken();
   useChildAuthStore.getState().clearChild();
   clearLegacyAuthStorage();
-  clearAuthAgent();
 }
 
 export function logoutParent(redirect = false): void {
@@ -71,23 +61,22 @@ export function logoutParent(redirect = false): void {
   useAuthStore.getState().clearUser();
   useRegisterWizardStore.getState().reset();
   clearLegacyAuthStorage();
-  clearAuthAgent();
   if (redirect) {
-    redirectTo(PORTAL_SIGN_IN_PATHS.parent);
+    redirectTo(LANDING_PATH);
   }
 }
 
 export function logoutChild(redirect = false): void {
   clearChildSession();
   if (redirect) {
-    redirectTo(PORTAL_SIGN_IN_PATHS.child);
+    redirectTo(LANDING_PATH);
   }
 }
 
 export function logoutUser(redirect = false): void {
   clearUserSession();
   if (redirect) {
-    redirectTo(PORTAL_SIGN_IN_PATHS.wayfinder);
+    redirectTo(LANDING_PATH);
   }
 }
 
