@@ -70,6 +70,7 @@ export function useBlackboardNarration({
       return;
     }
 
+    const currentStep = step;
     const runId = ++runIdRef.current;
     let cancelled = false;
 
@@ -77,7 +78,7 @@ export function useBlackboardNarration({
       setIsNarrating(true);
       resetReveal();
 
-      const intro = `Let's look at ${step.title}.`;
+      const intro = `Let's look at ${currentStep.title}.`;
       onCaption(intro);
       if (voiceEnabled) {
         await speak(intro);
@@ -86,8 +87,8 @@ export function useBlackboardNarration({
       }
       if (cancelled || runId !== runIdRef.current) return;
 
-      for (let i = 0; i < step.lines.length; i += 1) {
-        const line = step.lines[i];
+      for (let i = 0; i < currentStep.lines.length; i += 1) {
+        const line = currentStep.lines[i];
         onCaption(line);
         if (voiceEnabled) {
           await speak(line);
@@ -99,7 +100,7 @@ export function useBlackboardNarration({
         await delay(pauseMs);
       }
 
-      const bullets = step.bulletPoints ?? [];
+      const bullets = currentStep.bulletPoints ?? [];
       for (let i = 0; i < bullets.length; i += 1) {
         const bullet = bullets[i];
         onCaption(bullet);
@@ -113,12 +114,12 @@ export function useBlackboardNarration({
         await delay(pauseMs);
       }
 
-      if (step.interaction) {
-        onCaption(step.interaction.prompt);
+      if (currentStep.interaction) {
+        onCaption(currentStep.interaction.prompt);
         if (voiceEnabled) {
-          await speak(step.interaction.prompt);
+          await speak(currentStep.interaction.prompt);
         } else {
-          await delay(estimateSpeakMs(step.interaction.prompt, wordMs));
+          await delay(estimateSpeakMs(currentStep.interaction.prompt, wordMs));
         }
         if (cancelled || runId !== runIdRef.current) return;
         setReveal((prev) => ({ ...prev, interactionVisible: true }));

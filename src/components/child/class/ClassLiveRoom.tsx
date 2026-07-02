@@ -190,7 +190,7 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
         canJoinClass={canJoinClass}
         hasVideo={hasVideo}
         hasAudio={hasAudio}
-        onEnableMedia={startMedia}
+        onEnableMedia={() => void startMedia()}
         onJoinClass={handleJoinClass}
         onBack={() => router.push("/child-dashboard")}
         lessonTitle={lessonTitle}
