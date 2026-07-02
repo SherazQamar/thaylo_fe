@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { isAuthAgent } from "@/lib/auth-agent";
 import {
   getApiErrorMessage,
   refreshParentSession,
@@ -8,6 +7,7 @@ import {
 import { getUserToken } from "@/lib/auth-cookies";
 import { hasCompletedFamilyRegistration } from "@/lib/parent-registration";
 import { logoutParent } from "@/lib/auth-session";
+import { isParentAccessTokenValid } from "@/lib/jwt";
 import { useAuthStore } from "@/stores/auth.store";
 
 type AccessStatus = "loading" | "ready" | "error";
@@ -21,13 +21,15 @@ export function useParentRegisterAccess(redirectIfRegistered = false) {
     let cancelled = false;
 
     async function validateAccess() {
-      if (!isAuthAgent("parent")) {
-        router.replace("/");
+      const token = getUserToken();
+      if (!token) {
+        router.replace("/parent-sign-in");
         return;
       }
 
-      if (!getUserToken()) {
-        router.replace("/parent-sign-in");
+      if (!isParentAccessTokenValid(token)) {
+        logoutParent();
+        router.replace("/");
         return;
       }
 
@@ -51,7 +53,7 @@ export function useParentRegisterAccess(redirectIfRegistered = false) {
 
         if (profile.role !== "PARENT") {
           logoutParent();
-          router.replace("/parent-sign-in");
+          router.replace("/");
           return;
         }
 

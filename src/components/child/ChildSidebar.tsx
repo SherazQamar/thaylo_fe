@@ -3,7 +3,10 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import ChildNoClassBanner from "@/components/child/ChildNoClassBanner";
+import { useChildAssignedClasses } from "@/hooks/use-child-assigned-classes";
+import { navigateToChildClass } from "@/lib/start-child-class";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
@@ -67,7 +70,23 @@ const navItems = [
 
 export default function ChildSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
+  const [isStarting, setIsStarting] = useState(false);
+  const { primaryClass, hasAssignedClass, isLoading: classesLoading } = useChildAssignedClasses();
+  const canStartClass = hasAssignedClass && !classesLoading;
+
+  const handleStartClass = async () => {
+    if (isStarting || !canStartClass) return;
+    setIsStarting(true);
+    try {
+      await navigateToChildClass(router, hasAssignedClass);
+    } catch {
+      // Progress page banner covers the no-class state; ignore sidebar errors.
+    } finally {
+      setIsStarting(false);
+    }
+  };
 
   return (
     <>
@@ -128,24 +147,36 @@ export default function ChildSidebar() {
         {/* Bottom Module Card */}
         {!collapsed && (
           <div className="px-3 pb-4">
-            <div className="rounded-[16px] p-4 flex flex-col items-center" style={{ backgroundColor: "#111023" }}>
-              <div className="w-[80px] h-[80px] rounded-full bg-[#313044] border-4 border-[#525162] flex items-center justify-center mb-3">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#00CED1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 22V8" /><path d="M5 12H2a10 10 0 0020 0h-3" /><path d="M8 5.2C9.2 3.6 10.5 3 12 3c1.5 0 2.8.6 4 2.2" />
-                </svg>
+            {hasAssignedClass && primaryClass ? (
+              <div className="rounded-[16px] p-4 flex flex-col items-center" style={{ backgroundColor: "#111023" }}>
+                <div className="w-[80px] h-[80px] rounded-full bg-[#313044] border-4 border-[#525162] flex items-center justify-center mb-3">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#00CED1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 22V8" /><path d="M5 12H2a10 10 0 0020 0h-3" /><path d="M8 5.2C9.2 3.6 10.5 3 12 3c1.5 0 2.8.6 4 2.2" />
+                  </svg>
+                </div>
+                <p className="text-white text-xs font-semibold text-center mb-1" style={inter}>
+                  {primaryClass.nextLessonTitle ?? primaryClass.title}
+                </p>
+                <div className="flex items-center gap-1.5 text-white/50 text-[11px] mb-3">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></svg>
+                  {primaryClass.estimatedMinutes ? `${primaryClass.estimatedMinutes} min` : primaryClass.subject}
+                </div>
+                <button
+                  className="w-full py-2 rounded-[10px] text-xs font-semibold uppercase tracking-wider cursor-pointer hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: "#00CED1", color: "#111023", ...inter }}
+                  disabled={isStarting || !canStartClass}
+                  onClick={handleStartClass}
+                >
+                  {isStarting ? "Starting…" : classesLoading ? "Loading…" : "Start NOW"}
+                </button>
               </div>
-              <p className="text-white text-xs font-semibold text-center mb-1" style={inter}>Vocabulary & Word Meaning</p>
-              <div className="flex items-center gap-1.5 text-white/50 text-[11px] mb-3">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></svg>
-                30 min
+            ) : !classesLoading ? (
+              <ChildNoClassBanner compact />
+            ) : (
+              <div className="rounded-[16px] p-4 text-center text-white/40 text-xs" style={{ backgroundColor: "#111023" }}>
+                Loading class…
               </div>
-              <button
-                className="w-full py-2 rounded-[10px] text-xs font-semibold uppercase tracking-wider cursor-pointer hover:opacity-90 transition-opacity"
-                style={{ backgroundColor: "#00CED1", color: "#111023", ...inter }}
-              >
-                Start NOW
-              </button>
-            </div>
+            )}
           </div>
         )}
 

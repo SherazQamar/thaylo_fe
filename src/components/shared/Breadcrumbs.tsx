@@ -62,7 +62,7 @@ export default function Breadcrumbs({
         const isLast = index === autoItems.length - 1;
         const showSeparator = showHome || index > 0;
         return (
-          <span key={item.href} className="flex items-center gap-1.5">
+          <span key={`${item.href}-${item.label}-${index}`} className="flex items-center gap-1.5">
             {showSeparator && <span className="text-white/30">/</span>}
             {isLast ? (
               <span className="text-white/70" aria-current="page">

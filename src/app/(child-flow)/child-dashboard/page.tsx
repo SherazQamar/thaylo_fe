@@ -1,9 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import ChildUserDropdown from "@/components/child/ChildUserDropdown";
+import ChildNoClassBanner from "@/components/child/ChildNoClassBanner";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
-import { needsOnboardingBeforeClass } from "@/lib/onboarding-api";
+import { useChildAssignedClasses } from "@/hooks/use-child-assigned-classes";
+import { navigateToChildClass } from "@/lib/start-child-class";
 import { useChildAuthStore } from "@/stores/child-auth.store";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
@@ -26,6 +29,28 @@ export default function ChildProgressPage() {
   const router = useRouter();
   const child = useChildAuthStore((state) => state.child);
   const greetingName = child?.userName?.trim() || "Student";
+  const { primaryClass, hasAssignedClass, isLoading: classesLoading } = useChildAssignedClasses();
+  const [isStarting, setIsStarting] = useState(false);
+  const [startError, setStartError] = useState<string | null>(null);
+  const canStartClass = hasAssignedClass && !classesLoading;
+
+  const handleStartClass = async () => {
+    if (isStarting || !canStartClass) {
+      if (!canStartClass) {
+        setStartError(null);
+      }
+      return;
+    }
+    setIsStarting(true);
+    setStartError(null);
+    try {
+      await navigateToChildClass(router, hasAssignedClass);
+    } catch (error) {
+      setStartError(error instanceof Error ? error.message : "Unable to start class.");
+    } finally {
+      setIsStarting(false);
+    }
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -39,10 +64,7 @@ export default function ChildProgressPage() {
         </div>
         <Breadcrumbs
           showHome={false}
-          items={[
-            { href: "/child-dashboard", label: "Student Dashboard" },
-            { href: "/child-dashboard", label: "Progress" },
-          ]}
+          items={[{ href: "/child-dashboard", label: "Progress" }]}
         />
       </div>
 
@@ -60,28 +82,38 @@ export default function ChildProgressPage() {
               Welcome back, {greetingName}
             </p>
             <p style={{ ...inter, fontWeight: 700, fontSize: "20px", color: "#FFFFFF", marginTop: "4px" }}>
-              Here&apos;s your learning path today
+              {hasAssignedClass && primaryClass
+                ? primaryClass.nextLessonTitle ?? primaryClass.title
+                : "Here's your learning path today"}
             </p>
+            {hasAssignedClass && primaryClass && (
+              <p style={{ ...inter, fontWeight: 400, fontSize: "12px", color: "rgba(255,255,255,0.65)", marginTop: "6px" }}>
+                {primaryClass.subject} · {primaryClass.gradeLevel}
+              </p>
+            )}
           </div>
           <button
-            className="rounded-[14px] px-6 py-3 cursor-pointer hover:opacity-90 transition-opacity flex-shrink-0 ml-4"
+            className="rounded-[14px] px-6 py-3 cursor-pointer hover:opacity-90 transition-opacity flex-shrink-0 ml-4 disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ backgroundColor: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.25)", backdropFilter: "blur(4px)", ...inter, fontWeight: 700, fontSize: "14px", color: "#FFFFFF" }}
-            onClick={async () => {
-              try {
-                const needsAssessment = await needsOnboardingBeforeClass();
-                if (needsAssessment) {
-                  router.push("/child-onboarding?returnTo=lesson");
-                  return;
-                }
-              } catch {
-                // If status check fails, allow continuing to lesson.
-              }
-              router.push("/child-dashboard/lesson");
-            }}
+            disabled={isStarting || !canStartClass}
+            onClick={handleStartClass}
+            title={!canStartClass ? "No published class for your grade yet" : undefined}
           >
-            Start NOW
+            {isStarting ? "Starting…" : classesLoading ? "Loading…" : "Start NOW"}
           </button>
         </div>
+
+        {!classesLoading && !hasAssignedClass && (
+          <div className="mb-4">
+            <ChildNoClassBanner />
+          </div>
+        )}
+
+        {startError && (
+          <div className="rounded-[12px] px-4 py-3 mb-4 text-sm text-[#FF7B7B]" style={{ backgroundColor: "rgba(255,123,123,0.12)" }}>
+            {startError}
+          </div>
+        )}
 
         {/* Learning Path */}
         <div className="flex flex-col items-center pb-8">
@@ -92,11 +124,38 @@ export default function ChildProgressPage() {
                 <>
                   <span
                     className="rounded-full px-4 py-1 mb-2"
-                    style={{ backgroundColor: "#00CED1", ...inter, fontWeight: 700, fontSize: "11px", color: "#111023", letterSpacing: "1px" }}
+                    style={{
+                      backgroundColor: canStartClass ? "#00CED1" : "#525162",
+                      ...inter,
+                      fontWeight: 700,
+                      fontSize: "11px",
+                      color: canStartClass ? "#111023" : "rgba(255,255,255,0.5)",
+                      letterSpacing: "1px",
+                    }}
                   >
                     START
                   </span>
-                  <div className="w-[56px] h-[56px] rounded-full bg-[#00CED1] flex items-center justify-center shadow-lg" style={{ boxShadow: "0 0 20px rgba(0,206,209,0.3)" }}>
+                  <div
+                    className={
+                      "w-[56px] h-[56px] rounded-full flex items-center justify-center shadow-lg transition-opacity " +
+                      (canStartClass
+                        ? "bg-[#00CED1] cursor-pointer hover:opacity-90"
+                        : "bg-[#525162] cursor-not-allowed opacity-60")
+                    }
+                    style={canStartClass ? { boxShadow: "0 0 20px rgba(0,206,209,0.3)" } : undefined}
+                    onClick={canStartClass ? handleStartClass : undefined}
+                    role="button"
+                    tabIndex={canStartClass ? 0 : -1}
+                    aria-disabled={!canStartClass}
+                    onKeyDown={(event) => {
+                      if (!canStartClass) return;
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        void handleStartClass();
+                      }
+                    }}
+                    aria-label={canStartClass ? "Start class" : "No class available yet"}
+                  >
                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="12" r="3" />
                       <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />

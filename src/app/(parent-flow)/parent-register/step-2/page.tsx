@@ -188,7 +188,7 @@ function ParentRegisterStep2Content() {
 
   const isEditing = editingChildId !== null;
 
-  const grades = ["K4", "K5", "K6", "K7", "K8", "K9", "K10"];
+  const grades = ["K4", "K5", "K6", "K7", "K8", "K9", "K10", "K11", "K12"];
 
   if (status === "loading") {
     return <RegisterStepLoading />;

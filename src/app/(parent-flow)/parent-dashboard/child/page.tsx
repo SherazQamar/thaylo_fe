@@ -6,6 +6,7 @@ import { Suspense, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import ParentUserDropdown from "@/components/parent/ParentUserDropdown";
 import OnboardingResultsPanel from "@/components/onboarding/OnboardingResultsPanel";
+import StudentProgressOverview from "@/components/shared/StudentProgressOverview";
 import {
   archiveParentChild,
   fetchParentChild,
@@ -130,17 +131,28 @@ function ChildDetailContent() {
         </div>
       </div>
 
-      <div className="rounded-[12px] p-4 md:p-6 mb-6" style={{ backgroundColor: "#313044" }}>
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <p style={{ ...inter, fontWeight: 600, fontSize: "20px", color: "#FFFFFF" }}>
-              {child.userName}
-            </p>
-            <p style={{ ...inter, fontWeight: 500, fontSize: "14px", color: "#00CED1", marginTop: "4px" }}>
-              {formatChildGrade(child.grade)}
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-3">
+      <div className="flex gap-6 mb-6 border-b border-white/10">
+        <button
+          type="button"
+          onClick={() => setActiveTab("overview")}
+          className={`pb-2.5 cursor-pointer transition-colors ${activeTab === "overview" ? "border-b-2 border-[#00CED1] text-[#00CED1]" : "text-white/40 hover:text-white/60"}`}
+          style={{ ...inter, fontWeight: 500, fontSize: "14px" }}
+        >
+          Overview
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("preferences")}
+          className={`pb-2.5 cursor-pointer transition-colors ${activeTab === "preferences" ? "border-b-2 border-[#00CED1] text-[#00CED1]" : "text-white/40 hover:text-white/60"}`}
+          style={{ ...inter, fontWeight: 500, fontSize: "14px" }}
+        >
+          Learning Preferences
+        </button>
+      </div>
+
+      {activeTab === "overview" ? (
+        <>
+          <div className="flex flex-wrap gap-3 mb-6">
             <button
               type="button"
               onClick={() => {
@@ -164,47 +176,17 @@ function ChildDetailContent() {
               Archive
             </button>
           </div>
-        </div>
-        {actionError && !showPinModal && !showArchiveConfirm && (
-          <p className="text-red-400 text-sm mt-4" role="alert" style={inter}>
-            {actionError}
-          </p>
-        )}
-      </div>
-
-      <div className="flex gap-6 mb-6 border-b border-white/10">
-        <button
-          type="button"
-          onClick={() => setActiveTab("overview")}
-          className={`pb-2.5 cursor-pointer transition-colors ${activeTab === "overview" ? "border-b-2 border-[#00CED1] text-[#00CED1]" : "text-white/40 hover:text-white/60"}`}
-          style={{ ...inter, fontWeight: 500, fontSize: "14px" }}
-        >
-          Overview
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab("preferences")}
-          className={`pb-2.5 cursor-pointer transition-colors ${activeTab === "preferences" ? "border-b-2 border-[#00CED1] text-[#00CED1]" : "text-white/40 hover:text-white/60"}`}
-          style={{ ...inter, fontWeight: 500, fontSize: "14px" }}
-        >
-          Learning Preferences
-        </button>
-      </div>
-
-      {activeTab === "overview" ? (
-        <div className="rounded-[12px] p-5" style={{ backgroundColor: "#313044" }}>
-          <p style={{ ...inter, fontWeight: 500, fontSize: "14px", color: "rgba(255,255,255,0.6)" }}>
-            Account created{" "}
-            {new Date(child.createdAt).toLocaleDateString(undefined, {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
-          </p>
-          <p style={{ ...inter, fontWeight: 400, fontSize: "13px", color: "rgba(255,255,255,0.45)", marginTop: "12px" }}>
-            Use Learning Preferences to review this child&apos;s completed onboarding assessments.
-          </p>
-        </div>
+          {actionError && !showPinModal && !showArchiveConfirm && (
+            <p className="text-red-400 text-sm mb-4" role="alert" style={inter}>
+              {actionError}
+            </p>
+          )}
+          <StudentProgressOverview
+            displayName={displayName}
+            gradeLabel={formatChildGrade(child.grade)}
+            messagesHref="/parent-dashboard/message"
+          />
+        </>
       ) : (
         <div className="rounded-[12px] p-5" style={{ backgroundColor: "#313044" }}>
           <OnboardingResultsPanel
