@@ -16,6 +16,7 @@ export default function ChildSignIn() {
   const [username, setUsername] = useState("");
   const [pin, setPin] = useState<number[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [showForgotPinModal, setShowForgotPinModal] = useState(false);
 
   const loginMutation = useMutation({
     mutationFn: async () => {
@@ -186,6 +187,7 @@ export default function ChildSignIn() {
           {/* Forget PIN */}
           <button
             type="button"
+            onClick={() => setShowForgotPinModal(true)}
             className="text-[#00CED1] text-sm font-medium mt-4 cursor-pointer hover:underline"
             style={inter}
             disabled={loginMutation.isPending}
@@ -194,6 +196,37 @@ export default function ChildSignIn() {
           </button>
         </div>
       </div>
+
+      {showForgotPinModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div
+            className="absolute inset-0 bg-black/70"
+            onClick={() => setShowForgotPinModal(false)}
+            aria-hidden
+          />
+          <div
+            className="relative w-full max-w-md rounded-[20px] border border-[#525162]/50 bg-[#313044] p-6 text-center"
+            style={inter}
+            role="dialog"
+            aria-labelledby="forgot-pin-title"
+            aria-describedby="forgot-pin-message"
+          >
+            <h2 id="forgot-pin-title" className="text-white text-lg font-semibold">
+              Forgot your PIN?
+            </h2>
+            <p id="forgot-pin-message" className="text-white/70 text-sm mt-3 leading-relaxed">
+              Please ask your parent to reset your PIN from their parent account.
+            </p>
+            <button
+              type="button"
+              onClick={() => setShowForgotPinModal(false)}
+              className="mt-6 px-6 py-2.5 rounded-full bg-[#00CED1] text-[#111023] font-semibold cursor-pointer hover:opacity-90 transition-opacity"
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Character Image - right side desktop only */}
       <div className="hidden lg:block absolute right-6 bottom-0 pointer-events-none">
