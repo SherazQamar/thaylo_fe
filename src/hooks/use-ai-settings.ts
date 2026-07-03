@@ -16,8 +16,8 @@ const DEFAULT_SETTINGS: PublicAiSettings = {
   },
   voice: {
     engine: "elevenlabs",
-    elevenLabsVoiceId: "21m00Tcm4TlvDq8ikWAM",
-    elevenLabsVoiceName: "Rachel",
+    elevenLabsVoiceId: "EXAVITQu4vr4xnSDxMaL",
+    elevenLabsVoiceName: "Bella",
     elevenLabsModelId: "eleven_multilingual_v2",
     browserVoiceUri: "",
     browserVoiceName: "",
