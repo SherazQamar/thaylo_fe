@@ -2,6 +2,9 @@
 
 import { useEffect, useRef } from "react";
 import { useChildAuthStore } from "@/stores/child-auth.store";
+import FaceTrackingOverlay from "@/components/child/class/FaceTrackingOverlay";
+import { useClassFaceMonitor } from "@/hooks/use-class-face-monitor";
+import { faceFrameColor } from "@/lib/face-monitor/face-box";
 import type { ClassMediaError } from "@/lib/class-media-request";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
@@ -19,7 +22,15 @@ type ClassMediaSetupGateProps = {
   onJoinClass: () => void;
   onBack: () => void;
   lessonTitle?: string;
+  isRetake?: boolean;
 };
+
+function positioningHint(status: ReturnType<typeof useClassFaceMonitor>["status"]): string {
+  if (!status.ready) return "Loading face tracking…";
+  if (!status.facePresent) return "Move into view so your face appears in the frame";
+  if (status.engagement === "away") return "Look at the screen — center your face in the green box";
+  return "Great! You're in position — join when ready";
+}
 
 export default function ClassMediaSetupGate({
   stream,
@@ -34,10 +45,17 @@ export default function ClassMediaSetupGate({
   onJoinClass,
   onBack,
   lessonTitle = "your class",
+  isRetake = false,
 }: ClassMediaSetupGateProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const child = useChildAuthStore((state) => state.child);
   const displayName = child?.userName?.trim() || "Student";
+
+  const showPreview = !!stream && (hasVideo || hasAudio);
+  const { status: faceStatus } = useClassFaceMonitor(videoRef, {
+    enabled: showPreview && hasVideo,
+  });
 
   useEffect(() => {
     const video = videoRef.current;
@@ -50,7 +68,8 @@ export default function ClassMediaSetupGate({
     }
   }, [stream]);
 
-  const showPreview = !!stream && (hasVideo || hasAudio);
+  const hint = showPreview && hasVideo ? positioningHint(faceStatus) : null;
+  const hintColor = showPreview && hasVideo ? faceFrameColor(faceStatus) : undefined;
 
   return (
     <div className="flex flex-col items-center justify-center h-full px-4 py-8">
@@ -69,10 +88,12 @@ export default function ClassMediaSetupGate({
             </svg>
           </div>
           <h2 style={{ ...inter, fontWeight: 700, fontSize: "22px", color: "#FFFFFF" }}>
-            Get ready for class
+            {isRetake ? "Get ready to retake" : "Get ready for class"}
           </h2>
           <p style={{ ...inter, fontWeight: 400, fontSize: "14px", color: "rgba(255,255,255,0.55)", marginTop: "8px" }}>
-            Turn on your camera before joining {lessonTitle}. Microphone is optional.
+            {isRetake
+              ? `Calyx prepared new examples for ${lessonTitle}. Turn on your camera before joining.`
+              : `Turn on your camera before joining ${lessonTitle}. Microphone is optional.`}
           </p>
         </div>
 
@@ -108,21 +129,31 @@ export default function ClassMediaSetupGate({
         )}
 
         <div
-          className="relative aspect-video rounded-[14px] overflow-hidden mb-5 border-2"
+          ref={containerRef}
+          className="relative aspect-video rounded-[14px] overflow-hidden mb-3 border-2"
           style={{
             borderColor: showPreview ? "#00CED1" : "#525162",
             backgroundColor: "#1a1830",
           }}
         >
           {showPreview && hasVideo ? (
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              className="w-full h-full object-cover"
-              style={{ transform: "scaleX(-1)" }}
-            />
+            <>
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="w-full h-full object-cover"
+                style={{ transform: "scaleX(-1)" }}
+              />
+              <FaceTrackingOverlay
+                videoRef={videoRef}
+                containerRef={containerRef}
+                status={faceStatus}
+                mirrored
+                strokeWidth={3}
+              />
+            </>
           ) : showPreview && hasAudio && !hasVideo ? (
             <div className="w-full h-full flex flex-col items-center justify-center gap-3 px-4">
               <p className="text-[#FFC542] text-sm text-center" style={inter}>
@@ -144,12 +175,21 @@ export default function ClassMediaSetupGate({
           )}
 
           {showPreview && (
-            <div className="absolute bottom-3 left-3 flex items-center gap-2 rounded-full bg-black/50 px-3 py-1.5">
+            <div className="absolute bottom-3 left-3 flex items-center gap-2 rounded-full bg-black/50 px-3 py-1.5 z-20">
               <span className="w-2 h-2 rounded-full bg-[#00CED1] animate-pulse" />
               <span style={{ ...inter, fontSize: "11px", color: "#FFFFFF" }}>{displayName}</span>
             </div>
           )}
         </div>
+
+        {hint && (
+          <p
+            className="text-center text-xs font-medium mb-4 transition-colors duration-300"
+            style={{ ...inter, color: hintColor }}
+          >
+            {hint}
+          </p>
+        )}
 
         <div className="flex flex-col gap-3">
           {!canJoinClass ? (
@@ -169,7 +209,7 @@ export default function ClassMediaSetupGate({
               className="w-full py-3.5 rounded-xl font-semibold text-sm transition-opacity hover:opacity-90"
               style={{ backgroundColor: "#00CED1", color: "#111023", ...inter }}
             >
-              Join class
+              Join {isRetake ? "retake" : "class"}
             </button>
           )}
 

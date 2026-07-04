@@ -28,9 +28,10 @@ import {
   type ChildClassSession,
   type ClassSessionScore,
 } from "@/lib/curriculum-api";
-import { buildClassGreeting } from "@/lib/calyx-class-chat";
+import { buildClassGreeting, buildRetakeClassGreeting } from "@/lib/calyx-class-chat";
 import { delay } from "@/lib/tts-word-sync";
 import { navigateToChildClass } from "@/lib/start-child-class";
+import { FACE_MONITOR_DEFAULTS, type FaceMonitorStatus } from "@/lib/face-monitor/types";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
@@ -52,6 +53,7 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
   const [chatInitialized, setChatInitialized] = useState(false);
   const [greetingDone, setGreetingDone] = useState(false);
   const [isGreeting, setIsGreeting] = useState(false);
+  const [faceStatus, setFaceStatus] = useState<FaceMonitorStatus | null>(null);
   const greetingStartedRef = useRef(false);
   const stepIndexRef = useRef(stepIndex);
 
@@ -63,7 +65,12 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
   }, [stepIndex]);
 
   const lessonTitle = session?.lessonTitle ?? "Live Class";
-  const moduleLabel = session ? `Lesson ${session.lessonOrder}` : "Class";
+  const isRetake = session?.isRetake ?? false;
+  const moduleLabel = session
+    ? isRetake
+      ? `Retake · Lesson ${session.lessonOrder}`
+      : `Lesson ${session.lessonOrder}`
+    : "Class";
   const subtitle = session
     ? `${session.curriculumTitle} · ${session.subject} · ${session.gradeLevel}`
     : undefined;
@@ -97,6 +104,17 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
     toggleMic,
     toggleCamera,
   } = useClassMedia(false);
+
+  const faceMissingLong =
+    faceStatus != null &&
+    faceStatus.faceMissingSeconds * 1000 >= FACE_MONITOR_DEFAULTS.missingThresholdMs;
+  const showLookAtScreenNudge =
+    classJoined &&
+    cameraEnabled &&
+    faceStatus?.ready &&
+    faceStatus.facePresent &&
+    faceStatus.engagement === "away";
+  const showStayInViewNudge = classJoined && cameraEnabled && faceMissingLong;
 
   const { settings: aiSettings } = useAiSettings("child");
 
@@ -186,8 +204,11 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
     greetingStartedRef.current = true;
 
     async function runGreeting() {
+      if (!session) return;
       setIsGreeting(true);
-      const greeting = buildClassGreeting(studentName, lessonTitle);
+      const greeting = session.isRetake
+        ? buildRetakeClassGreeting(studentName, lessonTitle, session.calyxIntro)
+        : buildClassGreeting(studentName, lessonTitle);
       setActiveCaption(greeting);
       await speakProgress(greeting, { wordMs: aiSettings.pacing.wordMs });
       if (!chatInitialized) {
@@ -341,6 +362,7 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
         onJoinClass={handleJoinClass}
         onBack={() => router.push("/child-dashboard")}
         lessonTitle={lessonTitle}
+        isRetake={isRetake}
       />
     );
   }
@@ -396,7 +418,31 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
                   cameraEnabled={cameraEnabled}
                   micEnabled={micEnabled}
                   onEnableMedia={() => void startMedia()}
+                  faceMonitorEnabled={classJoined && cameraEnabled}
+                  onFaceStatusChange={setFaceStatus}
                 />
+
+                {showStayInViewNudge && (
+                  <div
+                    className="absolute top-3 left-3 right-[150px] z-30 rounded-[10px] px-3 py-2 border border-[#FF7B7B]/40"
+                    style={{ backgroundColor: "rgba(255,123,123,0.15)" }}
+                  >
+                    <p className="text-xs font-medium text-[#FF7B7B]" style={inter}>
+                      Please stay in view of your camera so Calyx can see you.
+                    </p>
+                  </div>
+                )}
+
+                {!showStayInViewNudge && showLookAtScreenNudge && (
+                  <div
+                    className="absolute top-3 left-3 right-[150px] z-30 rounded-[10px] px-3 py-2 border border-[#FBBF24]/30"
+                    style={{ backgroundColor: "rgba(251,191,36,0.12)" }}
+                  >
+                    <p className="text-xs font-medium text-[#FBBF24]" style={inter}>
+                      Look at the screen to stay focused.
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 

@@ -2,6 +2,9 @@
 
 import { useEffect, useRef } from "react";
 import { useChildAuthStore } from "@/stores/child-auth.store";
+import FaceTrackingOverlay from "@/components/child/class/FaceTrackingOverlay";
+import { useClassFaceMonitor } from "@/hooks/use-class-face-monitor";
+import type { FaceMonitorStatus } from "@/lib/face-monitor/types";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
@@ -11,6 +14,8 @@ type ClassChildVideoProps = {
   micEnabled: boolean;
   permissionError?: string | null;
   onEnableMedia?: () => void;
+  faceMonitorEnabled?: boolean;
+  onFaceStatusChange?: (status: FaceMonitorStatus) => void;
 };
 
 export default function ClassChildVideo({
@@ -19,10 +24,18 @@ export default function ClassChildVideo({
   micEnabled,
   permissionError,
   onEnableMedia,
+  faceMonitorEnabled = false,
+  onFaceStatusChange,
 }: ClassChildVideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const child = useChildAuthStore((state) => state.child);
   const displayName = child?.userName?.trim() || "You";
+
+  const { status: faceStatus } = useClassFaceMonitor(videoRef, {
+    enabled: faceMonitorEnabled && Boolean(stream && cameraEnabled),
+    onStatusChange: onFaceStatusChange,
+  });
 
   useEffect(() => {
     const video = videoRef.current;
@@ -38,16 +51,25 @@ export default function ClassChildVideo({
         className="rounded-[12px] overflow-hidden border-2 shadow-xl"
         style={{ borderColor: micEnabled ? "#00CED1" : "#525162", backgroundColor: "#313044" }}
       >
-        <div className="relative aspect-[4/3] bg-[#1a1830]">
+        <div ref={containerRef} className="relative aspect-[4/3] bg-[#1a1830]">
           {showVideo ? (
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              className="w-full h-full object-cover"
-              style={{ transform: "scaleX(-1)" }}
-            />
+            <>
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="w-full h-full object-cover"
+                style={{ transform: "scaleX(-1)" }}
+              />
+              <FaceTrackingOverlay
+                videoRef={videoRef}
+                containerRef={containerRef}
+                status={faceStatus}
+                mirrored
+                strokeWidth={2}
+              />
+            </>
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center gap-2 px-2">
               <div className="w-10 h-10 rounded-full bg-[#525162] flex items-center justify-center">
@@ -73,7 +95,7 @@ export default function ClassChildVideo({
             </div>
           )}
 
-          <div className="absolute top-1.5 left-1.5 flex items-center gap-1">
+          <div className="absolute top-1.5 left-1.5 flex items-center gap-1 z-20">
             {micEnabled ? (
               <span className="w-2 h-2 rounded-full bg-[#00CED1] animate-pulse" />
             ) : (

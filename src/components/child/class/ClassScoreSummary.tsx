@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
 const PASS_THRESHOLD = 85;
@@ -11,7 +13,7 @@ type ClassScoreSummaryProps = {
   passed?: boolean;
   passThreshold?: number;
   onContinue: () => void;
-  onRetake?: () => void;
+  onRetake?: () => void | Promise<void>;
 };
 
 export default function ClassScoreSummary({
@@ -23,7 +25,18 @@ export default function ClassScoreSummary({
   onContinue,
   onRetake,
 }: ClassScoreSummaryProps) {
+  const [isRetaking, setIsRetaking] = useState(false);
   const percent = scoreTotal > 0 ? Math.round((scoreCorrect / scoreTotal) * 100) : 0;
+
+  const handleRetake = async () => {
+    if (!onRetake || isRetaking) return;
+    setIsRetaking(true);
+    try {
+      await onRetake();
+    } finally {
+      setIsRetaking(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/70">
@@ -46,7 +59,7 @@ export default function ClassScoreSummary({
         <p className="text-white/55 text-sm mb-6" style={inter}>
           {passed
             ? "You scored high enough to move on to the next lesson."
-            : `You need at least ${passThreshold}% to pass. Please retake this class.`}
+            : `You need at least ${passThreshold}% to pass. Calyx will prepare a fresh retake with new examples.`}
         </p>
 
         <div className="rounded-2xl bg-[#111023] border border-white/10 py-6 px-4 mb-6">
@@ -71,11 +84,12 @@ export default function ClassScoreSummary({
           <div className="flex flex-col gap-3">
             <button
               type="button"
-              onClick={onRetake ?? onContinue}
-              className="w-full py-3.5 rounded-xl bg-[#FFC542] text-[#111023] text-sm font-semibold uppercase tracking-wide hover:opacity-90 transition-opacity"
+              onClick={() => void handleRetake()}
+              disabled={isRetaking}
+              className="w-full py-3.5 rounded-xl bg-[#FFC542] text-[#111023] text-sm font-semibold uppercase tracking-wide hover:opacity-90 transition-opacity disabled:opacity-60"
               style={inter}
             >
-              Retake class
+              {isRetaking ? "Preparing your retake…" : "Retake class"}
             </button>
             <button
               type="button"

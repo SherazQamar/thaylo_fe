@@ -49,6 +49,9 @@ export interface ChildClassSession {
   scoreCorrect?: number | null;
   scoreTotal?: number | null;
   lessonScript?: ChildClassLessonScript | null;
+  isRetake?: boolean;
+  attemptNumber?: number;
+  calyxIntro?: string | null;
 }
 
 export interface ClassSessionAnswerRecord {
