@@ -5,24 +5,23 @@ import type { ReactNode } from "react";
 type ClassMediaControlsProps = {
   micEnabled: boolean;
   cameraEnabled: boolean;
-  ccEnabled: boolean;
-  voiceEnabled: boolean;
+  cameraLocked?: boolean;
   onToggleMic: () => void;
   onToggleCamera: () => void;
-  onToggleCc: () => void;
-  onToggleVoice: () => void;
   onEndCall: () => void;
 };
 
 function ControlButton({
   active,
   danger,
+  disabled,
   onClick,
   label,
   children,
 }: {
   active?: boolean;
   danger?: boolean;
+  disabled?: boolean;
   onClick: () => void;
   label: string;
   children: ReactNode;
@@ -31,14 +30,18 @@ function ControlButton({
     <button
       type="button"
       onClick={onClick}
+      disabled={disabled}
       aria-label={label}
       title={label}
       className={
-        "flex items-center justify-center cursor-pointer transition-colors " +
-        (danger
-          ? "w-14 h-12 rounded-full bg-[#EF4444] hover:bg-[#DC2626]"
-          : "w-12 h-12 rounded-full " +
-            (active ? "bg-[#00CED1]/20 border border-[#00CED1]/50" : "bg-[#313044] hover:bg-[#424056]"))
+        "flex items-center justify-center transition-colors " +
+        (disabled
+          ? "w-12 h-12 rounded-full bg-[#313044] opacity-50 cursor-not-allowed"
+          : "cursor-pointer " +
+            (danger
+              ? "w-14 h-12 rounded-full bg-[#EF4444] hover:bg-[#DC2626]"
+              : "w-12 h-12 rounded-full " +
+                (active ? "bg-[#00CED1]/20 border border-[#00CED1]/50" : "bg-[#313044] hover:bg-[#424056]")))
       }
     >
       {children}
@@ -49,15 +52,13 @@ function ControlButton({
 export default function ClassMediaControls({
   micEnabled,
   cameraEnabled,
-  ccEnabled,
-  voiceEnabled,
+  cameraLocked = false,
   onToggleMic,
   onToggleCamera,
-  onToggleCc,
-  onToggleVoice,
   onEndCall,
 }: ClassMediaControlsProps) {
   const stroke = "rgba(255,255,255,0.75)";
+  const cameraOffBlocked = cameraLocked && cameraEnabled;
 
   return (
     <div className="flex items-center justify-center gap-3 md:gap-4 py-2 flex-shrink-0 flex-wrap">
@@ -80,7 +81,18 @@ export default function ClassMediaControls({
         )}
       </ControlButton>
 
-      <ControlButton active={cameraEnabled} onClick={onToggleCamera} label={cameraEnabled ? "Turn off camera" : "Turn on camera"}>
+      <ControlButton
+        active={cameraEnabled}
+        disabled={cameraOffBlocked}
+        onClick={onToggleCamera}
+        label={
+          cameraOffBlocked
+            ? "Camera must stay on during class"
+            : cameraEnabled
+              ? "Turn off camera"
+              : "Turn on camera"
+        }
+      >
         {cameraEnabled ? (
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M23 7l-7 5 7 5V7z" />
@@ -90,27 +102,6 @@ export default function ClassMediaControls({
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF7B7B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M16 16v1a2 2 0 01-2 2H3a2 2 0 01-2-2V7a2 2 0 012-2h2m5.66 0H14a2 2 0 012 2v3.34l1 1L23 7v10" />
             <line x1="1" y1="1" x2="23" y2="23" />
-          </svg>
-        )}
-      </ControlButton>
-
-      <ControlButton active={ccEnabled} onClick={onToggleCc} label={ccEnabled ? "Hide captions" : "Show captions"}>
-        <span style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: "11px", color: ccEnabled ? "#00CED1" : stroke }}>
-          CC
-        </span>
-      </ControlButton>
-
-      <ControlButton active={voiceEnabled} onClick={onToggleVoice} label={voiceEnabled ? "Mute Calyx voice" : "Enable Calyx voice"}>
-        {voiceEnabled ? (
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00CED1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-            <path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07" />
-          </svg>
-        ) : (
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-            <line x1="23" y1="9" x2="17" y2="15" />
-            <line x1="17" y1="9" x2="23" y2="15" />
           </svg>
         )}
       </ControlButton>

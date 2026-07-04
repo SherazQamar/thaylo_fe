@@ -12,6 +12,24 @@ export interface ChildAssignedClass {
   nextLessonKey: string | null;
   nextLessonTitle: string | null;
   estimatedMinutes: number | null;
+  needsRetake?: boolean;
+}
+
+export interface ChildClassLessonScript {
+  studentLanguage?: string;
+  instructionalCore?: {
+    concept?: string;
+    terms?: string[];
+    howTo?: string[];
+    practiceExamples?: string[];
+    masteryMarker?: string;
+  };
+  assessments?: Array<{
+    key: string;
+    prompt: string;
+    type: string;
+    options?: string[];
+  }>;
 }
 
 export interface ChildClassSession {
@@ -28,6 +46,29 @@ export interface ChildClassSession {
   estimatedMinutes: number | null;
   status: string;
   startedAt: string;
+  scoreCorrect?: number | null;
+  scoreTotal?: number | null;
+  lessonScript?: ChildClassLessonScript | null;
+}
+
+export interface ClassSessionAnswerRecord {
+  stepId: string;
+  interactionId: string;
+  optionId: string;
+  optionLabel: string;
+  isCorrect: boolean;
+  answeredAt: string;
+}
+
+export interface ClassSessionScore {
+  sessionId: number;
+  scoreCorrect: number;
+  scoreTotal: number;
+  scorePercent: number;
+  passed: boolean;
+  passThreshold: number;
+  needsRetake: boolean;
+  answers: ClassSessionAnswerRecord[];
 }
 
 export async function fetchChildAssignedClasses() {
@@ -49,6 +90,27 @@ export async function startChildClass(curriculumId?: number) {
 export async function fetchChildClassSession(sessionId: number) {
   const { data } = await api.get<ApiResponse<ChildClassSession>>(
     `/child/classes/sessions/${sessionId}`,
+    { authMode: "child" },
+  );
+  return data.data;
+}
+
+export async function submitClassAnswer(
+  sessionId: number,
+  payload: Omit<ClassSessionAnswerRecord, "answeredAt">,
+) {
+  const { data } = await api.post<ApiResponse<ClassSessionScore>>(
+    `/child/classes/sessions/${sessionId}/answers`,
+    payload,
+    { authMode: "child" },
+  );
+  return data.data;
+}
+
+export async function completeClassSession(sessionId: number) {
+  const { data } = await api.post<ApiResponse<ClassSessionScore>>(
+    `/child/classes/sessions/${sessionId}/complete`,
+    {},
     { authMode: "child" },
   );
   return data.data;
