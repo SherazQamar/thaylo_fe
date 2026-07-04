@@ -2,6 +2,7 @@
 
 import type { BlackboardInteraction, BlackboardStep } from "@/lib/class-lesson-content";
 import type { BlackboardReveal } from "@/hooks/use-blackboard-narration";
+import WordLadderDragDrop from "@/components/child/class/WordLadderDragDrop";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
@@ -9,27 +10,58 @@ type ClassBlackboardProps = {
   step: BlackboardStep;
   reveal: BlackboardReveal;
   isNarrating?: boolean;
+  greeting?: { studentName: string; inProgress: boolean };
   interaction?: BlackboardInteraction;
   selectedOptionId?: string | null;
   answeredCorrectly?: boolean | null;
   onSelectOption?: (optionId: string) => void;
+  onSubmitWordLadder?: (orderedIds: string[]) => void;
 };
+
+function renderPartialText(text: string, visibleWords: number, keyPrefix: string) {
+  const words = text.split(/\s+/).filter(Boolean);
+  const shown = words.slice(0, visibleWords);
+
+  return (
+    <>
+      {shown.map((word, index) => (
+        <span key={`${keyPrefix}-${index}`} className="inline">
+          {word}
+          {index < shown.length - 1 ? " " : ""}
+        </span>
+      ))}
+    </>
+  );
+}
 
 export default function ClassBlackboard({
   step,
   reveal,
   isNarrating = false,
+  greeting,
   interaction,
   selectedOptionId,
   answeredCorrectly,
   onSelectOption,
+  onSubmitWordLadder,
 }: ClassBlackboardProps) {
-  const visibleLines = step.lines.slice(0, reveal.visibleLines);
-  const visibleBullets = (step.bulletPoints ?? []).slice(0, reveal.visibleBullets);
+  const completedLines = step.lines.slice(0, reveal.completedLines);
+  const completedBullets = (step.bulletPoints ?? []).slice(0, reveal.completedBullets);
   const showInteraction = reveal.interactionVisible && interaction;
+  const hasContent =
+    completedLines.length > 0 ||
+    completedBullets.length > 0 ||
+    reveal.activeLineIndex != null ||
+    reveal.activeBulletIndex != null ||
+    showInteraction;
+
+  const isWordLadder = interaction?.type === "word_ladder";
+  const showChoiceOptions = showInteraction && !isWordLadder;
+  const showWordLadder = showInteraction && isWordLadder;
+  const compact = showInteraction || (step.bulletPoints?.length ?? 0) > 2;
 
   return (
-    <div className="relative w-full h-full min-h-[280px] rounded-[16px] overflow-hidden border border-[#2d4a3e]">
+    <div className="relative w-full h-full rounded-[16px] overflow-hidden border border-[#2d4a3e]">
       <div
         className="absolute inset-0"
         style={{
@@ -44,135 +76,180 @@ export default function ClassBlackboard({
         }}
       />
 
-      <div className="relative z-10 h-full flex flex-col p-5 md:p-8 overflow-y-auto scrollbar-hide">
-        <div className="flex items-center gap-3 mb-5">
+      <div className="relative z-10 h-full flex flex-col overflow-hidden px-4 py-3 md:px-5 md:py-4">
+        <div className={`flex items-center gap-2.5 shrink-0 ${compact ? "mb-2" : "mb-3"}`}>
           <div
-            className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+            className={`rounded-full flex items-center justify-center shrink-0 ${compact ? "w-8 h-8" : "w-10 h-10"}`}
             style={{ backgroundColor: "rgba(0,206,209,0.2)", border: "2px solid rgba(0,206,209,0.4)" }}
           >
-            <span style={{ ...inter, fontWeight: 800, fontSize: "14px", color: "#00CED1" }}>C</span>
+            <span style={{ ...inter, fontWeight: 800, fontSize: compact ? "12px" : "14px", color: "#00CED1" }}>C</span>
           </div>
-          <div>
-            <p style={{ ...inter, fontWeight: 600, fontSize: "12px", color: "rgba(255,255,255,0.5)" }}>
+          <div className="min-w-0">
+            <p style={{ ...inter, fontWeight: 600, fontSize: "11px", color: "rgba(255,255,255,0.5)" }}>
               Calyx — Blackboard
               {isNarrating && <span className="ml-2 text-[#00CED1]">speaking…</span>}
             </p>
-            <p style={{ ...inter, fontWeight: 700, fontSize: "20px", color: "#E8F5E9" }}>
+            <p
+              className="truncate"
+              style={{
+                ...inter,
+                fontWeight: 700,
+                fontSize: compact ? "clamp(14px, 2.2vh, 17px)" : "clamp(16px, 2.6vh, 20px)",
+                color: "#E8F5E9",
+              }}
+            >
               {step.title}
             </p>
           </div>
         </div>
 
-        <div className="space-y-3 flex-1">
-          {visibleLines.length === 0 && visibleBullets.length === 0 && !showInteraction && (
-            <p style={{ ...inter, fontSize: "14px", color: "rgba(255,255,255,0.35)", fontStyle: "italic" }}>
-              Calyx is writing on the board…
-            </p>
-          )}
+        <div className="flex-1 min-h-0 flex flex-col justify-center overflow-hidden">
+          <div
+            className={`overflow-hidden ${compact ? "space-y-1.5" : "space-y-2.5"}`}
+            style={{ fontSize: compact ? "clamp(12px, 1.9vh, 14px)" : "clamp(13px, 2.1vh, 15px)" }}
+          >
+            {greeting && (
+              <div className="flex flex-col items-center justify-center text-center py-4 px-2">
+                <p style={{ ...inter, fontWeight: 700, fontSize: "clamp(16px, 2.8vh, 20px)", color: "#E8F5E9", marginBottom: "8px" }}>
+                  Hello, {greeting.studentName}!
+                </p>
+                <p style={{ ...inter, fontWeight: 400, fontSize: "clamp(12px, 2vh, 14px)", color: "rgba(232,245,233,0.75)", lineHeight: "1.4" }}>
+                  {greeting.inProgress ? "Calyx is welcoming you to class…" : "Getting your lesson ready…"}
+                </p>
+              </div>
+            )}
 
-          {visibleLines.map((line, index) => (
-            <p
-              key={`line-${index}`}
-              style={{
-                ...inter,
-                fontWeight: index === 0 ? 600 : 400,
-                fontSize: index === 0 ? "16px" : "15px",
-                color: "rgba(232,245,233,0.92)",
-                lineHeight: "1.5",
-                animation: "fadeIn 0.5s ease",
-              }}
-            >
-              {line}
-            </p>
-          ))}
+            {!greeting && !hasContent && (
+              <p style={{ ...inter, fontSize: "13px", color: "rgba(255,255,255,0.35)", fontStyle: "italic" }}>
+                Calyx is writing on the board…
+              </p>
+            )}
 
-          {visibleBullets.length > 0 && (
-            <ul className="mt-2 space-y-2.5 pl-1">
-              {visibleBullets.map((point) => (
-                <li key={point} className="flex items-start gap-2.5">
-                  <span className="text-[#7dd3a8] mt-1.5 text-xs">●</span>
-                  <span
-                    style={{
-                      ...inter,
-                      fontWeight: 400,
-                      fontSize: "14px",
-                      color: "rgba(232,245,233,0.85)",
-                      lineHeight: "1.45",
-                      animation: "fadeIn 0.5s ease",
-                    }}
-                  >
-                    {point}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-
-          {showInteraction && interaction && (
-            <div className="mt-5 pt-4 border-t border-white/10">
+            {!greeting && completedLines.map((line, index) => (
               <p
+                key={`line-${index}`}
                 style={{
                   ...inter,
-                  fontWeight: 600,
-                  fontSize: "14px",
-                  color: "#E8F5E9",
-                  marginBottom: "12px",
+                  fontWeight: index === 0 ? 600 : 400,
+                  color: "rgba(232,245,233,0.92)",
+                  lineHeight: 1.35,
                 }}
               >
-                {interaction.prompt}
+                {line}
               </p>
-              <div className="grid grid-cols-2 gap-2.5">
-                {interaction.options.map((option) => {
-                  const isSelected = selectedOptionId === option.id;
-                  const showResult = selectedOptionId != null;
-                  const isCorrect = option.correct === true;
-                  let borderColor = "rgba(255,255,255,0.2)";
-                  let bg = "rgba(0,0,0,0.2)";
+            ))}
 
-                  if (showResult && isSelected) {
-                    borderColor = answeredCorrectly ? "#00CED1" : "#FF7B7B";
-                    bg = answeredCorrectly ? "rgba(0,206,209,0.15)" : "rgba(255,123,123,0.12)";
-                  } else if (showResult && isCorrect && !answeredCorrectly) {
-                    borderColor = "#00CED1";
-                    bg = "rgba(0,206,209,0.1)";
-                  }
+            {!greeting && reveal.activeLineIndex != null && (
+              <p style={{ ...inter, fontWeight: 400, color: "rgba(232,245,233,0.92)", lineHeight: 1.35 }}>
+                {renderPartialText(
+                  step.lines[reveal.activeLineIndex] ?? "",
+                  reveal.activeLineWords,
+                  `active-line-${reveal.activeLineIndex}`,
+                )}
+              </p>
+            )}
 
-                  return (
-                    <button
-                      key={option.id}
-                      type="button"
-                      disabled={selectedOptionId != null}
-                      onClick={() => onSelectOption?.(option.id)}
-                      className="rounded-xl px-4 py-3 text-left transition-transform hover:scale-[1.02] disabled:cursor-default"
-                      style={{
-                        border: `2px solid ${borderColor}`,
-                        backgroundColor: bg,
-                        ...inter,
-                        fontWeight: 600,
-                        fontSize: "14px",
-                        color: "#E8F5E9",
-                      }}
-                    >
-                      {option.label}
-                    </button>
-                  );
-                })}
-              </div>
-              {selectedOptionId != null && (
+            {!greeting && completedBullets.length > 0 && (
+              <ul className={`pl-1 ${compact ? "space-y-1" : "space-y-1.5"}`}>
+                {completedBullets.map((point) => (
+                  <li key={point} className="flex items-start gap-2">
+                    <span className="text-[#7dd3a8] mt-0.5 text-[10px] shrink-0">●</span>
+                    <span style={{ ...inter, fontWeight: 400, color: "rgba(232,245,233,0.85)", lineHeight: 1.35 }}>
+                      {point}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {!greeting && reveal.activeBulletIndex != null && (
+              <ul className="pl-1">
+                <li className="flex items-start gap-2">
+                  <span className="text-[#7dd3a8] mt-0.5 text-[10px] shrink-0">●</span>
+                  <span style={{ ...inter, fontWeight: 400, color: "rgba(232,245,233,0.85)", lineHeight: 1.35 }}>
+                    {renderPartialText(
+                      (step.bulletPoints ?? [])[reveal.activeBulletIndex] ?? "",
+                      reveal.activeBulletWords,
+                      `active-bullet-${reveal.activeBulletIndex}`,
+                    )}
+                  </span>
+                </li>
+              </ul>
+            )}
+
+            {showInteraction && interaction && (
+              <div className={`border-t border-white/10 ${compact ? "pt-2 mt-1" : "pt-3 mt-2"}`}>
                 <p
-                  className="mt-3 text-sm"
                   style={{
                     ...inter,
-                    color: answeredCorrectly ? "#00CED1" : "#FFC542",
+                    fontWeight: 600,
+                    fontSize: compact ? "clamp(12px, 1.9vh, 13px)" : "14px",
+                    color: "#E8F5E9",
+                    marginBottom: compact ? "8px" : "10px",
+                    lineHeight: 1.35,
                   }}
                 >
-                  {answeredCorrectly
-                    ? "Great job! That's the strongest word."
-                    : "Good try — pick the word with the most energy."}
+                  {interaction.prompt}
                 </p>
-              )}
-            </div>
-          )}
+
+                {showChoiceOptions && (
+                  <>
+                    <div className="grid grid-cols-2 gap-2">
+                      {interaction.options.map((option) => {
+                        const isSelected = selectedOptionId === option.id;
+                        const showResult = selectedOptionId != null;
+                        let borderColor = "rgba(255,255,255,0.2)";
+                        let bg = "rgba(0,0,0,0.2)";
+
+                        if (showResult && isSelected) {
+                          borderColor = answeredCorrectly ? "#00CED1" : "#FF7B7B";
+                          bg = answeredCorrectly ? "rgba(0,206,209,0.15)" : "rgba(255,123,123,0.12)";
+                        }
+
+                        return (
+                          <button
+                            key={option.id}
+                            type="button"
+                            disabled={selectedOptionId != null}
+                            onClick={() => onSelectOption?.(option.id)}
+                            className="rounded-xl px-3 py-2 text-left transition-transform hover:scale-[1.02] disabled:cursor-default"
+                            style={{
+                              border: `2px solid ${borderColor}`,
+                              backgroundColor: bg,
+                              ...inter,
+                              fontWeight: 600,
+                              fontSize: "clamp(12px, 1.9vh, 14px)",
+                              color: "#E8F5E9",
+                            }}
+                          >
+                            {option.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {selectedOptionId != null && (
+                      <p className="mt-2 text-xs" style={{ ...inter, color: answeredCorrectly ? "#00CED1" : "#FFC542" }}>
+                        {answeredCorrectly
+                          ? "Great job! That's the strongest word."
+                          : "Thanks for answering — let's keep going."}
+                      </p>
+                    )}
+                  </>
+                )}
+
+                {showWordLadder && (
+                  <WordLadderDragDrop
+                    words={interaction.options}
+                    disabled={isNarrating}
+                    submitted={selectedOptionId != null}
+                    isCorrect={answeredCorrectly}
+                    compact
+                    onSubmit={onSubmitWordLadder ?? (() => undefined)}
+                  />
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

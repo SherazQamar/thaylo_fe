@@ -64,3 +64,8 @@ export function generateCalyxReply(
 export function getWelcomeMessage(lessonTitle: string): string {
   return `Welcome to ${lessonTitle}! I'm Calyx. Watch the blackboard as we learn together — you can type questions here anytime.`;
 }
+
+export function buildClassGreeting(studentName: string, lessonTitle: string): string {
+  const name = studentName.trim() || "there";
+  return `Hello ${name}! I'm Calyx, your tutor. Welcome to today's class on ${lessonTitle}. Let's get started.`;
+}

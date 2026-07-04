@@ -83,12 +83,16 @@ export default function ChildProgressPage() {
             </p>
             <p style={{ ...inter, fontWeight: 700, fontSize: "20px", color: "#FFFFFF", marginTop: "4px" }}>
               {hasAssignedClass && primaryClass
-                ? primaryClass.nextLessonTitle ?? primaryClass.title
+                ? primaryClass.needsRetake
+                  ? `Retake: ${primaryClass.nextLessonTitle ?? primaryClass.title}`
+                  : primaryClass.nextLessonTitle ?? primaryClass.title
                 : "Here's your learning path today"}
             </p>
             {hasAssignedClass && primaryClass && (
               <p style={{ ...inter, fontWeight: 400, fontSize: "12px", color: "rgba(255,255,255,0.65)", marginTop: "6px" }}>
-                {primaryClass.subject} · {primaryClass.gradeLevel}
+                {primaryClass.needsRetake
+                  ? "Score below 85% — please retake this lesson before moving on"
+                  : `${primaryClass.subject} · ${primaryClass.gradeLevel}`}
               </p>
             )}
           </div>

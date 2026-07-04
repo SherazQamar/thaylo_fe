@@ -53,8 +53,8 @@ export function useClassMedia(autoStart = false) {
       } else {
         setPermissionError({
           code: "unknown",
-          message: "Could not access camera or microphone.",
-          guidance: "Check browser permissions and try again.",
+          message: "Could not access camera.",
+          guidance: "Check browser camera permissions and try again.",
         });
       }
       return null;
@@ -73,10 +73,11 @@ export function useClassMedia(autoStart = false) {
     setMicEnabled(next);
   }, [micEnabled]);
 
-  const toggleCamera = useCallback(() => {
+  const toggleCamera = useCallback((options?: { lockWhenOn?: boolean }) => {
     const tracks = streamRef.current?.getVideoTracks() ?? [];
     if (tracks.length === 0) return;
     const next = !cameraEnabled;
+    if (options?.lockWhenOn && cameraEnabled && !next) return;
     tracks.forEach((track) => {
       track.enabled = next;
     });
@@ -91,13 +92,9 @@ export function useClassMedia(autoStart = false) {
 
   const hasActiveMedia =
     !!stream &&
-    stream.getAudioTracks().some((t) => t.readyState === "live") &&
-    stream.getVideoTracks().some((t) => t.readyState === "live");
+    stream.getVideoTracks().some((t) => t.readyState === "live" && t.enabled);
 
-  const canJoinClass =
-    !!stream &&
-    stream.getAudioTracks().some((t) => t.readyState === "live") &&
-    (stream.getVideoTracks().some((t) => t.readyState === "live") || !hasVideo);
+  const canJoinClass = hasActiveMedia && hasVideo;
 
   return {
     stream,

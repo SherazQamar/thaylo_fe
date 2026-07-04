@@ -155,7 +155,9 @@ export default function ChildSidebar() {
                   </svg>
                 </div>
                 <p className="text-white text-xs font-semibold text-center mb-1" style={inter}>
-                  {primaryClass.nextLessonTitle ?? primaryClass.title}
+                  {primaryClass.needsRetake
+                    ? `Retake: ${primaryClass.nextLessonTitle ?? primaryClass.title}`
+                    : primaryClass.nextLessonTitle ?? primaryClass.title}
                 </p>
                 <div className="flex items-center gap-1.5 text-white/50 text-[11px] mb-3">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></svg>

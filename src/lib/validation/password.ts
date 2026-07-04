@@ -9,3 +9,13 @@ export function validateParentPassword(password: string): string | null {
   }
   return null;
 }
+
+export function validatePasswordConfirm(password: string, confirmPassword: string): string | null {
+  if (!confirmPassword.trim()) {
+    return "Please confirm your password.";
+  }
+  if (password !== confirmPassword) {
+    return "Passwords do not match.";
+  }
+  return null;
+}

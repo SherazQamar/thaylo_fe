@@ -4,8 +4,22 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { synthesizeAiSpeech, type PublicAiSettings, type SpeechAuthMode } from "@/lib/ai-settings-api";
 import { sanitizeTextForSpeech } from "@/lib/tts-sanitize";
+import {
+  delay,
+  estimateSpeakDurationMs,
+  playAudioBlobWithWordSync,
+  revealWordsOnSchedule,
+  splitSpeakWords,
+  stopAudioSlot,
+} from "@/lib/tts-word-sync";
 
 type VoiceConfig = PublicAiSettings["voice"];
+
+type SpeakProgressOptions = {
+  onWord?: (index: number, word: string) => void;
+  wordMs?: number;
+  isCancelled?: () => boolean;
+};
 
 function resolveBrowserVoice(voiceConfig: VoiceConfig) {
   if (typeof window === "undefined" || !("speechSynthesis" in window)) {
@@ -45,79 +59,201 @@ export function useSpeechSynthesis(
   const engine = voiceConfig?.engine ?? "browser";
   const supported = engine === "elevenlabs" || browserSupported;
 
-  const stop = useCallback(() => {
-    requestIdRef.current += 1;
+  const stopMedia = useCallback(() => {
     if (browserSupported) {
       window.speechSynthesis.cancel();
     }
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
-    }
-    setSpeaking(false);
+    stopAudioSlot(audioRef);
   }, [browserSupported]);
 
-  const speak = useCallback(
-    async (text: string) => {
+  const stop = useCallback(() => {
+    requestIdRef.current += 1;
+    stopMedia();
+    setSpeaking(false);
+  }, [stopMedia]);
+
+  const speakBrowser = useCallback(
+    async (
+      spokenText: string,
+      words: string[],
+      options?: SpeakProgressOptions,
+    ): Promise<boolean> => {
+      if (!browserSupported) return false;
+
+      stopMedia();
+
+      const isCancelled = options?.isCancelled;
+      const onWord = options?.onWord;
+      let startedSpeaking = false;
+
+      await new Promise<void>((resolve) => {
+        const utterance = new SpeechSynthesisUtterance(spokenText);
+        utterance.rate = voiceConfig?.rate ?? 0.95;
+        utterance.pitch = voiceConfig?.pitch ?? 1;
+        utterance.lang = voiceConfig?.lang ?? "en-US";
+
+        const selectedVoice = voiceConfig ? resolveBrowserVoice(voiceConfig) : null;
+        if (selectedVoice) {
+          utterance.voice = selectedVoice;
+        }
+
+        let revealedWords = 0;
+
+        utterance.onstart = () => {
+          startedSpeaking = true;
+          if (onWord && words.length > 0 && revealedWords === 0) {
+            onWord(0, words[0]);
+            revealedWords = 1;
+          }
+        };
+
+        utterance.onboundary = (event) => {
+          if (event.name !== "word" || !onWord) return;
+          const spoken = spokenText.slice(0, event.charIndex + event.charLength);
+          const count = splitSpeakWords(spoken).length;
+          while (revealedWords < count && revealedWords < words.length) {
+            onWord(revealedWords, words[revealedWords]);
+            revealedWords += 1;
+          }
+        };
+
+        utterance.onend = () => {
+          if (onWord) {
+            for (let i = revealedWords; i < words.length; i += 1) {
+              onWord(i, words[i]);
+            }
+          }
+          resolve();
+        };
+
+        utterance.onerror = () => {
+          if (onWord) {
+            for (let i = revealedWords; i < words.length; i += 1) {
+              onWord(i, words[i]);
+            }
+          }
+          resolve();
+        };
+
+        utteranceRef.current = utterance;
+        window.speechSynthesis.speak(utterance);
+      });
+
+      if (isCancelled?.()) return startedSpeaking;
+      return startedSpeaking;
+    },
+    [browserSupported, stopMedia, voiceConfig],
+  );
+
+  const speakElevenLabs = useCallback(
+    async (
+      spokenText: string,
+      words: string[],
+      options?: SpeakProgressOptions,
+    ): Promise<boolean> => {
+      try {
+        stopMedia();
+        const blob = await synthesizeAiSpeech(spokenText, authMode);
+        if (options?.isCancelled?.()) return false;
+
+        return await playAudioBlobWithWordSync(
+          blob,
+          words,
+          options?.onWord,
+          options?.wordMs ?? 55,
+          options?.isCancelled,
+          audioRef,
+        );
+      } catch {
+        stopAudioSlot(audioRef);
+        return false;
+      }
+    },
+    [authMode, stopMedia],
+  );
+
+  const speakTimedFallback = useCallback(
+    async (words: string[], options?: SpeakProgressOptions) => {
+      stopMedia();
+      const wordMs = options?.wordMs ?? 55;
+      const duration = estimateSpeakDurationMs(words.join(" "), wordMs);
+      await revealWordsOnSchedule(
+        words,
+        (index, word) => options?.onWord?.(index, word),
+        duration,
+        options?.isCancelled,
+      );
+      if (!options?.isCancelled?.()) {
+        await delay(Math.min(400, Math.max(200, duration * 0.05)));
+      }
+    },
+    [stopMedia],
+  );
+
+  const speakProgress = useCallback(
+    async (text: string, options?: SpeakProgressOptions) => {
       const spokenText = sanitizeTextForSpeech(text);
-      if (!spokenText.trim() || !supported) {
+      if (!spokenText.trim()) {
         return;
       }
 
+      const words = splitSpeakWords(spokenText);
       const requestId = ++requestIdRef.current;
-      stop();
+      stopMedia();
       requestIdRef.current = requestId;
       setSpeaking(true);
 
+      const isCancelled = () =>
+        requestId !== requestIdRef.current || options?.isCancelled?.() === true;
+
       try {
         if (engine === "elevenlabs") {
-          const blob = await synthesizeAiSpeech(spokenText, authMode);
-          if (requestId !== requestIdRef.current) return;
-
-          const url = URL.createObjectURL(blob);
-          const audio = new Audio(url);
-          audioRef.current = audio;
-
-          await new Promise<void>((resolve) => {
-            const finish = () => {
-              URL.revokeObjectURL(url);
-              if (audioRef.current === audio) {
-                audioRef.current = null;
-              }
-              resolve();
-            };
-            audio.onended = finish;
-            audio.onerror = finish;
-            void audio.play().catch(finish);
+          const played = await speakElevenLabs(spokenText, words, {
+            ...options,
+            isCancelled,
           });
-          return;
+          if (played && !isCancelled()) return;
+
+          if (browserSupported && !isCancelled()) {
+            stopMedia();
+            const browserPlayed = await speakBrowser(spokenText, words, {
+              ...options,
+              isCancelled,
+            });
+            if (browserPlayed && !isCancelled()) return;
+          }
+        } else if (browserSupported) {
+          const browserPlayed = await speakBrowser(spokenText, words, {
+            ...options,
+            isCancelled,
+          });
+          if (browserPlayed && !isCancelled()) return;
         }
 
-        if (!browserSupported) return;
-
-        await new Promise<void>((resolve) => {
-          const utterance = new SpeechSynthesisUtterance(spokenText);
-          utterance.rate = voiceConfig?.rate ?? 0.95;
-          utterance.pitch = voiceConfig?.pitch ?? 1;
-          utterance.lang = voiceConfig?.lang ?? "en-US";
-
-          const selectedVoice = voiceConfig ? resolveBrowserVoice(voiceConfig) : null;
-          if (selectedVoice) {
-            utterance.voice = selectedVoice;
-          }
-
-          utterance.onend = () => resolve();
-          utterance.onerror = () => resolve();
-          utteranceRef.current = utterance;
-          window.speechSynthesis.speak(utterance);
-        });
+        if (!isCancelled()) {
+          await speakTimedFallback(words, { ...options, isCancelled });
+        }
       } finally {
         if (requestId === requestIdRef.current) {
           setSpeaking(false);
         }
       }
     },
-    [authMode, browserSupported, engine, stop, supported, voiceConfig],
+    [
+      browserSupported,
+      engine,
+      speakBrowser,
+      speakElevenLabs,
+      speakTimedFallback,
+      stopMedia,
+    ],
+  );
+
+  const speak = useCallback(
+    async (text: string) => {
+      await speakProgress(text);
+    },
+    [speakProgress],
   );
 
   useEffect(() => {
@@ -131,5 +267,5 @@ export function useSpeechSynthesis(
     };
   }, [browserSupported, stop]);
 
-  return { speak, stop, speaking, supported };
+  return { speak, speakProgress, stop, speaking, supported };
 }

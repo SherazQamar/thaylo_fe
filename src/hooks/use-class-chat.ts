@@ -26,10 +26,10 @@ export function useClassChat({
   const welcomedRef = useRef(false);
 
   const pushCalyxMessage = useCallback(
-    (text: string) => {
+    (text: string, options?: { speak?: boolean }) => {
       const message = createMessage("calyx", text);
       setMessages((prev) => [...prev, message]);
-      if (voiceEnabled && onCalyxSpeak) {
+      if (voiceEnabled && onCalyxSpeak && options?.speak !== false) {
         onCalyxSpeak(text);
       }
       return message;
@@ -41,7 +41,7 @@ export function useClassChat({
     if (welcomedRef.current) return;
     welcomedRef.current = true;
     const welcome = getWelcomeMessage(lessonTitle);
-    pushCalyxMessage(welcome);
+    pushCalyxMessage(welcome, { speak: false });
   }, [lessonTitle, pushCalyxMessage]);
 
   const sendMessage = useCallback(
