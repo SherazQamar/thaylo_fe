@@ -252,7 +252,9 @@ export function buildBlackboardStepsFromLessonScript(
     ...buildPracticeSteps(practiceExamples),
     buildQuickCheckStep(
       lessonScript?.assessments,
-      parsePracticeExample(practiceExamples[3] ?? practiceExamples[practiceExamples.length - 1] ?? ""),
+      parsePracticeExample(
+        practiceExamples[3] ?? practiceExamples[practiceExamples.length - 1] ?? "",
+      ) ?? undefined,
       lessonScript?.instructionalCore?.masteryMarker,
     ),
   ];
