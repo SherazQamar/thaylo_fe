@@ -69,3 +69,16 @@ export function buildClassGreeting(studentName: string, lessonTitle: string): st
   const name = studentName.trim() || "there";
   return `Hello ${name}! I'm Calyx, your tutor. Welcome to today's class on ${lessonTitle}. Let's get started.`;
 }
+
+export function buildRetakeClassGreeting(
+  studentName: string,
+  lessonTitle: string,
+  calyxIntro?: string | null,
+): string {
+  if (calyxIntro?.trim()) {
+    return calyxIntro.trim();
+  }
+
+  const name = studentName.trim() || "there";
+  return `Welcome back, ${name}! Let's try ${lessonTitle} again with some fresh examples. You've got this.`;
+}

@@ -1,11 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import ClassLiveRoom from "@/components/child/class/ClassLiveRoom";
 import { fetchChildClassSession, type ChildClassSession } from "@/lib/curriculum-api";
 
-export default function LessonPage() {
+const ClassLiveRoom = dynamic(
+  () => import("@/components/child/class/ClassLiveRoom"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-full items-center justify-center text-white/50 text-sm">
+        Loading class…
+      </div>
+    ),
+  },
+);
+
+function LessonPageContent() {
   const searchParams = useSearchParams();
   const sessionId = Number(searchParams.get("sessionId"));
   const [session, setSession] = useState<ChildClassSession | null>(null);
@@ -46,5 +58,19 @@ export default function LessonPage() {
 
   return (
     <ClassLiveRoom session={session} isLoading={isLoading} loadError={loadError} />
+  );
+}
+
+export default function LessonPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex h-full items-center justify-center text-white/50 text-sm">
+          Loading class…
+        </div>
+      }
+    >
+      <LessonPageContent />
+    </Suspense>
   );
 }
