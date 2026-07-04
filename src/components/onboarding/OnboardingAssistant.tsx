@@ -279,6 +279,24 @@ export default function OnboardingAssistant({
           setTimeout(() => router.replace(dashboardPath), 2200);
           return;
         }
+
+        if (portal === "child") {
+          const status = await fetchOnboardingStatus("child");
+          const waitingForParent =
+            status.currentWalkthroughPortal === "parent" ||
+            status.walkthroughs.some(
+              (item) =>
+                item.deliveryMode === "combined" &&
+                item.combinedPhase === "parent" &&
+                item.progressStatus !== "completed",
+            );
+
+          if (waitingForParent) {
+            setTimeout(() => router.replace(dashboardPath), 3200);
+            return;
+          }
+        }
+
         setActiveSection("parent");
         setTimeout(() => void beginWalkthrough(), 2200);
         return;
@@ -447,14 +465,12 @@ export default function OnboardingAssistant({
               {combinedWalkthrough?.title ?? "Assessment"}
             </h1>
             <p className="text-white/70 text-sm leading-relaxed">
-              This assessment is for both you and your parent to complete together.
-              You will answer the student questions first, then your parent will
-              answer the parent questions. No extra sign-in is needed.
+              You will answer the student questions first. When you finish, your parent
+              must sign in on the parent dashboard to complete the parent questions.
             </p>
             <ul className="text-white/60 text-sm space-y-2 list-disc pl-5">
-              <li>Student questions are answered by the child</li>
-              <li>Parent questions are answered by the parent</li>
-              <li>Please stay together until both parts are finished</li>
+              <li>Student questions appear on the student dashboard</li>
+              <li>Parent questions appear on the parent dashboard</li>
             </ul>
           </div>
           <button
@@ -646,7 +662,9 @@ export default function OnboardingAssistant({
                 <p className="text-[#00CED1] text-sm font-medium">
                   {turn?.onboardingComplete
                     ? "Redirecting to your dashboard…"
-                    : "Great progress! Moving to the next section…"}
+                    : portal === "child"
+                      ? "Student section complete! Ask your parent to sign in and finish the parent questions on the parent dashboard."
+                      : "Great progress! Moving to the next section…"}
                 </p>
               </div>
             )}

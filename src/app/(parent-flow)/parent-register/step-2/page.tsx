@@ -19,6 +19,7 @@ import { useAuthStore } from "@/stores/auth.store";
 import type { Child } from "@/types/api";
 import ParentUserDropdown from "@/components/parent/ParentUserDropdown";
 import ThayloBrandLink from "@/components/shared/ThayloBrandLink";
+import InfoTooltip from "@/components/shared/InfoTooltip";
 
 const EMPTY_CHILDREN: Child[] = [];
 const DEFAULT_GRADE = "K4";
@@ -426,8 +427,9 @@ function ParentRegisterStep2Content() {
 
               {/* Student User Name */}
               <div>
-                <label className="block text-[14px] font-semibold text-white mb-1.5">
+                <label className="flex items-center gap-1.5 text-[14px] font-semibold text-white mb-1.5">
                   Student User Name
+                  <InfoTooltip content="This username is required for your child to sign in. They will use it with their PIN on the child sign-in page." />
                 </label>
                 <input
                   type="text"
@@ -474,8 +476,9 @@ function ParentRegisterStep2Content() {
 
               {/* Pin */}
               <div>
-                <label className="block text-[14px] font-semibold text-white mb-1.5">
+                <label className="flex items-center gap-1.5 text-[14px] font-semibold text-white mb-1.5">
                   Pin
+                  <InfoTooltip content="Your child will enter this PIN with their username to sign in." />
                 </label>
                 <div className="grid grid-cols-6 gap-3">
                   {pin.map((digit, i) => (
@@ -494,6 +497,9 @@ function ParentRegisterStep2Content() {
                     />
                   ))}
                 </div>
+                <p className="mt-2 text-xs text-white/50">
+                  Set a 6-digit PIN.
+                </p>
               </div>
 
               {modalError && (

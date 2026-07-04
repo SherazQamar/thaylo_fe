@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import ParentUserDropdown from "@/components/parent/ParentUserDropdown";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
@@ -86,24 +85,15 @@ export default function ParentDashboardPage() {
       />
 
       {/* Greeting */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-        <div>
-          <h2 style={{ ...inter, fontWeight: 700, fontSize: "22px", lineHeight: "30px", color: "#FFFFFF" }}>
-            Hello, {greetingName}
-          </h2>
-          <p style={{ ...inter, fontWeight: 400, fontSize: "14px", lineHeight: "22px", color: "rgba(255,255,255,0.5)" }}>
-            {firstChildName
-              ? `Here is how ${firstChildName} is doing today.`
-              : "Here is your family learning overview."}
-          </p>
-        </div>
-        <Link
-          href="/parent-dashboard/children"
-          className="rounded-full px-6 py-2.5 cursor-pointer hover:opacity-90 transition-opacity self-start sm:self-auto"
-          style={{ backgroundColor: "#00CED1", ...inter, fontWeight: 600, fontSize: "14px", lineHeight: "20px", color: "#111023" }}
-        >
-          Add Child
-        </Link>
+      <div className="mb-6">
+        <h2 style={{ ...inter, fontWeight: 700, fontSize: "22px", lineHeight: "30px", color: "#FFFFFF" }}>
+          Hello, {greetingName}
+        </h2>
+        <p style={{ ...inter, fontWeight: 400, fontSize: "14px", lineHeight: "22px", color: "rgba(255,255,255,0.5)" }}>
+          {firstChildName
+            ? `Here is how ${firstChildName} is doing today.`
+            : "Here is your family learning overview."}
+        </p>
       </div>
 
       {/* Stats Cards */}

@@ -13,6 +13,7 @@ import {
 import {
   PARENT_PASSWORD_REQUIREMENTS,
   validateParentPassword,
+  validatePasswordConfirm,
 } from "@/lib/validation/password";
 import {
   formatPhoneInput,
@@ -31,6 +32,38 @@ const fieldInputStyle = {
   height: "44px",
 } as const;
 
+function PasswordVisibilityToggle({
+  visible,
+  onToggle,
+  label,
+}: {
+  visible: boolean;
+  onToggle: () => void;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-label={label}
+      className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70 transition-colors"
+    >
+      {visible ? (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94" />
+          <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19" />
+          <line x1="1" y1="1" x2="23" y2="23" />
+        </svg>
+      ) : (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+          <circle cx="12" cy="12" r="3" />
+        </svg>
+      )}
+    </button>
+  );
+}
+
 export default function ParentRegister() {
   const router = useRouter();
   const [guardian1Name, setGuardian1Name] = useState("");
@@ -40,7 +73,11 @@ export default function ParentRegister() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [confirmPasswordError, setConfirmPasswordError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [timezone, setTimezone] = useState("");
   const [error, setError] = useState<string | null>(null);
 
@@ -55,6 +92,10 @@ export default function ParentRegister() {
       const passwordValidationError = validateParentPassword(password);
       if (passwordValidationError) {
         throw new Error(passwordValidationError);
+      }
+      const confirmValidationError = validatePasswordConfirm(password, confirmPassword);
+      if (confirmValidationError) {
+        throw new Error(confirmValidationError);
       }
       if (!timezone) {
         throw new Error("Please select a timezone");
@@ -94,6 +135,16 @@ export default function ParentRegister() {
     if (passwordError) {
       setPasswordError(validateParentPassword(value));
     }
+    if (confirmPasswordError && confirmPassword) {
+      setConfirmPasswordError(validatePasswordConfirm(value, confirmPassword));
+    }
+  }
+
+  function handleConfirmPasswordChange(value: string) {
+    setConfirmPassword(value);
+    if (confirmPasswordError) {
+      setConfirmPasswordError(validatePasswordConfirm(password, value));
+    }
   }
 
   function handleSubmit(e: FormEvent) {
@@ -106,6 +157,13 @@ export default function ParentRegister() {
       return;
     }
     setPasswordError(null);
+
+    const confirmValidationError = validatePasswordConfirm(password, confirmPassword);
+    if (confirmValidationError) {
+      setConfirmPasswordError(confirmValidationError);
+      return;
+    }
+    setConfirmPasswordError(null);
 
     if (!timezone) {
       setError("Please select a timezone");
@@ -341,7 +399,7 @@ export default function ParentRegister() {
                   />
                 </div>
 
-                {/* Password — same styling as /parent-sign-in */}
+                {/* Password */}
                 <div>
                   <label
                     htmlFor="password"
@@ -350,23 +408,30 @@ export default function ParentRegister() {
                   >
                     Password
                   </label>
-                  <input
-                    type="password"
-                    id="password"
-                    value={password}
-                    onChange={(e) => handlePasswordChange(e.target.value)}
-                    onBlur={() => setPasswordError(validateParentPassword(password))}
-                    placeholder="••••••••"
-                    required
-                    aria-invalid={passwordError ? true : undefined}
-                    aria-describedby="password-requirements"
-                    className={`w-full px-4 py-3 sm:py-3.5 rounded-full bg-[#313044] text-white text-sm outline-none border transition-colors placeholder:text-white/30 ${
-                      passwordError
-                        ? "border-red-400/70 focus:border-red-400/70"
-                        : "border-transparent focus:border-[#00CED1]/40"
-                    }`}
-                    style={inter}
-                  />
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      id="password"
+                      value={password}
+                      onChange={(e) => handlePasswordChange(e.target.value)}
+                      onBlur={() => setPasswordError(validateParentPassword(password))}
+                      placeholder="••••••••"
+                      required
+                      aria-invalid={passwordError ? true : undefined}
+                      aria-describedby="password-requirements"
+                      className={`w-full px-4 py-3 sm:py-3.5 pr-12 rounded-full bg-[#313044] text-white text-sm outline-none border transition-colors placeholder:text-white/30 ${
+                        passwordError
+                          ? "border-red-400/70 focus:border-red-400/70"
+                          : "border-transparent focus:border-[#00CED1]/40"
+                      }`}
+                      style={inter}
+                    />
+                    <PasswordVisibilityToggle
+                      visible={showPassword}
+                      onToggle={() => setShowPassword((prev) => !prev)}
+                      label={showPassword ? "Hide password" : "Show password"}
+                    />
+                  </div>
                   <p
                     id="password-requirements"
                     className={`mt-1.5 text-xs ${passwordError ? "text-red-400" : "text-white/40"}`}
@@ -374,6 +439,45 @@ export default function ParentRegister() {
                   >
                     {passwordError ?? PARENT_PASSWORD_REQUIREMENTS}
                   </p>
+                </div>
+
+                {/* Confirm Password */}
+                <div>
+                  <label
+                    htmlFor="confirmPassword"
+                    className="block text-sm font-medium text-white/70 mb-2"
+                    style={inter}
+                  >
+                    Confirm Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      id="confirmPassword"
+                      value={confirmPassword}
+                      onChange={(e) => handleConfirmPasswordChange(e.target.value)}
+                      onBlur={() => setConfirmPasswordError(validatePasswordConfirm(password, confirmPassword))}
+                      placeholder="••••••••"
+                      required
+                      aria-invalid={confirmPasswordError ? true : undefined}
+                      className={`w-full px-4 py-3 sm:py-3.5 pr-12 rounded-full bg-[#313044] text-white text-sm outline-none border transition-colors placeholder:text-white/30 ${
+                        confirmPasswordError
+                          ? "border-red-400/70 focus:border-red-400/70"
+                          : "border-transparent focus:border-[#00CED1]/40"
+                      }`}
+                      style={inter}
+                    />
+                    <PasswordVisibilityToggle
+                      visible={showConfirmPassword}
+                      onToggle={() => setShowConfirmPassword((prev) => !prev)}
+                      label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                    />
+                  </div>
+                  {confirmPasswordError && (
+                    <p className="mt-1.5 text-xs text-red-400" style={inter}>
+                      {confirmPasswordError}
+                    </p>
+                  )}
                 </div>
 
                 {/* Country & Timezone */}

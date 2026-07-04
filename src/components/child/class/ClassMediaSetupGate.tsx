@@ -72,7 +72,7 @@ export default function ClassMediaSetupGate({
             Get ready for class
           </h2>
           <p style={{ ...inter, fontWeight: 400, fontSize: "14px", color: "rgba(255,255,255,0.55)", marginTop: "8px" }}>
-            Turn on your camera and microphone before joining {lessonTitle}.
+            Turn on your camera before joining {lessonTitle}. Microphone is optional.
           </p>
         </div>
 
@@ -81,15 +81,20 @@ export default function ClassMediaSetupGate({
             className="rounded-[10px] px-3 py-2.5 mb-4 text-xs text-[#00CED1] border border-[#00CED1]/30"
             style={{ backgroundColor: "rgba(0,206,209,0.08)", ...inter }}
           >
-            <strong>Check your browser</strong> — a permission popup should appear at the top of the window.
-            Choose <strong>Allow</strong> for camera and microphone.
+            <strong>Check your browser</strong> — allow <strong>Camera</strong> when prompted.
+            Microphone is optional.
           </div>
         )}
 
         {(permissionHint || permissionError) && !isRequesting && (
           <div
-            className="rounded-[10px] px-3 py-2.5 mb-4 text-xs text-[#FFC542]"
-            style={{ backgroundColor: "rgba(255,197,66,0.12)", ...inter }}
+            className={`rounded-[10px] px-3 py-2.5 mb-4 text-xs border ${permissionError ? "text-[#FFC542] border-[#FFC542]/30" : "text-[#00CED1] border-[#00CED1]/30"}`}
+            style={{
+              backgroundColor: permissionError
+                ? "rgba(255,197,66,0.12)"
+                : "rgba(0,206,209,0.08)",
+              ...inter,
+            }}
           >
             {permissionError ? (
               <>
@@ -120,14 +125,8 @@ export default function ClassMediaSetupGate({
             />
           ) : showPreview && hasAudio && !hasVideo ? (
             <div className="w-full h-full flex flex-col items-center justify-center gap-3 px-4">
-              <div className="w-16 h-16 rounded-full bg-[#00CED1]/20 flex items-center justify-center">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#00CED1" strokeWidth="1.5">
-                  <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z" />
-                  <path d="M19 10v2a7 7 0 01-14 0v-2" />
-                </svg>
-              </div>
-              <p className="text-[#00CED1] text-sm text-center" style={inter}>
-                Microphone is on. No camera detected — you can still join.
+              <p className="text-[#FFC542] text-sm text-center" style={inter}>
+                No camera detected. A camera is required to join class.
               </p>
             </div>
           ) : (
@@ -161,7 +160,7 @@ export default function ClassMediaSetupGate({
               className="w-full py-3.5 rounded-xl font-semibold text-sm transition-opacity hover:opacity-90 disabled:opacity-60"
               style={{ backgroundColor: "#00CED1", color: "#111023", ...inter }}
             >
-              {isRequesting ? "Waiting for browser permission…" : permissionError ? "Try again" : "Turn on camera & microphone"}
+              {isRequesting ? "Waiting for browser permission…" : permissionError ? "Try again" : "Turn on camera"}
             </button>
           ) : (
             <button
@@ -185,7 +184,7 @@ export default function ClassMediaSetupGate({
         </div>
 
         <p className="text-center text-[11px] text-white/30 mt-5 leading-relaxed" style={inter}>
-          If no popup appears, click the lock icon left of the address bar and set Camera + Microphone to Allow.
+          If no popup appears, click the lock icon left of the address bar and set Camera to Allow.
         </p>
       </div>
     </div>
