@@ -6,14 +6,15 @@ import {
   startResendCooldown,
 } from "@/lib/pending-verification";
 
-function readCooldownSeconds(): number {
-  if (typeof window === "undefined") return RESEND_COOLDOWN_SECONDS;
-  ensureInitialResendCooldown();
-  return getResendCooldownRemainingSeconds();
-}
+export function useResendCooldown(options?: { skipInitialCooldown?: boolean }) {
+  const skipInitial = options?.skipInitialCooldown ?? false;
 
-export function useResendCooldown() {
-  const [remaining, setRemaining] = useState(readCooldownSeconds);
+  const [remaining, setRemaining] = useState(() => {
+    if (typeof window === "undefined") return skipInitial ? 0 : RESEND_COOLDOWN_SECONDS;
+    if (skipInitial) return getResendCooldownRemainingSeconds();
+    ensureInitialResendCooldown();
+    return getResendCooldownRemainingSeconds();
+  });
 
   const syncRemaining = useCallback(() => {
     setRemaining(getResendCooldownRemainingSeconds());

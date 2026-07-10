@@ -9,7 +9,7 @@ import { isAxiosError } from "axios";
 import ThayloBrandLink from "@/components/shared/ThayloBrandLink";
 import { forgotPassword, getApiErrorMessage, loginParent } from "@/lib/auth-api";
 import { fetchOnboardingStatus } from "@/lib/onboarding-api";
-import { startResendCooldown } from "@/lib/pending-verification";
+import { clearResendCooldown } from "@/lib/pending-verification";
 import { logoutParent, setParentSession } from "@/lib/auth-session";
 import { hasCompletedFamilyRegistration } from "@/lib/parent-registration";
 
@@ -101,9 +101,12 @@ export default function ParentSignIn() {
         email.trim()
       ) {
         const emailTrimmed = email.trim();
-        startResendCooldown();
+        clearResendCooldown();
         router.push(
-          `/verify-email?${new URLSearchParams({ email: emailTrimmed }).toString()}`,
+          `/verify-email?${new URLSearchParams({
+            email: emailTrimmed,
+            source: "login",
+          }).toString()}`,
         );
         return;
       }
