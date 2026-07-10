@@ -2,10 +2,11 @@
 
 import React, { useState, FormEvent } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { US_TIMEZONES } from "@/constants/us-timezones";
-import { getApiErrorMessage, registerParent } from "@/lib/auth-api";
+import { getApiErrorMessage, isEmailAlreadyRegisteredMessage, registerParent } from "@/lib/auth-api";
 import {
   setPendingVerification,
   startResendCooldown,
@@ -80,6 +81,7 @@ export default function ParentRegister() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [timezone, setTimezone] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const showLoginLink = error != null && isEmailAlreadyRegisteredMessage(error);
 
   const registerMutation = useMutation({
     mutationFn: async () => {
@@ -534,13 +536,25 @@ export default function ParentRegister() {
                 </div>
 
                 {error && (
-                  <p
+                  <div
                     className="text-sm text-red-400 text-center"
                     style={inter}
                     role="alert"
                   >
-                    {error}
-                  </p>
+                    <p>{error}</p>
+                    {showLoginLink && (
+                      <p className="mt-2 text-white/60">
+                        Already started signing up?{" "}
+                        <Link
+                          href="/parent-sign-in"
+                          className="text-[#00CED1] font-medium hover:underline"
+                        >
+                          Sign in
+                        </Link>{" "}
+                        to verify your email or continue.
+                      </p>
+                    )}
+                  </div>
                 )}
 
                 {/* Continue Button */}

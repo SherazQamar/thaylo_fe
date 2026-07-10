@@ -8,11 +8,22 @@ export function getAvatarInitial(name: string | null | undefined): string {
   return trimmed.charAt(0).toUpperCase();
 }
 
+export function getAvatarWordInitials(name: string | null | undefined): string {
+  const trimmed = name?.trim();
+  if (!trimmed) return "?";
+  const parts = trimmed.split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return `${parts[0].charAt(0)}${parts[1].charAt(0)}`.toUpperCase();
+  }
+  return trimmed.slice(0, Math.min(2, trimmed.length)).toUpperCase();
+}
+
 interface PortalAvatarProps {
   name: string | null | undefined;
   avatarUrl?: string | null;
   size?: number;
   className?: string;
+  useWordInitials?: boolean;
 }
 
 export default function PortalAvatar({
@@ -20,6 +31,7 @@ export default function PortalAvatar({
   avatarUrl,
   size = 40,
   className = "",
+  useWordInitials = false,
 }: PortalAvatarProps) {
   const hasAvatar = Boolean(avatarUrl?.trim());
 
@@ -57,7 +69,7 @@ export default function PortalAvatar({
           color: "#FFFFFF",
         }}
       >
-        {getAvatarInitial(name)}
+        {useWordInitials ? getAvatarWordInitials(name) : getAvatarInitial(name)}
       </span>
     </div>
   );
