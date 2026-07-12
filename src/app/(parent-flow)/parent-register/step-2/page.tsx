@@ -17,7 +17,6 @@ import {
 } from "@/stores/register-wizard.store";
 import { useAuthStore } from "@/stores/auth.store";
 import type { Child } from "@/types/api";
-import ParentUserDropdown from "@/components/parent/ParentUserDropdown";
 import ThayloBrandLink from "@/components/shared/ThayloBrandLink";
 import InfoTooltip from "@/components/shared/InfoTooltip";
 
@@ -242,17 +241,6 @@ function ParentRegisterStep2Content() {
             <ThayloBrandLink size="sm" />
           </div>
 
-          {isAddMode && (
-            <div className="w-full max-w-[420px] lg:max-w-[560px] mx-auto mb-4 flex items-center justify-between">
-              <h2 className="text-white text-base sm:text-lg font-semibold uppercase tracking-[0.12em]" style={{ fontFamily: "Inter, sans-serif" }}>
-                Add Child
-              </h2>
-              <div className="hidden md:block">
-                <ParentUserDropdown />
-              </div>
-            </div>
-          )}
-
           {/* Step Progress Bar */}
           <div className="w-full max-w-[420px] lg:max-w-[560px] mx-auto mb-4">
             <div className="w-full h-[6px] bg-[#313044] rounded-full overflow-hidden mb-3">
@@ -296,7 +284,7 @@ function ParentRegisterStep2Content() {
               {children.length === 0 ? (
                 /* Empty State */
                 <div className="flex flex-col items-center py-8">
-                  <div className="mb-4 text-5xl opacity-60" aria-hidden>
+                  <div className="mb-4 text-7xl" aria-hidden>
                     👶
                   </div>
                   <p
@@ -382,12 +370,23 @@ function ParentRegisterStep2Content() {
 
       {/* Add Child Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6 overflow-y-auto scrollbar-hide">
           <div className="absolute inset-0 bg-black/60" onClick={closeModal} />
           <div
-            className="relative w-full max-w-[360px] lg:max-w-[500px] rounded-[19px] p-6 lg:p-8 border border-[#525162]/50"
+            className="relative w-full max-w-[360px] lg:max-w-[500px] max-h-[90vh] overflow-y-auto scrollbar-hide rounded-[19px] p-6 lg:p-8 border border-[#525162]/50"
             style={{ backgroundColor: "#313044", fontFamily: "Inter, sans-serif" }}
           >
+            <button
+              type="button"
+              onClick={closeModal}
+              aria-label="Close"
+              className="absolute top-4 right-4 w-9 h-9 rounded-full flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 6 6 18M6 6l12 12" />
+              </svg>
+            </button>
+
             <h3 className="text-white text-lg font-semibold uppercase tracking-wide text-center mb-6">
               {isEditing ? "Edit Child" : "Add Child"}
             </h3>

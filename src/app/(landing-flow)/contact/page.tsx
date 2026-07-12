@@ -6,10 +6,10 @@ import Navbar from "@/components/landing/shared/Navbar";
 import Footer from "@/components/landing/shared/Footer";
 import FAQ from "@/components/landing/home/FAQ";
 import CTABanner from "@/components/landing/shared/CTABanner";
+import aboutBg from "@/app/(landing-flow)/assets/aboutbg.png";
 import {
   formatPhoneInput,
   isValidPhoneDigits,
-  PHONE_INPUT_PLACEHOLDER,
   PHONE_VALIDATION_MESSAGE,
 } from "@/lib/validation/phone";
 
@@ -56,7 +56,7 @@ export default function ContactPage() {
       {/* Hero Section */}
       <section className="relative bg-[#0B1D2E] overflow-hidden">
         <Image
-          src="/assets/aboutbg.png"
+          src={aboutBg}
           alt=""
           fill
           className="object-cover mix-blend-screen"
@@ -135,15 +135,28 @@ export default function ContactPage() {
                   href="#"
                   label="LinkedIn"
                   icon={
-                    <path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2zM4 6a2 2 0 100-4 2 2 0 000 4z" />
+                    <>
+                      <rect x="2.5" y="2.5" width="19" height="19" rx="3" />
+                      <path d="M7 10.5v6" />
+                      <path d="M7 7.4v.01" />
+                      <path d="M11 16.5v-6" />
+                      <path d="M11 13.4a2.5 2.5 0 0 1 5 0v3.1" />
+                    </>
                   }
+                  stroke
                 />
                 <SocialLink
                   href="#"
                   label="Facebook"
                   icon={
-                    <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z" />
+                    <>
+                      <circle cx="12" cy="12" r="9.5" />
+                      <path d="M14.5 8.5H13a1.75 1.75 0 0 0-1.75 1.75V12h3" />
+                      <path d="M11.25 12v7" />
+                      <path d="M11.25 12H9.5" />
+                    </>
                   }
+                  stroke
                 />
               </div>
             </div>
@@ -267,7 +280,6 @@ export default function ContactPage() {
                         name="phone"
                         value={formData.phone}
                         onChange={handleChange}
-                        placeholder={PHONE_INPUT_PLACEHOLDER}
                         maxLength={12}
                         aria-invalid={phoneError ? true : undefined}
                         className="w-full px-4 bg-white outline-none focus:border-[#14B8A6] transition-colors text-[#1A2B3D]"

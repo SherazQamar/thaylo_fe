@@ -3,6 +3,7 @@ import Image from "next/image";
 import Navbar from "@/components/landing/shared/Navbar";
 import CTABanner from "@/components/landing/shared/CTABanner";
 import Footer from "@/components/landing/shared/Footer";
+import aboutBg from "@/app/(landing-flow)/assets/aboutbg.png";
 
 const sections = [
   {
@@ -73,7 +74,7 @@ export default function PersonalisedLearning() {
       {/* Hero Section */}
       <section className="relative bg-[#0B1D2E] overflow-hidden">
         <Image
-          src="/assets/aboutbg.png"
+          src={aboutBg}
           alt=""
           fill
           className="object-cover mix-blend-screen"
@@ -133,7 +134,7 @@ export default function PersonalisedLearning() {
                   {section.title}
                 </h2>
                 {section.paragraphs.map((p, i) => (
-                  <p key={i} className="text-[#606B68] mb-3 last:mb-0 text-[18px] leading-[1.5] tracking-[-0.48px]" style={{ fontFamily: "Inter, sans-serif", fontWeight: 400 }}>
+                  <p key={i} className="text-[#606B68] mb-6 last:mb-0 text-[18px] leading-[1.5] tracking-[-0.48px]" style={{ fontFamily: "Inter, sans-serif", fontWeight: 400 }}>
                     {p}
                   </p>
                 ))}

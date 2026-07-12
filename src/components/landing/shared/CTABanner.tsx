@@ -28,7 +28,7 @@ export default function CTABanner() {
               <span className="block">confidence, and growth.</span>
             </p>
             <button className="w-full max-w-[300px] px-8 py-3 bg-white hover:bg-white/90 transition-colors cursor-pointer shadow-lg mb-3" style={{ borderRadius: "12px", fontFamily: "Instrument Sans, sans-serif", fontWeight: 500, fontSize: "18px", lineHeight: "21.6px", letterSpacing: "-0.48px", color: "#111023" }}>
-              Start Your Free 7-Day Trial
+              Apply Now
             </button>
             <div className="w-full max-w-[320px] h-[280px] overflow-hidden flex justify-center">
               <Image
@@ -70,7 +70,7 @@ export default function CTABanner() {
                 understanding, confidence, and growth.
               </p>
               <button className="px-6 sm:px-8 py-3 sm:py-3.5 bg-white hover:bg-white/90 transition-colors cursor-pointer shadow-lg" style={{ borderRadius: "12px", fontFamily: "Instrument Sans, sans-serif", fontWeight: 500, fontSize: "18px", lineHeight: "21.6px", letterSpacing: "-0.48px", color: "#111023" }}>
-                Start Your Free 7-Day Trial
+                Apply Now
               </button>
             </div>
           </div>
