@@ -3,6 +3,7 @@ import Navbar from "@/components/landing/shared/Navbar";
 import CTABanner from "@/components/landing/shared/CTABanner";
 import Footer from "@/components/landing/shared/Footer";
 import SectionLabel from "@/components/ui/SectionLabel";
+import aboutBg from "@/app/(landing-flow)/assets/aboutbg.png";
 
 export default function LearningApproach() {
   return (
@@ -10,7 +11,7 @@ export default function LearningApproach() {
       {/* Hero Section */}
       <section className="relative bg-[#0B1D2E] overflow-hidden">
         <Image
-          src="/assets/aboutbg.png"
+          src={aboutBg}
           alt=""
           fill
           className="object-cover mix-blend-screen"

@@ -42,12 +42,12 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop Nav Links */}
-          <div className="hidden lg:flex items-center gap-1 xl:gap-1.5 bg-[#090F15] border border-white/10 rounded-full px-2 py-1.5">
+          <div className="hidden lg:flex items-center gap-0.5 xl:gap-1.5 bg-[#090F15] border border-white/10 rounded-full px-1.5 xl:px-2 py-1.5">
             {navLinks.map((link) => (
               <Link
                 key={link.label}
                 href={link.href}
-                className={`px-5 xl:px-6 py-2.5 rounded-full text-sm font-normal transition-all duration-300 whitespace-nowrap ${
+                className={`px-3 xl:px-6 py-2.5 rounded-full text-[13px] xl:text-sm font-normal transition-all duration-300 whitespace-nowrap ${
                   pathname === link.href
                     ? "bg-gradient-to-r from-[#60D624] to-[#00696B] text-white shadow-lg shadow-green-500/25"
                     : "text-white/70 hover:text-white hover:bg-white/8"
@@ -59,13 +59,13 @@ export default function Navbar() {
           </div>
 
           {/* Sign In + CTA Button */}
-          <div className="hidden lg:flex items-center gap-5 flex-shrink-0">
-            <Link href="/sign-in" className="flex items-center gap-2 text-white/80 hover:text-white transition-colors text-sm font-normal">
+          <div className="hidden lg:flex items-center gap-2.5 xl:gap-5 flex-shrink-0">
+            <Link href="/sign-in" className="flex items-center gap-2 text-white/80 hover:text-white transition-colors text-[13px] xl:text-sm font-normal whitespace-nowrap">
               <Image src="/assets/profile-circle.png" alt="Sign in" width={20} height={20} className="w-5 h-5 object-contain" unoptimized />
               Sign in
             </Link>
             <Link href="/parent-register">
-              <Button variant="primary" className="!rounded-xl px-8 py-3 text-sm font-normal shadow-lg shadow-green-500/25">
+              <Button variant="primary" className="!rounded-xl px-4 xl:px-8 py-3 text-[13px] xl:text-sm font-normal whitespace-nowrap shadow-lg shadow-green-500/25">
                 {pathname === "/" ? "Join The Pilot" : "Sign Up"}
               </Button>
             </Link>

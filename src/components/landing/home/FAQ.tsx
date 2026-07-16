@@ -125,7 +125,7 @@ export default function FAQ({ maxItems }: { maxItems?: number } = {}) {
                   <span className="text-lg md:text-xl font-semibold text-[#1A2B3D] pr-4" style={{ fontSize: "20px", lineHeight: "28px", letterSpacing: "-0.48px" }}>
                     {faq.question}
                   </span>
-                  <span className="flex-shrink-0 w-10 h-10 rounded-full border border-[#D1D5DB] flex items-center justify-center text-[#1A2B3D]" style={{ fontSize: "22px", lineHeight: "1" }}>
+                  <span className="flex-shrink-0 flex items-center justify-center text-[#1A2B3D] font-light" style={{ fontSize: "28px", lineHeight: "1", width: "28px", height: "28px" }}>
                     {openIndex === index ? "−" : "+"}
                   </span>
                 </button>

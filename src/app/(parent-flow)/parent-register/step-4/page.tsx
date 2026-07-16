@@ -268,17 +268,15 @@ function ParentRegisterStep4Content() {
                   </p>
                 )}
 
-                {allChecked && (
-                  <button
-                    type="button"
-                    onClick={handleContinue}
-                    disabled={isSubmitting}
-                    className="w-full py-4 rounded-[16px] bg-[#00CED1] text-white text-sm font-semibold uppercase tracking-wide hover:bg-[#00B8BB] transition-colors cursor-pointer disabled:opacity-70 disabled:cursor-wait"
-                    style={{ fontFamily: "Inter, sans-serif" }}
-                  >
-                    {isSubmitting ? "Submitting…" : "Continue"}
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={handleContinue}
+                  disabled={!allChecked || isSubmitting}
+                  className="w-full py-4 rounded-[16px] bg-[#00CED1] text-white text-sm font-semibold uppercase tracking-wide transition-colors cursor-pointer enabled:hover:bg-[#00B8BB] disabled:opacity-40 disabled:cursor-not-allowed"
+                  style={{ fontFamily: "Inter, sans-serif" }}
+                >
+                  {isSubmitting ? "Submitting…" : "Continue"}
+                </button>
               </div>
             )}
           </div>
