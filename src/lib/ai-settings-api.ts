@@ -3,11 +3,15 @@ import type { ApiResponse } from "@/types/api";
 
 export type AiVoiceEngine = "browser" | "elevenlabs";
 
+export interface AiPersonaSettings {
+  name: string;
+  tagline: string;
+  defaultTone: string;
+}
+
 export interface PublicAiSettings {
-  persona: {
-    name: string;
-    defaultTone: string;
-  };
+  instructor: AiPersonaSettings;
+  bloomBuddy: AiPersonaSettings;
   voice: {
     engine: AiVoiceEngine;
     elevenLabsVoiceId: string;
@@ -34,14 +38,32 @@ export async function fetchChildAiSettings() {
   const { data } = await api.get<ApiResponse<PublicAiSettings>>("/child/ai-settings", {
     authMode: "child",
   });
-  return data.data;
+  return normalizePublicAiSettings(data.data);
 }
 
 export async function fetchRuntimeAiSettings() {
   const { data } = await api.get<ApiResponse<PublicAiSettings>>("/ai-settings/runtime", {
     authMode: "user",
   });
-  return data.data;
+  return normalizePublicAiSettings(data.data);
+}
+
+function normalizePublicAiSettings(raw: PublicAiSettings & { persona?: AiPersonaSettings }): PublicAiSettings {
+  const legacyPersona = raw.persona;
+  return {
+    instructor: raw.instructor ?? {
+      name: "AI Instructor",
+      tagline: "your learning guide",
+      defaultTone: "clear, patient, and encouraging",
+    },
+    bloomBuddy: raw.bloomBuddy ?? legacyPersona ?? {
+      name: "Calyx",
+      tagline: "your Bloom Buddy",
+      defaultTone: "warm, gentle, and supportive",
+    },
+    voice: raw.voice,
+    pacing: raw.pacing,
+  };
 }
 
 export async function synthesizeAiSpeech(text: string, authMode: SpeechAuthMode) {

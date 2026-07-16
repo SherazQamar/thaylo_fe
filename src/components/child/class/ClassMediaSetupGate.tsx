@@ -23,6 +23,7 @@ type ClassMediaSetupGateProps = {
   onBack: () => void;
   lessonTitle?: string;
   isRetake?: boolean;
+  instructorName?: string;
 };
 
 function positioningHint(status: ReturnType<typeof useClassFaceMonitor>["status"]): string {
@@ -46,6 +47,7 @@ export default function ClassMediaSetupGate({
   onBack,
   lessonTitle = "your class",
   isRetake = false,
+  instructorName = "AI Instructor",
 }: ClassMediaSetupGateProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -92,7 +94,7 @@ export default function ClassMediaSetupGate({
           </h2>
           <p style={{ ...inter, fontWeight: 400, fontSize: "14px", color: "rgba(255,255,255,0.55)", marginTop: "8px" }}>
             {isRetake
-              ? `Calyx prepared new examples for ${lessonTitle}. Turn on your camera before joining.`
+              ? `${instructorName} prepared new examples for ${lessonTitle}. Turn on your camera before joining.`
               : `Turn on your camera before joining ${lessonTitle}. Microphone is optional.`}
           </p>
         </div>

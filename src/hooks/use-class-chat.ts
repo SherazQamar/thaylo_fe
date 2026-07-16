@@ -11,6 +11,7 @@ import {
 type UseClassChatOptions = {
   lessonTitle?: string;
   stepTitle?: string;
+  instructorName?: string;
   onCalyxSpeak?: (text: string) => void;
   voiceEnabled?: boolean;
 };
@@ -18,6 +19,7 @@ type UseClassChatOptions = {
 export function useClassChat({
   lessonTitle = "your class",
   stepTitle,
+  instructorName = "AI Instructor",
   onCalyxSpeak,
   voiceEnabled = true,
 }: UseClassChatOptions) {
@@ -40,9 +42,9 @@ export function useClassChat({
   const initializeChat = useCallback(() => {
     if (welcomedRef.current) return;
     welcomedRef.current = true;
-    const welcome = getWelcomeMessage(lessonTitle);
+    const welcome = getWelcomeMessage(lessonTitle, instructorName);
     pushCalyxMessage(welcome, { speak: false });
-  }, [lessonTitle, pushCalyxMessage]);
+  }, [instructorName, lessonTitle, pushCalyxMessage]);
 
   const sendMessage = useCallback(
     async (text: string) => {
@@ -54,11 +56,11 @@ export function useClassChat({
 
       await new Promise((resolve) => setTimeout(resolve, 600 + Math.random() * 400));
 
-      const reply = generateCalyxReply(trimmed, { lessonTitle, stepTitle });
+      const reply = generateCalyxReply(trimmed, { lessonTitle, stepTitle, instructorName });
       pushCalyxMessage(reply);
       setIsTyping(false);
     },
-    [isTyping, lessonTitle, pushCalyxMessage, stepTitle],
+    [instructorName, isTyping, lessonTitle, pushCalyxMessage, stepTitle],
   );
 
   return {

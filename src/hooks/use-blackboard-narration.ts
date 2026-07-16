@@ -38,6 +38,7 @@ type UseBlackboardNarrationOptions = {
   voiceEnabled: boolean;
   speakProgress: SpeakProgressFn;
   onCaption: (text: string) => void;
+  onCaptionWords?: (visibleWords: number) => void;
   onNarrationComplete?: () => void;
   pacing?: PacingConfig;
 };
@@ -59,6 +60,7 @@ export function useBlackboardNarration({
   voiceEnabled,
   speakProgress,
   onCaption,
+  onCaptionWords,
   onNarrationComplete,
   pacing,
 }: UseBlackboardNarrationOptions) {
@@ -97,13 +99,19 @@ export function useBlackboardNarration({
         await speakProgress(text, {
           wordMs,
           isCancelled,
-          onWord: (index) => onWordProgress(index + 1),
+          onWord: (index) => {
+            const count = index + 1;
+            onWordProgress(count);
+            onCaptionWords?.(count);
+          },
         });
       } else {
         const words = text.split(/\s+/).filter(Boolean);
         for (let i = 0; i < words.length; i += 1) {
           if (isCancelled()) return;
-          onWordProgress(i + 1);
+          const count = i + 1;
+          onWordProgress(count);
+          onCaptionWords?.(count);
           await delay(wordMs);
         }
         await delay(Math.max(0, estimateSpeakDurationMs(text, wordMs) - words.length * wordMs));
@@ -118,11 +126,39 @@ export function useBlackboardNarration({
       const hasInteraction = !!currentStep.interaction;
       const isCompactPracticeStep =
         currentStep.lines.length === 0 && bullets.length === 1 && hasInteraction;
+      const aiScript = currentStep.narrationScript?.trim();
 
       try {
+        if (aiScript) {
+          onCaption(aiScript);
+          onCaptionWords?.(0);
+          setReveal({
+            completedLines: currentStep.lines.length,
+            completedBullets: bullets.length,
+            activeLineIndex: null,
+            activeLineWords: 0,
+            activeBulletIndex: null,
+            activeBulletWords: 0,
+            interactionVisible: hasInteraction,
+            interactionWords: hasInteraction
+              ? currentStep.interaction!.prompt.split(/\s+/).filter(Boolean).length
+              : 0,
+          });
+          if (isCancelled()) return;
+
+          await narrateSegment(aiScript, () => {});
+          if (isCancelled()) return;
+
+          if (!isCancelled()) {
+            onNarrationCompleteRef.current?.();
+          }
+          return;
+        }
+
         if (!isCompactPracticeStep) {
           const intro = `Let's look at ${currentStep.title}.`;
           onCaption(intro);
+          onCaptionWords?.(0);
           if (isCancelled()) return;
 
           if (voiceEnabled) {
@@ -137,6 +173,7 @@ export function useBlackboardNarration({
         for (let i = 0; i < currentStep.lines.length; i += 1) {
           const line = currentStep.lines[i];
           onCaption(line);
+          onCaptionWords?.(0);
           setReveal((prev) => ({
             ...prev,
             activeLineIndex: i,
@@ -160,6 +197,7 @@ export function useBlackboardNarration({
         for (let i = 0; i < bullets.length; i += 1) {
           const bullet = bullets[i];
           onCaption(bullet);
+          onCaptionWords?.(0);
           setReveal((prev) => ({
             ...prev,
             activeBulletIndex: i,
@@ -192,6 +230,7 @@ export function useBlackboardNarration({
         if (currentStep.interaction && bullets.length === 0) {
           const prompt = currentStep.interaction.prompt;
           onCaption(prompt);
+          onCaptionWords?.(0);
           setReveal((prev) => ({
             ...prev,
             interactionVisible: true,
@@ -205,6 +244,7 @@ export function useBlackboardNarration({
         } else if (currentStep.interaction && bullets.length > 0) {
           const prompt = currentStep.interaction.prompt;
           onCaption(prompt);
+          onCaptionWords?.(0);
           if (voiceEnabled) {
             void speakProgress(prompt, { wordMs, isCancelled });
           }
@@ -233,6 +273,7 @@ export function useBlackboardNarration({
     voiceEnabled,
     speakProgress,
     onCaption,
+    onCaptionWords,
     resetReveal,
     pauseMs,
     wordMs,

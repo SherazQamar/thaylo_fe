@@ -4,6 +4,8 @@ export type BlackboardOption = {
   id: string;
   label: string;
   correct?: boolean;
+  /** Scaffold clue shown during assessment — not the answer */
+  hint?: string;
 };
 
 export type BlackboardInteraction = {
@@ -22,6 +24,8 @@ export type BlackboardStep = {
   lines: string[];
   bulletPoints?: string[];
   interaction?: BlackboardInteraction;
+  /** Full AI-generated teaching script — spoken as paragraphs when present. */
+  narrationScript?: string;
 };
 
 export type ClassProgressStep = {

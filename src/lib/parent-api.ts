@@ -59,6 +59,7 @@ export interface SubscriptionPlan {
 }
 
 export interface ParentSubscriptionStatus {
+  billingMode?: "beta" | "stripe";
   status: string | null;
   planLabel: string;
   isActive: boolean;
@@ -66,6 +67,7 @@ export interface ParentSubscriptionStatus {
   childrenCount: number;
   monthlyPlan: SubscriptionPlan | null;
   annualPlan: SubscriptionPlan | null;
+  betaMessage?: string;
 }
 
 export async function fetchParentSubscription() {

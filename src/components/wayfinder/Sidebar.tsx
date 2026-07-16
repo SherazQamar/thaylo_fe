@@ -4,8 +4,10 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import NavCountBadge from "@/components/shared/NavCountBadge";
 import NavUnreadBadge from "@/components/shared/chat/NavUnreadBadge";
 import { useChatUnreadCount } from "@/hooks/use-chat-unread-count";
+import { useWayfinderAlertCount } from "@/hooks/use-wayfinder-alert-count";
 
 function AlertIcon({ active }: { active: boolean }) {
   return (
@@ -51,7 +53,6 @@ const navItems = [
     href: "/dashboard/alerts",
     matchPaths: ["/dashboard/alerts"],
     icon: "alert" as const,
-    badge: 3,
   },
   {
     label: "MESSAGE",
@@ -93,6 +94,7 @@ export default function Sidebar() {
   const activeHref = getActiveNavHref(pathname);
   const [collapsed, setCollapsed] = useState(false);
   const { unreadTotal } = useChatUnreadCount("wayfinder");
+  const { alertCount } = useWayfinderAlertCount();
 
   return (
     <>
@@ -130,6 +132,7 @@ export default function Sidebar() {
           {navItems.map((item) => {
             const isActive = activeHref === item.href;
             const messageUnread = item.label === "MESSAGE" ? unreadTotal : 0;
+            const alertUnread = item.label === "ALERTS CENTER" ? alertCount : 0;
             return (
               <Link
                 key={item.label}
@@ -165,17 +168,16 @@ export default function Sidebar() {
                     {item.label}
                   </span>
                 )}
-                {"badge" in item && item.badge && item.label !== "MESSAGE" && !collapsed && (
-                  <span className="ml-auto min-w-[18px] h-[18px] px-1.5 rounded-full bg-[#FF6F6F] text-white text-[10px] font-bold flex items-center justify-center">
-                    {item.badge}
-                  </span>
-                )}
+                {item.label === "ALERTS CENTER" ? (
+                  <NavCountBadge
+                    count={alertUnread}
+                    collapsed={collapsed}
+                    ariaLabel={`${alertUnread} active alerts`}
+                  />
+                ) : null}
                 {item.label === "MESSAGE" ? (
                   <NavUnreadBadge count={messageUnread} collapsed={collapsed} />
                 ) : null}
-                {"badge" in item && item.badge && item.label !== "MESSAGE" && collapsed && (
-                  <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#FF6F6F]" />
-                )}
               </Link>
             );
           })}
@@ -248,6 +250,7 @@ export default function Sidebar() {
         {navItems.map((item) => {
           const isActive = activeHref === item.href;
           const messageUnread = item.label === "MESSAGE" ? unreadTotal : 0;
+          const alertUnread = item.label === "ALERTS CENTER" ? alertCount : 0;
           return (
             <Link
               key={item.label}
@@ -270,8 +273,12 @@ export default function Sidebar() {
                   unoptimized
                 />
               )}
-              {"badge" in item && item.badge && item.label !== "MESSAGE" ? (
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#FF6F6F]" />
+              {item.label === "ALERTS CENTER" ? (
+                <NavCountBadge
+                  count={alertUnread}
+                  collapsed
+                  ariaLabel={`${alertUnread} active alerts`}
+                />
               ) : null}
               {item.label === "MESSAGE" ? (
                 <NavUnreadBadge count={messageUnread} collapsed />
