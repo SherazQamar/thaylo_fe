@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import UserDropdown from "@/components/wayfinder/UserDropdown";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
@@ -35,6 +36,9 @@ type WayfinderContact = ChatSidebarContact & {
 
 export default function MessagePage() {
   const queryClient = useQueryClient();
+  const searchParams = useSearchParams();
+  const deepLinkStudentId = Number(searchParams.get("studentId"));
+  const deepLinkContact = searchParams.get("contact");
   const user = useAuthStore((s) => s.user);
   const [message, setMessage] = useState("");
   const [activeRoomId, setActiveRoomId] = useState<number | null>(null);
@@ -55,8 +59,13 @@ export default function MessagePage() {
 
   useEffect(() => {
     if (activeStudentId || !students[0]?.id) return;
-    setActiveStudentId(students[0].id);
-  }, [activeStudentId, students]);
+    const preferred =
+      Number.isFinite(deepLinkStudentId) &&
+      students.some((student) => student.id === deepLinkStudentId)
+        ? deepLinkStudentId
+        : students[0].id;
+    setActiveStudentId(preferred);
+  }, [activeStudentId, students, deepLinkStudentId]);
 
   const roomsQuery = useQuery({
     queryKey: ["chat-rooms", "wayfinder"],
@@ -201,6 +210,26 @@ export default function MessagePage() {
     () => filterContacts(allContacts, selectedFilters),
     [allContacts, selectedFilters],
   );
+
+  useEffect(() => {
+    if (!Number.isFinite(deepLinkStudentId) || !activeStudentId) return;
+    if (deepLinkStudentId !== activeStudentId) return;
+
+    const contactType =
+      deepLinkContact === "parent"
+        ? "parent"
+        : deepLinkContact === "group"
+          ? "group"
+          : "child";
+    const contactId = `${contactType}-${activeStudentId}`;
+    const contact = allContacts.find((item) => item.id === contactId) as WayfinderContact | undefined;
+    if (!contact) return;
+
+    setSelectedFilters([contactType]);
+    setActiveContactId(contactId);
+    openRoomMutation.mutate(contact);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allContacts, activeStudentId, deepLinkStudentId, deepLinkContact]);
 
   useEffect(() => {
     if (!activeContactId || visibleContacts.some((contact) => contact.id === activeContactId)) {

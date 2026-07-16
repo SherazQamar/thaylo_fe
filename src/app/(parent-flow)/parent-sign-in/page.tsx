@@ -8,7 +8,6 @@ import { useMutation } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import ThayloBrandLink from "@/components/shared/ThayloBrandLink";
 import { forgotPassword, getApiErrorMessage, loginParent } from "@/lib/auth-api";
-import { fetchOnboardingStatus } from "@/lib/onboarding-api";
 import { clearResendCooldown } from "@/lib/pending-verification";
 import { logoutParent, setParentSession } from "@/lib/auth-session";
 import { hasCompletedFamilyRegistration } from "@/lib/parent-registration";
@@ -60,19 +59,6 @@ export default function ParentSignIn() {
 
       if (!hasCompletedFamilyRegistration(user)) {
         router.push("/parent-register/step-2");
-        return;
-      }
-
-      let onboardingComplete = true;
-      try {
-        const status = await fetchOnboardingStatus("parent");
-        onboardingComplete = status.isComplete;
-      } catch {
-        onboardingComplete = true;
-      }
-
-      if (!onboardingComplete) {
-        router.push("/parent-onboarding");
         return;
       }
 

@@ -23,11 +23,12 @@ export function createMessage(
   };
 }
 
-/** UI-phase Calyx replies until classroom WebSocket runtime is connected. */
+/** UI-phase instructor replies until classroom WebSocket runtime is connected. */
 export function generateCalyxReply(
   userMessage: string,
-  context?: { lessonTitle?: string; stepTitle?: string },
+  context?: { lessonTitle?: string; stepTitle?: string; instructorName?: string },
 ): string {
+  const instructorName = context?.instructorName?.trim() || "AI Instructor";
   const msg = userMessage.toLowerCase().trim();
 
   if (!msg) {
@@ -35,7 +36,7 @@ export function generateCalyxReply(
   }
 
   if (/hello|hi|hey|start/.test(msg)) {
-    return `Hi! I'm Calyx. Today we're working on ${context?.lessonTitle ?? "your lesson"}. Ask me anything about intensity scaling or the examples on the board.`;
+    return `Hi! I'm ${instructorName}. Today we're working on ${context?.lessonTitle ?? "your lesson"}. Ask me anything about intensity scaling or the examples on the board.`;
   }
 
   if (/intensity|volume knob|gradient|stronger|weaker/.test(msg)) {
@@ -61,13 +62,17 @@ export function generateCalyxReply(
   return `Good question about "${userMessage.trim()}". ${context?.stepTitle ? `We're on "${context.stepTitle}" right now.` : ""} Check the blackboard for the main idea, or ask me about intensity, examples, or the word ladder.`;
 }
 
-export function getWelcomeMessage(lessonTitle: string): string {
-  return `Welcome to ${lessonTitle}! I'm Calyx. Watch the blackboard as we learn together — you can type questions here anytime.`;
+export function getWelcomeMessage(lessonTitle: string, instructorName = "AI Instructor"): string {
+  return `Welcome to ${lessonTitle}! I'm ${instructorName}. Watch the blackboard as we learn together — you can type questions here anytime.`;
 }
 
-export function buildClassGreeting(studentName: string, lessonTitle: string): string {
+export function buildClassGreeting(
+  studentName: string,
+  lessonTitle: string,
+  instructorName = "AI Instructor",
+): string {
   const name = studentName.trim() || "there";
-  return `Hello ${name}! I'm Calyx, your tutor. Welcome to today's class on ${lessonTitle}. Let's get started.`;
+  return `Hello ${name}! I'm ${instructorName}, your tutor. Welcome to today's class on ${lessonTitle}. Let's get started.`;
 }
 
 export function buildRetakeClassGreeting(

@@ -30,6 +30,28 @@ export interface ChildClassLessonScript {
     type: string;
     options?: string[];
   }>;
+  runtimePlan?: {
+    version: 1;
+    totalMinutes: number;
+    teachUntilMinute: number;
+    segments: Array<{
+      id: string;
+      phase: "teach" | "practice" | "quick_check";
+      title: string;
+      narrationScript: string;
+      lines?: string[];
+      bulletPoints?: string[];
+      interaction?: {
+        id: string;
+        prompt: string;
+        type: "single_choice" | "word_pick" | "word_ladder";
+        options: Array<{ id: string; label: string; correct?: boolean; hint?: string }>;
+        correctOrder?: string[];
+      };
+    }>;
+    generatedAt?: string;
+    generationType?: "publish" | "retake";
+  } | null;
 }
 
 export interface ChildClassSession {

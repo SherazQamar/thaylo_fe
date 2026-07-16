@@ -10,8 +10,10 @@ type ClassScoreSummaryProps = {
   scoreCorrect: number;
   scoreTotal: number;
   lessonTitle: string;
+  instructorName?: string;
   passed?: boolean;
   passThreshold?: number;
+  wayfinderBlocked?: boolean;
   onContinue: () => void;
   onRetake?: () => void | Promise<void>;
 };
@@ -20,8 +22,10 @@ export default function ClassScoreSummary({
   scoreCorrect,
   scoreTotal,
   lessonTitle,
+  instructorName = "AI Instructor",
   passed = true,
   passThreshold = PASS_THRESHOLD,
+  wayfinderBlocked = false,
   onContinue,
   onRetake,
 }: ClassScoreSummaryProps) {
@@ -59,7 +63,7 @@ export default function ClassScoreSummary({
         <p className="text-white/55 text-sm mb-6" style={inter}>
           {passed
             ? "You scored high enough to move on to the next lesson."
-            : `You need at least ${passThreshold}% to pass. Calyx will prepare a fresh retake with new examples.`}
+            : `You need at least ${passThreshold}% to pass. ${instructorName} will prepare a fresh retake with new examples.`}
         </p>
 
         <div className="rounded-2xl bg-[#111023] border border-white/10 py-6 px-4 mb-6">
@@ -82,15 +86,24 @@ export default function ClassScoreSummary({
           </button>
         ) : (
           <div className="flex flex-col gap-3">
-            <button
-              type="button"
-              onClick={() => void handleRetake()}
-              disabled={isRetaking}
-              className="w-full py-3.5 rounded-xl bg-[#FFC542] text-[#111023] text-sm font-semibold uppercase tracking-wide hover:opacity-90 transition-opacity disabled:opacity-60"
-              style={inter}
-            >
-              {isRetaking ? "Preparing your retake…" : "Retake class"}
-            </button>
+            {wayfinderBlocked ? (
+              <div
+                className="rounded-xl px-4 py-3 text-sm text-left mb-1"
+                style={{ backgroundColor: "rgba(255,111,111,0.12)", color: "#FF9B9B" }}
+              >
+                Your Wayfinder teacher needs to help you before you can try this lesson again. Check back soon!
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => void handleRetake()}
+                disabled={isRetaking}
+                className="w-full py-3.5 rounded-xl bg-[#FFC542] text-[#111023] text-sm font-semibold uppercase tracking-wide hover:opacity-90 transition-opacity disabled:opacity-60"
+                style={inter}
+              >
+                {isRetaking ? "Preparing your retake…" : "Retake class"}
+              </button>
+            )}
             <button
               type="button"
               onClick={onContinue}

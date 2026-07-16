@@ -16,6 +16,7 @@ type ClassChildVideoProps = {
   onEnableMedia?: () => void;
   faceMonitorEnabled?: boolean;
   onFaceStatusChange?: (status: FaceMonitorStatus) => void;
+  dock?: "top" | "bottom";
 };
 
 export default function ClassChildVideo({
@@ -26,6 +27,7 @@ export default function ClassChildVideo({
   onEnableMedia,
   faceMonitorEnabled = false,
   onFaceStatusChange,
+  dock = "bottom",
 }: ClassChildVideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -46,7 +48,11 @@ export default function ClassChildVideo({
   const showVideo = stream && cameraEnabled;
 
   return (
-    <div className="absolute bottom-4 right-4 z-20 w-[130px] md:w-[150px]">
+    <div
+      className={`absolute z-20 w-[112px] md:w-[132px] ${
+        dock === "top" ? "top-3 right-3" : "bottom-4 right-4"
+      }`}
+    >
       <div
         className="rounded-[12px] overflow-hidden border-2 shadow-xl"
         style={{ borderColor: micEnabled ? "#00CED1" : "#525162", backgroundColor: "#313044" }}
