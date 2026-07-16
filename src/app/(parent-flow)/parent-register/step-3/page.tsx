@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState, Suspense } from "react";
+import React, { useEffect, Suspense } from "react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import RegisterStepLoading, {
@@ -11,90 +11,11 @@ import {
   isAddChildWizardMode,
   withAddChildWizardMode,
 } from "@/lib/parent-registration";
-import {
-  useRegisterWizardStore,
-  type RegisterChildDraft,
-} from "@/stores/register-wizard.store";
+import { useRegisterWizardStore } from "@/stores/register-wizard.store";
 import ParentUserDropdown from "@/components/parent/ParentUserDropdown";
 import ThayloBrandLink from "@/components/shared/ThayloBrandLink";
 
-function UploadSection({ child }: { child: RegisterChildDraft }) {
-  const setChildFiles = useRegisterWizardStore((s) => s.setChildFiles);
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [isDragging, setIsDragging] = useState(false);
-
-  function handleFiles(fileList: FileList) {
-    const newFiles = Array.from(fileList);
-    setChildFiles(child.localId, [...child.files, ...newFiles]);
-  }
-
-  return (
-    <div>
-      <p
-        className="text-white/70 text-xs font-semibold uppercase tracking-wider mb-2"
-        style={{ fontFamily: "Inter, sans-serif" }}
-      >
-        {child.userName} Documents
-      </p>
-
-      <div className="rounded-[12px] border border-dashed border-[#525162]/50 overflow-hidden">
-        <div
-          onDragOver={(e) => {
-            e.preventDefault();
-            setIsDragging(true);
-          }}
-          onDragLeave={() => setIsDragging(false)}
-          onDrop={(e) => {
-            e.preventDefault();
-            setIsDragging(false);
-            if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files);
-          }}
-          onClick={() => fileRef.current?.click()}
-          className={`py-8 flex flex-col items-center justify-center cursor-pointer transition-colors ${
-            isDragging ? "bg-[#00CED1]/5" : "bg-[#313044]/30"
-          }`}
-        >
-          <svg width="32" height="32" viewBox="0 0 32 32" fill="none" className="mb-3">
-            <path d="M16 4v20M8 12l8-8 8 8" stroke="#525162" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M4 24v4h24v-4" stroke="#525162" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          <p className="text-white/50 text-sm" style={{ fontFamily: "Inter, sans-serif" }}>
-            Drag and Drop or{" "}
-            <span className="text-[#00CED1] font-medium">browse</span>
-          </p>
-          <input
-            ref={fileRef}
-            type="file"
-            multiple
-            className="hidden"
-            onChange={(e) => e.target.files && handleFiles(e.target.files)}
-          />
-        </div>
-
-        {child.files.length > 0 && (
-          <div className="px-3 py-2 space-y-1">
-            {child.files.map((f, i) => (
-              <div
-                key={`${f.name}-${i}`}
-                className="flex items-center justify-between text-white/50 text-xs"
-              >
-                <span className="truncate pr-2">{f.name}</span>
-                <span className="shrink-0">{(f.size / 1024).toFixed(1)} KB</span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        <div>
-          <span className="text-white/50 text-sm" style={{ fontFamily: "Inter, sans-serif" }}>
-            Or Add a File{" "}
-            <span className="text-[#00CED1] font-medium">URL</span>
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
+const inter = { fontFamily: "Inter, sans-serif" } as const;
 
 function ParentRegisterStep3Content() {
   const router = useRouter();
@@ -131,10 +52,10 @@ function ParentRegisterStep3Content() {
       <div className="relative hidden lg:flex w-1/2 bg-[#313044] flex-col pt-16 px-16 pb-0 overflow-hidden">
         <div className="relative z-10">
           <ThayloBrandLink />
-          <h1 className="text-white text-[36px] font-semibold leading-[1.1] tracking-tight max-w-[400px] mt-6" style={{ fontFamily: "Inter, sans-serif" }}>
+          <h1 className="text-white text-[36px] font-semibold leading-[1.1] tracking-tight max-w-[400px] mt-6" style={inter}>
             Track Progress &<br />Succeed
           </h1>
-          <p className="text-white/70 text-lg mt-3 max-w-[350px]" style={{ fontFamily: "Inter, sans-serif" }}>
+          <p className="text-white/70 text-lg mt-3 max-w-[350px]" style={inter}>
             Set goals, monitor your learning journey, and celebrate every milestone you achieve.
           </p>
         </div>
@@ -152,7 +73,7 @@ function ParentRegisterStep3Content() {
 
           {isAddMode && (
             <div className="w-full max-w-[420px] lg:max-w-[560px] mx-auto mb-4 flex items-center justify-between">
-              <h2 className="text-white text-base sm:text-lg font-semibold uppercase tracking-[0.12em]" style={{ fontFamily: "Inter, sans-serif" }}>
+              <h2 className="text-white text-base sm:text-lg font-semibold uppercase tracking-[0.12em]" style={inter}>
                 Add Child
               </h2>
               <div className="hidden md:block">
@@ -166,26 +87,36 @@ function ParentRegisterStep3Content() {
               <div className="h-full w-3/4 bg-[#00CED1] rounded-full" />
             </div>
             <div className="flex items-center justify-between">
-              <button type="button" onClick={() => router.back()} className="text-white/70 hover:text-white text-2xl cursor-pointer" style={{ fontFamily: "Inter, sans-serif" }}>&#8249;</button>
+              <button type="button" onClick={() => router.back()} className="text-white/70 hover:text-white text-2xl cursor-pointer" style={inter}>&#8249;</button>
               <div className="text-right">
-                <span className="block text-white/70 text-sm font-medium" style={{ fontFamily: "Inter, sans-serif" }}>STEP 03/04</span>
-                <span className="block text-[#00CED1] text-sm font-medium" style={{ fontFamily: "Inter, sans-serif" }}>Add student</span>
+                <span className="block text-white/70 text-sm font-medium" style={inter}>STEP 03/04</span>
+                <span className="block text-[#00CED1] text-sm font-medium" style={inter}>Add student</span>
               </div>
             </div>
           </div>
 
           <div className="w-full max-w-[420px] lg:max-w-[560px] mx-auto">
             <div className="rounded-[16px] p-5 border border-[#525162]/50 lg:bg-transparent lg:rounded-[19px] lg:border lg:border-[#525162]/50 lg:px-8 lg:py-6">
-              <h2 className="text-white text-base sm:text-lg font-semibold mb-1 tracking-wide uppercase text-center" style={{ fontFamily: "Inter, sans-serif" }}>
-                Upload Documents of Your Child
+              <h2 className="text-white text-base sm:text-lg font-semibold mb-1 tracking-wide uppercase text-center" style={inter}>
+                Student documents
               </h2>
-              <p className="text-white/40 text-xs text-center mb-5" style={{ fontFamily: "Inter, sans-serif" }}>
-                Optional — you can skip this step and continue without uploading
+              <p className="text-white/40 text-xs text-center mb-5" style={inter}>
+                Document upload is not required right now. Continue to finish adding your student.
               </p>
 
-              <div className="space-y-5">
+              <div className="rounded-[12px] border border-[#525162]/50 bg-[#313044]/30 px-4 py-5 space-y-3">
                 {children.map((child) => (
-                  <UploadSection key={child.localId} child={child} />
+                  <div
+                    key={child.localId}
+                    className="flex items-center justify-between rounded-[10px] bg-[#313044] px-4 py-3"
+                  >
+                    <span className="text-white text-sm font-medium" style={inter}>
+                      {child.userName}
+                    </span>
+                    <span className="text-white/40 text-xs" style={inter}>
+                      Ready to continue
+                    </span>
+                  </div>
                 ))}
               </div>
 
@@ -199,7 +130,7 @@ function ParentRegisterStep3Content() {
                   )
                 }
                 className="w-full py-4 rounded-[16px] bg-[#00CED1] text-white text-sm font-semibold uppercase tracking-wide hover:bg-[#00B8BB] transition-colors cursor-pointer mt-6"
-                style={{ fontFamily: "Inter, sans-serif" }}
+                style={inter}
               >
                 Continue
               </button>

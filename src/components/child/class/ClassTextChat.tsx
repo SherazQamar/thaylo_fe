@@ -8,6 +8,7 @@ const inter = { fontFamily: "Inter, sans-serif" } as const;
 type ClassTextChatProps = {
   messages: ClassChatMessage[];
   isTyping: boolean;
+  instructorName?: string;
   onSend: (text: string) => void;
   showQuickCheck?: boolean;
   onQuickCheckSubmit?: (answerIndex: number) => void;
@@ -18,6 +19,7 @@ const QUICK_CHECK_OPTIONS = ["Glad", "Happy", "Thrilled", "Ecstatic"];
 export default function ClassTextChat({
   messages,
   isTyping,
+  instructorName = "AI Instructor",
   onSend,
   showQuickCheck = false,
   onQuickCheckSubmit,
@@ -52,7 +54,7 @@ export default function ClassTextChat({
       <div className="px-4 py-3 border-b border-white/5 flex-shrink-0 flex items-center justify-between">
         <h3 style={{ ...inter, fontWeight: 700, fontSize: "16px", color: "#FFFFFF" }}>Text Mode</h3>
         <span className="text-[10px] font-semibold uppercase tracking-wider text-[#00CED1]" style={inter}>
-          Calyx
+          {instructorName}
         </span>
       </div>
 
@@ -134,7 +136,7 @@ export default function ClassTextChat({
               handleSend();
             }
           }}
-          placeholder="Message Calyx…"
+          placeholder={`Message ${instructorName}…`}
           className="flex-1 min-w-0 px-3 py-2.5 rounded-[12px] bg-[#313044] text-white text-sm outline-none placeholder:text-white/30 border border-transparent focus:border-[#00CED1]/40"
           style={inter}
         />

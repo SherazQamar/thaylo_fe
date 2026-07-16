@@ -4,6 +4,10 @@ import type {
   ClassPhase,
 } from "@/lib/class-lesson-content";
 import type { ChildClassLessonScript } from "@/lib/curriculum-api";
+import {
+  buildBlackboardStepsFromRuntimePlan,
+  isLessonRuntimePlan,
+} from "@/lib/class-runtime-plan";
 
 export type ParsedPracticeExample = {
   category: string;
@@ -270,6 +274,15 @@ export function buildBlackboardSteps(input?: {
   lessonTitle?: string | null;
   lessonScript?: ChildClassLessonScript | null;
 } | null): BlackboardStep[] {
+  const runtimePlan = input?.lessonScript?.runtimePlan;
+  if (isLessonRuntimePlan(runtimePlan)) {
+    const steps = buildBlackboardStepsFromRuntimePlan(runtimePlan);
+    if (input?.lessonTitle?.trim() && steps[0]) {
+      steps[0] = { ...steps[0], title: input.lessonTitle.trim() };
+    }
+    return steps;
+  }
+
   return buildBlackboardStepsFromLessonScript(
     input?.lessonScript,
     input?.lessonTitle,

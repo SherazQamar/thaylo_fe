@@ -14,6 +14,13 @@ type ClassLessonHeaderProps = {
   subtitle?: string;
   currentPhase: ClassPhase;
   quickCheckLabel?: string;
+  sessionTimer?: {
+    elapsedLabel: string;
+    phaseLabel: string;
+    phaseRemainingLabel: string;
+    totalMinutes: number;
+    teachUntilMinute: number;
+  };
 };
 
 function phaseIndex(phase: ClassPhase) {
@@ -26,6 +33,7 @@ export default function ClassLessonHeader({
   subtitle,
   currentPhase,
   quickCheckLabel = "Quick Check coming up",
+  sessionTimer,
 }: ClassLessonHeaderProps) {
   const activeIndex = phaseIndex(currentPhase);
   const showQuickCheckHint = currentPhase !== "quick_check";
@@ -75,6 +83,17 @@ export default function ClassLessonHeader({
       </div>
 
       <div className="flex flex-col items-start sm:items-end gap-2 shrink-0">
+        {sessionTimer && (
+          <div className="text-right">
+            <p style={{ ...inter, fontWeight: 600, fontSize: "12px", color: "#00CED1" }}>
+              {sessionTimer.phaseLabel} · {sessionTimer.phaseRemainingLabel} left
+            </p>
+            <p style={{ ...inter, fontWeight: 400, fontSize: "11px", color: "rgba(255,255,255,0.45)" }}>
+              {sessionTimer.elapsedLabel} / {sessionTimer.totalMinutes}:00 · assess at{" "}
+              {sessionTimer.teachUntilMinute}:00
+            </p>
+          </div>
+        )}
         {showQuickCheckHint && (
           <span style={{ ...inter, fontWeight: 500, fontSize: "12px", color: "rgba(255,255,255,0.6)" }}>
             {quickCheckLabel}

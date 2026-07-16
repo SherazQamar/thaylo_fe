@@ -1,4 +1,5 @@
 import { needsOnboardingBeforeClass } from "@/lib/onboarding-api";
+import { fetchBloomBuddyStatus } from "@/lib/bloom-buddy-api";
 import { startChildClass } from "@/lib/curriculum-api";
 import { getStartClassErrorMessage, NO_CLASS_AVAILABLE_MESSAGE } from "@/lib/child-class-messages";
 
@@ -6,10 +7,18 @@ type RouterLike = {
   push: (href: string) => void;
 };
 
+type NavigateOptions = {
+  skipBloomBuddy?: boolean;
+};
+
 /**
- * Gate onboarding, start the next assigned class session, and open the lesson view.
+ * Gate onboarding + Bloom Buddy check-in, start class, open lesson view.
  */
-export async function navigateToChildClass(router: RouterLike, hasAssignedClass = true) {
+export async function navigateToChildClass(
+  router: RouterLike,
+  hasAssignedClass = true,
+  options: NavigateOptions = {},
+) {
   if (!hasAssignedClass) {
     throw new Error(NO_CLASS_AVAILABLE_MESSAGE);
   }
@@ -24,10 +33,37 @@ export async function navigateToChildClass(router: RouterLike, hasAssignedClass 
     // If status check fails, allow continuing to class.
   }
 
+  if (!options.skipBloomBuddy) {
+    try {
+      const bloomStatus = await fetchBloomBuddyStatus("BEFORE_LESSON");
+      if (bloomStatus.needsCheckIn) {
+        router.push("/child-dashboard/check-in");
+        return;
+      }
+    } catch {
+      // If Bloom Buddy is unavailable, do not block the lesson.
+    }
+  }
+
   try {
     const session = await startChildClass();
     router.push(`/child-dashboard/lesson?sessionId=${session.sessionId}`);
   } catch (error) {
     throw new Error(getStartClassErrorMessage(error));
   }
+}
+
+/** After class ends, offer an optional post-lesson mood check-in. */
+export async function navigateAfterChildClass(router: RouterLike) {
+  try {
+    const bloomStatus = await fetchBloomBuddyStatus("AFTER_LESSON");
+    if (bloomStatus.needsCheckIn) {
+      router.push("/child-dashboard/check-in?timing=AFTER_LESSON");
+      return;
+    }
+  } catch {
+    // If Bloom Buddy is unavailable, return to dashboard.
+  }
+
+  router.push("/child-dashboard");
 }

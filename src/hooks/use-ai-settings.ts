@@ -10,9 +10,15 @@ import {
 } from "@/lib/ai-settings-api";
 
 const DEFAULT_SETTINGS: PublicAiSettings = {
-  persona: {
+  instructor: {
+    name: "AI Instructor",
+    tagline: "your learning guide",
+    defaultTone: "clear, patient, and encouraging",
+  },
+  bloomBuddy: {
     name: "Calyx",
-    defaultTone: "warm, encouraging, and clear",
+    tagline: "your Bloom Buddy",
+    defaultTone: "warm, gentle, and supportive",
   },
   voice: {
     engine: "elevenlabs",
