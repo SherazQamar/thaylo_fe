@@ -117,6 +117,23 @@ export async function dismissWayfinderAlert(alertId: number) {
   return data.data;
 }
 
+export async function sendWayfinderHeartbeat(): Promise<{
+  id: number;
+  lastSeenAt: string;
+  onlineWindowMs: number;
+  isOnline: boolean;
+}> {
+  const { data } = await api.post<
+    ApiResponse<{
+      id: number;
+      lastSeenAt: string;
+      onlineWindowMs: number;
+      isOnline: boolean;
+    }>
+  >("/wayfinder/presence/heartbeat");
+  return data.data;
+}
+
 export const wayfinderQueryKeys = {
   students: (params: WayfinderStudentsParams) => ["wayfinder", "students", params] as const,
   alerts: (params: WayfinderAlertsParams) => ["wayfinder", "alerts", params] as const,
