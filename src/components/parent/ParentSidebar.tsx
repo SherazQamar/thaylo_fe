@@ -33,7 +33,7 @@ const navItems = [
     ),
   },
   {
-    label: "SUBSCRIPTION",
+    label: "BILLING",
     href: "/parent-dashboard/subscription",
     matchPaths: ["/parent-dashboard/subscription"],
     icon: (

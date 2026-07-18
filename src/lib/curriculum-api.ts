@@ -11,6 +11,8 @@ export interface ChildAssignedClass {
   completedLessonCount: number;
   nextLessonKey: string | null;
   nextLessonTitle: string | null;
+  /** Skill family for the current / next lesson (4th ELA focus grouping). */
+  focusArea?: string | null;
   estimatedMinutes: number | null;
   needsRetake?: boolean;
 }

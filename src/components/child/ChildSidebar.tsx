@@ -14,7 +14,7 @@ const inter = { fontFamily: "Inter, sans-serif" } as const;
 
 const navItems = [
   {
-    label: "PROGRESS",
+    label: "PATHWAY",
     href: "/child-dashboard",
     matchPaths: ["/child-dashboard"],
     icon: (
@@ -24,7 +24,7 @@ const navItems = [
     ),
   },
   {
-    label: "MODULES",
+    label: "PROGRESS",
     href: "/child-dashboard/modules",
     matchPaths: ["/child-dashboard/modules"],
     icon: (

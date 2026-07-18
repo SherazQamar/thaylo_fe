@@ -221,7 +221,7 @@ export default function ClassMediaSetupGate({
             className="w-full py-3 rounded-xl text-sm text-white/50 hover:text-white/80"
             style={inter}
           >
-            Back to Progress
+            Back to Pathway
           </button>
         </div>
 

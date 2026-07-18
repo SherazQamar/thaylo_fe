@@ -1,6 +1,7 @@
 import { api } from "@/lib/api";
 import type {
   WayfinderLessonAlert,
+  WayfinderParentAlert,
   WayfinderSelAlert,
 } from "@/lib/wayfinder-alerts";
 import type { PaginatedMeta, ApiResponse } from "@/types/api";
@@ -21,6 +22,10 @@ export interface WayfinderStudent {
   grade: string | null;
   assignedAt: string | null;
   createdAt: string;
+  /** Most recent lesson activity ISO timestamp; null if never active in a lesson. */
+  lastActiveAt: string | null;
+  badgesEarned: number;
+  plantStatus: string;
   parent: WayfinderStudentParent;
 }
 
@@ -47,6 +52,7 @@ export interface WayfinderAlertsResult {
   items: WayfinderLessonAlert[];
   meta: PaginatedMeta & { activeCount?: number };
   selAlerts: WayfinderSelAlert[];
+  parentAlerts: WayfinderParentAlert[];
 }
 
 function withDefaultPagination(params: WayfinderStudentsParams = {}) {
@@ -71,6 +77,37 @@ export async function fetchWayfinderStudents(
   return unwrapPaginated(data);
 }
 
+export interface WayfinderStudentSnapshot {
+  childId: number;
+  firstName: string | null;
+  secondName: string | null;
+  userName: string;
+  grade: string | null;
+  parentName: string | null;
+  contentArea: string;
+  currentLessonTitle: string | null;
+  currentLessonKey: string | null;
+  lastActiveAt: string | null;
+  masteryPassed: number;
+  masteryAttempted: number;
+  masteryPercent: number | null;
+  masteryLabel: string;
+  progressCompleted: number;
+  progressTotal: number;
+  progressLabel: string;
+  badgesEarned: number;
+  badgeIcons: string[];
+}
+
+export async function fetchWayfinderStudentSnapshot(
+  childId: number,
+): Promise<WayfinderStudentSnapshot> {
+  const { data } = await api.get<ApiResponse<WayfinderStudentSnapshot>>(
+    `/wayfinder/students/${childId}/snapshot`,
+  );
+  return data.data;
+}
+
 export async function fetchWayfinderAlerts(
   params: WayfinderAlertsParams = {},
 ): Promise<WayfinderAlertsResult> {
@@ -79,6 +116,7 @@ export async function fetchWayfinderAlerts(
       items: WayfinderLessonAlert[];
       meta: PaginatedMeta & { activeCount?: number };
       selAlerts: WayfinderSelAlert[];
+      parentAlerts?: WayfinderParentAlert[];
     }>
   >("/wayfinder/alerts", {
     params: {
@@ -95,6 +133,7 @@ export async function fetchWayfinderAlerts(
     items: data.data.items ?? [],
     meta: data.data.meta ?? { total: 0, lastPage: 1, currentPage: 1, perPage: 10, prev: null, next: null },
     selAlerts: data.data.selAlerts ?? [],
+    parentAlerts: data.data.parentAlerts ?? [],
   };
 }
 
@@ -134,8 +173,97 @@ export async function sendWayfinderHeartbeat(): Promise<{
   return data.data;
 }
 
+export interface WayfinderDashboardStat {
+  key: string
+  label: string
+  value: string
+  changePercent: number | null
+  hint?: string
+}
+
+export interface WayfinderDashboardStudent {
+  id: number
+  firstName: string | null
+  secondName: string | null
+  userName: string
+  grade: string | null
+  assignedAt: string | null
+  plantStage: string
+  masteredLabel: string
+  masteredCount: number
+  totalLessons: number
+  contentArea: string
+  focusArea: string
+  confidence: string
+  parent: WayfinderStudentParent
+}
+
+export interface WayfinderPriorityStudent {
+  childId: number
+  name: string
+  grade: string | null
+  reason: string
+  source: "LESSON_RED" | "SEL_RED"
+  severity: "RED"
+}
+
+export interface WayfinderDashboard {
+  stats: WayfinderDashboardStat[]
+  students: WayfinderDashboardStudent[]
+  priorities: WayfinderPriorityStudent[]
+  totalStudents: number
+}
+
+export async function fetchWayfinderDashboard(): Promise<WayfinderDashboard> {
+  const { data } = await api.get<ApiResponse<WayfinderDashboard>>("/wayfinder/dashboard")
+  return data.data
+}
+
+export interface WayfinderLiveSession {
+  sessionId: number
+  childId: number
+  firstName: string | null
+  secondName: string | null
+  userName: string
+  grade: string | null
+  plantStage: string
+  masteredLabel: string
+  masteredCount: number
+  totalLessons: number
+  contentArea: string
+  /** Lesson the student is currently in (replaces generic "In Lesson"). */
+  currentLessonTitle: string
+  lessonKey: string
+  lessonOrder: number
+  subject: string | null
+  risk: "Clear" | "Amber" | "Orange" | "Red"
+  riskSeverity: "NONE" | "YELLOW" | "ORANGE" | "RED"
+  startedAt: string
+  lastActiveAt: string
+  elapsedSeconds: number
+}
+
+export interface WayfinderLiveSessionsResult {
+  items: WayfinderLiveSession[]
+  total: number
+}
+
+export async function fetchWayfinderLiveSessions(params: {
+  search?: string
+} = {}): Promise<WayfinderLiveSessionsResult> {
+  const { data } = await api.get<ApiResponse<WayfinderLiveSessionsResult>>(
+    "/wayfinder/live-sessions",
+    { params: params.search ? { search: params.search } : {} },
+  )
+  return data.data
+}
+
 export const wayfinderQueryKeys = {
+  dashboard: () => ["wayfinder", "dashboard"] as const,
   students: (params: WayfinderStudentsParams) => ["wayfinder", "students", params] as const,
+  studentSnapshot: (childId: number) => ["wayfinder", "students", childId, "snapshot"] as const,
+  liveSessions: (params: { search?: string } = {}) =>
+    ["wayfinder", "live-sessions", params] as const,
   alerts: (params: WayfinderAlertsParams) => ["wayfinder", "alerts", params] as const,
   alertCount: () => ["wayfinder", "alerts", "count"] as const,
 };

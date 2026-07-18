@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import ParentUserDropdown from "@/components/parent/ParentUserDropdown";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
@@ -14,6 +15,7 @@ import {
   toggleChatFilter,
   type ChatContactCategory,
   type ChatSidebarContact,
+  type ChatSidebarPerson,
 } from "@/components/shared/chat/chat-sidebar-types";
 import { fetchParentChildren } from "@/lib/parent-api";
 import {
@@ -40,12 +42,20 @@ function roomLabel(room: ChatRoomListItem) {
   return room.otherParticipant?.name ?? "Direct Chat";
 }
 
+function formatChildGrade(grade: string | null | undefined): string {
+  if (!grade?.trim()) return "Child";
+  if (/^grade\s/i.test(grade.trim())) return grade.trim();
+  return `Grade ${grade.trim()}`;
+}
+
 export default function ParentMessagePage() {
   const queryClient = useQueryClient();
+  const searchParams = useSearchParams();
   const user = useAuthStore((s) => s.user);
   const [activeRoomId, setActiveRoomId] = useState<number | null>(null);
   const [messageText, setMessageText] = useState("");
   const [activeContactId, setActiveContactId] = useState<string | null>(null);
+  const [activeChildId, setActiveChildId] = useState<number | null>(null);
   const [selectedFilters, setSelectedFilters] = useState<ChatContactCategory[]>([
     "group",
     "child",
@@ -56,6 +66,19 @@ export default function ParentMessagePage() {
     queryKey: ["parent-children"],
     queryFn: fetchParentChildren,
   });
+
+  useEffect(() => {
+    const fromQuery = Number(searchParams.get("childId"));
+    if (Number.isFinite(fromQuery) && fromQuery > 0) {
+      const match = children.find((c) => c.id === fromQuery);
+      if (match) {
+        setActiveChildId(match.id);
+        return;
+      }
+    }
+    if (activeChildId || !children[0]?.id) return;
+    setActiveChildId(children[0].id);
+  }, [activeChildId, children, searchParams]);
 
   const roomsQuery = useQuery({
     queryKey: ["chat-rooms", "parent"],
@@ -79,84 +102,106 @@ export default function ParentMessagePage() {
     self: { type: "USER", id: user?.id },
   });
 
+  const selectedChild = children.find((c) => c.id === activeChildId);
+
+  const people = useMemo<ChatSidebarPerson[]>(() => {
+    const rooms = roomsQuery.data ?? [];
+    return children.map((child) => {
+      const unread =
+        roomMeta(
+          rooms,
+          (room) => room.type === "GROUP" && room.anchorChild?.id === child.id,
+        ).unreadCount +
+        roomMeta(
+          rooms,
+          (room) =>
+            room.type === "DIRECT" &&
+            room.otherParticipant?.type === "CHILD" &&
+            room.otherParticipant.id === child.id,
+        ).unreadCount;
+      return {
+        id: String(child.id),
+        label: child.userName,
+        subtitle: formatChildGrade(child.grade),
+        unreadCount: unread,
+      };
+    });
+  }, [children, roomsQuery.data]);
+
   const allContacts = useMemo<ParentContact[]>(() => {
+    if (!selectedChild) return [];
+
     const rooms = roomsQuery.data ?? [];
     const wayfinderRoom = rooms.find(
       (room) => room.type === "DIRECT" && room.otherParticipant?.role === "WAYFINDER",
     );
 
-    const groupContacts: ParentContact[] = children.map((child) => {
-      const meta = roomMeta(
-        rooms,
-        (room) => room.type === "GROUP" && room.anchorChild?.id === child.id,
-      );
-      return {
-        id: `group-${child.id}`,
+    const groupMeta = roomMeta(
+      rooms,
+      (room) => room.type === "GROUP" && room.anchorChild?.id === selectedChild.id,
+    );
+    const childMeta = roomMeta(
+      rooms,
+      (room) =>
+        room.type === "DIRECT" &&
+        room.otherParticipant?.type === "CHILD" &&
+        room.otherParticipant.id === selectedChild.id,
+    );
+
+    const contacts: ParentContact[] = [
+      {
+        id: `group-${selectedChild.id}`,
         category: "group",
-        label: `${child.userName}'s Family Group`,
+        label: `${selectedChild.userName}'s Family Group`,
         subtitle: "Group chat",
-        childId: child.id,
-        roomId: meta.roomId,
-        unreadCount: meta.unreadCount,
-        lastMessage: meta.lastMessage,
-        lastMessageAt: meta.lastMessageAt,
-      };
-    });
-
-    const childContacts: ParentContact[] = children.map((child) => {
-      const meta = roomMeta(
-        rooms,
-        (room) =>
-          room.type === "DIRECT" &&
-          room.otherParticipant?.type === "CHILD" &&
-          room.otherParticipant.id === child.id,
-      );
-      return {
-        id: `child-${child.id}`,
+        childId: selectedChild.id,
+        roomId: groupMeta.roomId,
+        unreadCount: groupMeta.unreadCount,
+        lastMessage: groupMeta.lastMessage,
+        lastMessageAt: groupMeta.lastMessageAt,
+      },
+      {
+        id: `child-${selectedChild.id}`,
         category: "child",
-        label: child.userName,
+        label: selectedChild.userName,
         subtitle: "Direct with child",
-        childId: child.id,
+        childId: selectedChild.id,
         targetType: "CHILD",
-        targetId: child.id,
-        roomId: meta.roomId,
-        unreadCount: meta.unreadCount,
-        lastMessage: meta.lastMessage,
-        lastMessageAt: meta.lastMessageAt,
-      };
-    });
+        targetId: selectedChild.id,
+        roomId: childMeta.roomId,
+        unreadCount: childMeta.unreadCount,
+        lastMessage: childMeta.lastMessage,
+        lastMessageAt: childMeta.lastMessageAt,
+      },
+    ];
 
-    const parentContacts: ParentContact[] = wayfinderRoom?.otherParticipant
-      ? [
-          {
-            id: `parent-wayfinder-${wayfinderRoom.otherParticipant.id}`,
-            category: "parent",
-            label: wayfinderRoom.otherParticipant.name ?? "Wayfinder",
-            subtitle: "Direct with wayfinder",
-            wayfinderId: wayfinderRoom.otherParticipant.id,
-            targetType: "USER",
-            targetId: wayfinderRoom.otherParticipant.id,
-            roomId: wayfinderRoom.roomId,
-            unreadCount: wayfinderRoom.unreadCount,
-            lastMessage: wayfinderRoom.lastMessage,
-            lastMessageAt: wayfinderRoom.lastMessageAt,
-          },
-        ]
-      : children[0]
-        ? [
-            {
-              id: "parent-wayfinder-pending",
-              category: "parent",
-              label: "Wayfinder",
-              subtitle: "Direct with wayfinder",
-              childId: children[0].id,
-              unreadCount: 0,
-            },
-          ]
-        : [];
+    if (wayfinderRoom?.otherParticipant) {
+      contacts.push({
+        id: `parent-wayfinder-${wayfinderRoom.otherParticipant.id}`,
+        category: "parent",
+        label: wayfinderRoom.otherParticipant.name ?? "Wayfinder",
+        subtitle: "Direct with wayfinder",
+        wayfinderId: wayfinderRoom.otherParticipant.id,
+        targetType: "USER",
+        targetId: wayfinderRoom.otherParticipant.id,
+        roomId: wayfinderRoom.roomId,
+        unreadCount: wayfinderRoom.unreadCount,
+        lastMessage: wayfinderRoom.lastMessage,
+        lastMessageAt: wayfinderRoom.lastMessageAt,
+      });
+    } else {
+      contacts.push({
+        id: `parent-wayfinder-pending-${selectedChild.id}`,
+        category: "parent",
+        label: "Wayfinder",
+        subtitle: "Direct with wayfinder",
+        childId: selectedChild.id,
+        unreadCount: 0,
+      });
+    }
 
-    return [...groupContacts, ...childContacts, ...parentContacts];
-  }, [children, roomsQuery.data]);
+    return contacts;
+  }, [selectedChild, roomsQuery.data]);
 
   const visibleContacts = useMemo(
     () => filterContacts(allContacts, selectedFilters),
@@ -217,7 +262,7 @@ export default function ParentMessagePage() {
     setActiveContactId(first.id);
     ensureRoomMutation.mutate(first);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeContactId, visibleContacts]);
+  }, [activeContactId, visibleContacts, activeChildId]);
 
   const activeRoom = (roomsQuery.data ?? []).find((room) => room.roomId === activeRoomId);
 
@@ -237,6 +282,14 @@ export default function ParentMessagePage() {
     const parentContact = contact as ParentContact;
     setActiveContactId(parentContact.id);
     ensureRoomMutation.mutate(parentContact);
+  }
+
+  function handleSelectPerson(person: ChatSidebarPerson) {
+    const nextId = Number(person.id);
+    if (!Number.isFinite(nextId) || nextId === activeChildId) return;
+    setActiveChildId(nextId);
+    setActiveContactId(null);
+    setActiveRoomId(null);
   }
 
   const activeGroupParticipants = activeRoom?.groupParticipants ?? undefined;
@@ -266,12 +319,16 @@ export default function ParentMessagePage() {
         <ChatSidebar
           portal="parent"
           className="md:w-[300px] md:border-r border-b md:border-b-0"
+          people={people}
+          peopleLabel="Children"
+          activePersonId={activeChildId != null ? String(activeChildId) : null}
+          onSelectPerson={handleSelectPerson}
           contacts={visibleContacts}
           activeContactId={activeContactId}
           selectedFilters={selectedFilters}
           onFilterToggle={handleFilterToggle}
           onSelectContact={handleSelectContact}
-          footer={`${visibleContacts.length} chat${visibleContacts.length === 1 ? "" : "s"} shown`}
+          footer={`${visibleContacts.length} chat${visibleContacts.length === 1 ? "" : "s"} · ${people.length} child${people.length === 1 ? "" : "ren"}`}
         />
 
         <div className="flex-1 flex flex-col min-h-0">
@@ -280,7 +337,9 @@ export default function ParentMessagePage() {
               {activeRoom ? roomLabel(activeRoom) : "Select a chat"}
             </p>
             <p style={{ ...inter, fontSize: "12px", color: "rgba(255,255,255,0.5)" }}>
-              {activeRoom?.type === "GROUP" ? "Group chat" : "Direct chat"}
+              {activeRoom?.type === "GROUP"
+                ? `Group · ${selectedChild?.userName ?? "Child"}`
+                : "Direct chat"}
             </p>
           </div>
 

@@ -14,6 +14,7 @@ import {
   toggleChatFilter,
   type ChatContactCategory,
   type ChatSidebarContact,
+  type ChatSidebarPerson,
 } from "@/components/shared/chat/chat-sidebar-types";
 import {
   findOrCreateDirectRoom,
@@ -188,6 +189,18 @@ export default function ChildMessagePage() {
     [allContacts, selectedFilters],
   );
 
+  const people = useMemo<ChatSidebarPerson[]>(
+    () =>
+      visibleContacts.map((contact) => ({
+        id: contact.id,
+        label: contact.label,
+        subtitle: contact.subtitle,
+        unreadCount: contact.unreadCount,
+        avatarUrl: contact.avatarUrl,
+      })),
+    [visibleContacts],
+  );
+
   const hasAutoOpenedRef = useRef(false);
 
   useEffect(() => {
@@ -231,6 +244,12 @@ export default function ChildMessagePage() {
     openRoomMutation.mutate(childContact);
   }
 
+  function handleSelectPerson(person: ChatSidebarPerson) {
+    const contact = allContacts.find((item) => item.id === person.id);
+    if (!contact) return;
+    handleSelectContact(contact);
+  }
+
   return (
     <div className="flex flex-col h-full">
       <div className="flex flex-col gap-1 px-4 md:px-6 pt-4 pb-2 flex-shrink-0">
@@ -258,12 +277,17 @@ export default function ChildMessagePage() {
         <ChatSidebar
           portal="child"
           className="md:w-[300px] md:border-r border-b md:border-b-0"
-          contacts={visibleContacts}
+          people={people}
+          peopleLabel="Contacts"
+          activePersonId={activeContactId}
+          onSelectPerson={handleSelectPerson}
+          contacts={[]}
+          hideFilters
           activeContactId={activeContactId}
           selectedFilters={selectedFilters}
           onFilterToggle={handleFilterToggle}
           onSelectContact={handleSelectContact}
-          footer={`${visibleContacts.length} chat${visibleContacts.length === 1 ? "" : "s"} shown`}
+          footer={`${people.length} contact${people.length === 1 ? "" : "s"}`}
         />
 
         <div className="flex-1 flex flex-col min-h-0">

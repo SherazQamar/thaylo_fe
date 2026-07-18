@@ -1,41 +1,24 @@
 "use client";
 
-import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import ParentUserDropdown from "@/components/parent/ParentUserDropdown";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
-import { fetchParentDashboardStats } from "@/lib/parent-api";
+import {
+  fetchParentDashboardStats,
+  type ParentDashboardMasteryBar,
+  type ParentDashboardChildMastery,
+  type ParentDashboardChildSel,
+  type ParentDashboardWeeklyTime,
+} from "@/lib/parent-api";
+import { withAddChildWizardMode } from "@/lib/parent-registration";
 import { useAuthStore } from "@/stores/auth.store";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
-function buildStatCards(stats?: {
-  totalChildren: number;
-  activeToday: number;
-  avgWeeklyTimeMinutes: number;
-  masteredSkills: number;
-}) {
-  return [
-    {
-      label: "Total Children",
-      value: stats != null ? String(stats.totalChildren) : "—",
-    },
-    {
-      label: "Active Today",
-      value: stats != null ? String(stats.activeToday) : "—",
-    },
-    {
-      label: "Avg Weekly Time",
-      value: stats != null ? `${stats.avgWeeklyTimeMinutes} min` : "—",
-    },
-    {
-      label: "Mastered Skills",
-      value: stats != null ? String(stats.masteredSkills) : "—",
-    },
-  ];
-}
-
-const ZERO_PROGRESS_COLOR = "#858C94";
+const BAR_COLORS = ["#00CED1", "#EC4899", "#22C55E", "#F59E0B", "#8B5CF6"];
+const ZERO_BAR_COLOR = "#858C94";
 
 function formatChildGrade(grade: string | null | undefined): string {
   if (!grade?.trim()) return "—";
@@ -43,34 +26,57 @@ function formatChildGrade(grade: string | null | undefined): string {
   return `Grade ${grade.trim()}`;
 }
 
+function childInitial(name: string): string {
+  return name.trim().charAt(0).toUpperCase() || "?";
+}
+
 function confidenceBadgeColor(confidence: string): string {
   const normalized = confidence.toLowerCase();
   if (normalized === "high") return "bg-[#22C55E]";
   if (normalized === "medium") return "bg-[#F59E0B]";
-  if (normalized === "low") return "bg-[#EF4444]";
+  if (normalized === "building" || normalized === "low") return "bg-[#EF4444]";
   return "bg-[#858C94]";
 }
 
+function barColor(index: number, percent: number): string {
+  if (percent <= 0) return ZERO_BAR_COLOR;
+  return BAR_COLORS[index % BAR_COLORS.length];
+}
+
 export default function ParentDashboardPage() {
+  const router = useRouter();
   const user = useAuthStore((state) => state.user);
   const { data: dashboardStats } = useQuery({
     queryKey: ["parent-dashboard-stats"],
     queryFn: fetchParentDashboardStats,
   });
 
-  const stats = buildStatCards(dashboardStats);
   const greetingName = user?.name?.trim() || "Parent";
   const progressBars = dashboardStats?.masteryProgressBars ?? [];
+  const childrenSel = dashboardStats?.childrenSel ?? [];
   const masteryStudents = dashboardStats?.childrenMastery ?? [];
-  const firstChildName = masteryStudents[0]?.userName ?? user?.children?.[0]?.userName;
+  const childCount = masteryStudents.length;
+  const activeTodayNames = dashboardStats?.activeTodayNames ?? [];
+  const weeklyTimeByChild = dashboardStats?.weeklyTimeByChild ?? [];
+  const masteredSkills = dashboardStats?.masteredSkills ?? 0;
+
+  function handleAddChild() {
+    router.push(withAddChildWizardMode("/parent-register/step-2"));
+  }
 
   return (
     <div className="p-4 md:p-6 lg:p-10">
-      {/* Header */}
       <div className="flex items-center justify-between mb-2 md:mb-3">
         <h1
           className="uppercase"
-          style={{ ...inter, fontWeight: 700, fontSize: "24px", lineHeight: "25px", letterSpacing: "0.8px", color: "#DCE6EC" }}
+          style={{
+            ...inter,
+            fontWeight: 700,
+            fontSize: "24px",
+            lineHeight: "25px",
+            letterSpacing: "0.8px",
+            color: "#DCE6EC",
+          }}
         >
           Parent Dashboard
         </h1>
@@ -84,192 +90,662 @@ export default function ParentDashboardPage() {
         items={[{ href: "/parent-dashboard", label: "Parent Dashboard" }]}
       />
 
-      {/* Greeting */}
-      <div className="mb-6">
-        <h2 style={{ ...inter, fontWeight: 700, fontSize: "22px", lineHeight: "30px", color: "#FFFFFF" }}>
-          Hello, {greetingName}
-        </h2>
-        <p style={{ ...inter, fontWeight: 400, fontSize: "14px", lineHeight: "22px", color: "rgba(255,255,255,0.5)" }}>
-          {firstChildName
-            ? `Here is how ${firstChildName} is doing today.`
-            : "Here is your family learning overview."}
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h2
+            style={{
+              ...inter,
+              fontWeight: 700,
+              fontSize: "22px",
+              lineHeight: "30px",
+              color: "#FFFFFF",
+            }}
+          >
+            Hello, {greetingName}
+          </h2>
+          <p
+            style={{
+              ...inter,
+              fontWeight: 400,
+              fontSize: "14px",
+              lineHeight: "22px",
+              color: "rgba(255,255,255,0.5)",
+            }}
+          >
+            {childCount === 0
+              ? "Add a child to see their learning overview."
+              : childCount === 1
+                ? `Here is how ${masteryStudents[0]?.userName ?? "your child"} is doing today.`
+                : "Here is how your children are doing today."}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={handleAddChild}
+          className="shrink-0 rounded-full px-5 py-2.5 cursor-pointer hover:opacity-90 transition-opacity"
+          style={{
+            backgroundColor: "#00CED1",
+            ...inter,
+            fontWeight: 600,
+            fontSize: "14px",
+            lineHeight: "20px",
+            color: "#111023",
+          }}
+        >
+          Add Child
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 mb-8 md:mb-10">
+        <SummaryCard
+          label="Active Today"
+          value={
+            activeTodayNames.length > 0 ? activeTodayNames.join(", ") : "—"
+          }
+          compact={activeTodayNames.length > 1}
+        />
+        <WeeklyTimeCard rows={weeklyTimeByChild} />
+        <SummaryCard
+          label="Mastered Skills"
+          value={dashboardStats != null ? String(masteredSkills) : "—"}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
+        <MasteryOfAttemptedCard bars={progressBars} />
+        <SelOverviewCard rows={childrenSel} />
+      </div>
+
+      <MasteryListSection students={masteryStudents} />
+    </div>
+  );
+}
+
+function SummaryCard({
+  label,
+  value,
+  compact,
+}: {
+  label: string;
+  value: string;
+  compact?: boolean;
+}) {
+  return (
+    <div
+      className="flex items-center gap-4 rounded-[24px] px-5 md:px-6 py-[10px] min-h-[72px]"
+      style={{ backgroundColor: "#525162" }}
+    >
+      <PaperPlaneIcon />
+      <div className="flex-1 min-w-0">
+        <p
+          style={{
+            ...inter,
+            fontWeight: 500,
+            fontSize: "11px",
+            lineHeight: "16px",
+            color: "rgba(255,255,255,0.5)",
+          }}
+        >
+          {label}
+        </p>
+        <p
+          className="truncate"
+          style={{
+            ...inter,
+            fontWeight: 600,
+            fontSize: compact ? "16px" : "20px",
+            lineHeight: compact ? "22px" : "28px",
+            color: "#00CED1",
+          }}
+          title={value}
+        >
+          {value}
         </p>
       </div>
+    </div>
+  );
+}
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-8 md:mb-10">
-        {stats.map((stat, i) => (
-          <div
-            key={i}
-            className="flex items-center gap-4 rounded-[24px] px-5 md:px-6 py-[10px] h-[72px]"
-            style={{ backgroundColor: "#525162" }}
+function WeeklyTimeCard({ rows }: { rows: ParentDashboardWeeklyTime[] }) {
+  return (
+    <div
+      className="flex items-start gap-4 rounded-[24px] px-5 md:px-6 py-3 min-h-[72px]"
+      style={{ backgroundColor: "#525162" }}
+    >
+      <PaperPlaneIcon />
+      <div className="flex-1 min-w-0">
+        <p
+          style={{
+            ...inter,
+            fontWeight: 500,
+            fontSize: "11px",
+            lineHeight: "16px",
+            color: "rgba(255,255,255,0.5)",
+          }}
+        >
+          Avg Weekly Time
+        </p>
+        {rows.length === 0 ? (
+          <p
+            style={{
+              ...inter,
+              fontWeight: 600,
+              fontSize: "20px",
+              lineHeight: "28px",
+              color: "#FFFFFF",
+            }}
           >
-            <div className="w-10 h-10 rounded-full bg-[#00CED1]/20 flex items-center justify-center flex-shrink-0">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00CED1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M22 2L11 13" />
-                <path d="M22 2L15 22L11 13L2 9L22 2Z" />
-              </svg>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p style={{ ...inter, fontWeight: 500, fontSize: "11px", lineHeight: "16px", color: "rgba(255,255,255,0.5)" }}>{stat.label}</p>
-              <p style={{ ...inter, fontWeight: 600, fontSize: "20px", lineHeight: "28px", color: "#FFFFFF" }}>{stat.value}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Mastery Progress + SEL Overview */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
-        {/* Mastery Progress Card */}
-        <div className="rounded-[12px] p-5 md:p-6" style={{ backgroundColor: "#313044" }}>
-          <h3 style={{ ...inter, fontWeight: 700, fontSize: "20px", lineHeight: "28px", color: "#FFFFFF", marginBottom: "20px" }}>Mastery Progress</h3>
-          <div className="flex flex-col gap-5">
-            {progressBars.length === 0 ? (
-              <p style={{ ...inter, fontWeight: 400, fontSize: "14px", lineHeight: "22px", color: "rgba(255,255,255,0.5)" }}>
-                No children yet. Add a child to see mastery progress.
+            —
+          </p>
+        ) : (
+          <div className="mt-0.5 flex flex-col gap-0.5">
+            {rows.map((row) => (
+              <p
+                key={row.childId}
+                style={{
+                  ...inter,
+                  fontWeight: 600,
+                  fontSize: "13px",
+                  lineHeight: "18px",
+                  color: "#FFFFFF",
+                }}
+              >
+                {row.userName}:{" "}
+                <span style={{ color: "#00CED1" }}>{row.label}</span>
               </p>
-            ) : (
-              progressBars.map((bar) => (
-                <div key={bar.childId}>
-                  <div className="flex items-center justify-between mb-2">
-                    <span style={{ ...inter, fontWeight: 500, fontSize: "14px", lineHeight: "20px", color: "rgba(255,255,255,0.7)" }}>{bar.label}</span>
-                    <span style={{ ...inter, fontWeight: 600, fontSize: "14px", lineHeight: "20px", color: ZERO_PROGRESS_COLOR }}>{bar.progressPercent}%</span>
-                  </div>
-                  <div className="w-full h-2.5 rounded-full bg-[#525162]">
-                    <div className="h-full rounded-full transition-all duration-500" style={{ width: `${bar.progressPercent}%`, backgroundColor: ZERO_PROGRESS_COLOR }} />
-                  </div>
-                </div>
-              ))
-            )}
+            ))}
           </div>
-        </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
-        {/* SEL Overview Card */}
-        <div className="rounded-[12px] p-5 md:p-6" style={{ backgroundColor: "#313044" }}>
-          <h3 style={{ ...inter, fontWeight: 700, fontSize: "20px", lineHeight: "28px", color: "#FFFFFF", marginBottom: "20px" }}>SEL Overview</h3>
-          <div className="flex items-center justify-center py-4">
-            <div className="relative" style={{ width: "280px", height: "180px" }}>
-              {/* Happy circle - green */}
-              <div
-                className="absolute rounded-full flex items-center justify-center"
-                style={{
-                  width: "140px",
-                  height: "140px",
-                  backgroundColor: "rgba(34,197,94,0.25)",
-                  border: "2px solid rgba(34,197,94,0.5)",
-                  left: "0px",
-                  top: "20px",
-                }}
-              >
-                <div className="flex flex-col items-center">
-                  <span className="text-3xl mb-1">😊</span>
-                  <span style={{ ...inter, fontWeight: 600, fontSize: "13px", color: "#22C55E" }}>Happy</span>
-                  <span style={{ ...inter, fontWeight: 700, fontSize: "20px", color: "#FFFFFF" }}>7</span>
+function PaperPlaneIcon() {
+  return (
+    <div className="w-10 h-10 rounded-full bg-[#00CED1]/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+      <svg
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="#00CED1"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M22 2L11 13" />
+        <path d="M22 2L15 22L11 13L2 9L22 2Z" />
+      </svg>
+    </div>
+  );
+}
+
+function ChildAvatar({ name }: { name: string }) {
+  return (
+    <div
+      className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
+      style={{
+        background:
+          "linear-gradient(135deg, #f59e0b 0%, #ec4899 50%, #8b5cf6 100%)",
+        ...inter,
+        fontWeight: 700,
+        fontSize: "14px",
+        color: "#FFFFFF",
+      }}
+    >
+      {childInitial(name)}
+    </div>
+  );
+}
+
+function MasteryOfAttemptedCard({
+  bars,
+}: {
+  bars: ParentDashboardMasteryBar[];
+}) {
+  return (
+    <div
+      className="rounded-[12px] p-5 md:p-6"
+      style={{ backgroundColor: "#313044" }}
+    >
+      <h3
+        style={{
+          ...inter,
+          fontWeight: 700,
+          fontSize: "20px",
+          lineHeight: "28px",
+          color: "#FFFFFF",
+          marginBottom: "20px",
+        }}
+      >
+        Mastery of Attempted
+      </h3>
+      <div className="flex flex-col gap-5">
+        {bars.length === 0 ? (
+          <p
+            style={{
+              ...inter,
+              fontWeight: 400,
+              fontSize: "14px",
+              lineHeight: "22px",
+              color: "rgba(255,255,255,0.5)",
+            }}
+          >
+            No children yet. Add a child to see mastery progress.
+          </p>
+        ) : (
+          bars.map((bar, index) => {
+            const color = barColor(index, bar.progressPercent);
+            return (
+              <div key={bar.childId}>
+                <div className="flex items-center gap-3 mb-2">
+                  <ChildAvatar name={bar.label} />
+                  <div className="min-w-0 flex-1">
+                    <p
+                      style={{
+                        ...inter,
+                        fontWeight: 600,
+                        fontSize: "14px",
+                        lineHeight: "18px",
+                        color: "#FFFFFF",
+                      }}
+                    >
+                      {bar.label}
+                    </p>
+                    <p
+                      style={{
+                        ...inter,
+                        fontWeight: 500,
+                        fontSize: "12px",
+                        lineHeight: "16px",
+                        color: "#858C94",
+                      }}
+                    >
+                      {formatChildGrade(bar.grade)}
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p
+                      style={{
+                        ...inter,
+                        fontWeight: 600,
+                        fontSize: "13px",
+                        lineHeight: "18px",
+                        color: "#FFFFFF",
+                      }}
+                    >
+                      {bar.masteredCount} / {bar.attemptedCount}
+                    </p>
+                    <p
+                      style={{
+                        ...inter,
+                        fontWeight: 600,
+                        fontSize: "12px",
+                        lineHeight: "16px",
+                        color,
+                      }}
+                    >
+                      {bar.progressPercent}%
+                    </p>
+                  </div>
+                </div>
+                <div className="w-full h-2.5 rounded-full bg-[#525162]">
+                  <div
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{
+                      width: `${Math.min(100, bar.progressPercent)}%`,
+                      backgroundColor: color,
+                    }}
+                  />
                 </div>
               </div>
-              {/* Confuse circle - pink */}
-              <div
-                className="absolute rounded-full flex items-center justify-center"
-                style={{
-                  width: "110px",
-                  height: "110px",
-                  backgroundColor: "rgba(236,72,153,0.25)",
-                  border: "2px solid rgba(236,72,153,0.5)",
-                  left: "100px",
-                  top: "10px",
-                }}
-              >
-                <div className="flex flex-col items-center">
-                  <span className="text-2xl mb-1">😕</span>
-                  <span style={{ ...inter, fontWeight: 600, fontSize: "12px", color: "#EC4899" }}>Confuse</span>
-                  <span style={{ ...inter, fontWeight: 700, fontSize: "18px", color: "#FFFFFF" }}>3</span>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+}
+
+function SelMoodPill({
+  emoji,
+  label,
+  count,
+  color,
+  bg,
+}: {
+  emoji: string;
+  label: string;
+  count: number;
+  color: string;
+  bg: string;
+}) {
+  return (
+    <div
+      className="flex flex-col items-center justify-center rounded-full px-2 py-2 min-w-[64px]"
+      style={{ backgroundColor: bg }}
+    >
+      <span className="text-base leading-none mb-0.5">{emoji}</span>
+      <span
+        style={{
+          ...inter,
+          fontWeight: 600,
+          fontSize: "10px",
+          lineHeight: "12px",
+          color,
+        }}
+      >
+        {label}
+      </span>
+      <span
+        style={{
+          ...inter,
+          fontWeight: 700,
+          fontSize: "14px",
+          lineHeight: "18px",
+          color: "#FFFFFF",
+        }}
+      >
+        {count}
+      </span>
+    </div>
+  );
+}
+
+function SelOverviewCard({ rows }: { rows: ParentDashboardChildSel[] }) {
+  return (
+    <div
+      className="rounded-[12px] p-5 md:p-6"
+      style={{ backgroundColor: "#313044" }}
+    >
+      <h3
+        style={{
+          ...inter,
+          fontWeight: 700,
+          fontSize: "20px",
+          lineHeight: "28px",
+          color: "#FFFFFF",
+          marginBottom: "20px",
+        }}
+      >
+        SEL Overview
+      </h3>
+      <div className="flex flex-col gap-4">
+        {rows.length === 0 ? (
+          <p
+            style={{
+              ...inter,
+              fontWeight: 400,
+              fontSize: "14px",
+              lineHeight: "22px",
+              color: "rgba(255,255,255,0.5)",
+            }}
+          >
+            No children yet. SEL check-ins will appear here.
+          </p>
+        ) : (
+          rows.map((row) => (
+            <div
+              key={row.childId}
+              className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4"
+            >
+              <div className="flex items-center gap-3 min-w-0 sm:w-[140px]">
+                <ChildAvatar name={row.userName} />
+                <div className="min-w-0">
+                  <p
+                    style={{
+                      ...inter,
+                      fontWeight: 600,
+                      fontSize: "14px",
+                      lineHeight: "18px",
+                      color: "#FFFFFF",
+                    }}
+                  >
+                    {row.userName}
+                  </p>
+                  <p
+                    style={{
+                      ...inter,
+                      fontWeight: 500,
+                      fontSize: "12px",
+                      lineHeight: "16px",
+                      color: "#858C94",
+                    }}
+                  >
+                    {formatChildGrade(row.grade)}
+                  </p>
                 </div>
               </div>
-              {/* Sad circle - teal */}
-              <div
-                className="absolute rounded-full flex items-center justify-center"
-                style={{
-                  width: "90px",
-                  height: "90px",
-                  backgroundColor: "rgba(0,206,209,0.25)",
-                  border: "2px solid rgba(0,206,209,0.5)",
-                  left: "180px",
-                  top: "60px",
-                }}
-              >
-                <div className="flex flex-col items-center">
-                  <span className="text-xl mb-1">😢</span>
-                  <span style={{ ...inter, fontWeight: 600, fontSize: "11px", color: "#00CED1" }}>Sad</span>
-                  <span style={{ ...inter, fontWeight: 700, fontSize: "16px", color: "#FFFFFF" }}>2</span>
-                </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <SelMoodPill
+                  emoji="😊"
+                  label="Happy"
+                  count={row.happyCount}
+                  color="#22C55E"
+                  bg="rgba(34,197,94,0.2)"
+                />
+                <SelMoodPill
+                  emoji="😕"
+                  label="Confuse"
+                  count={row.confusedCount}
+                  color="#F59E0B"
+                  bg="rgba(245,158,11,0.2)"
+                />
+                <SelMoodPill
+                  emoji="😢"
+                  label="Sad"
+                  count={row.sadCount}
+                  color="#00CED1"
+                  bg="rgba(0,206,209,0.2)"
+                />
               </div>
             </div>
-          </div>
-        </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+function MasteryListSection({
+  students,
+}: {
+  students: ParentDashboardChildMastery[];
+}) {
+  return (
+    <div
+      className="rounded-[12px] p-4 md:p-6"
+      style={{ backgroundColor: "rgba(255, 255, 255, 0.05)" }}
+    >
+      <div className="flex items-center justify-between mb-4 md:mb-5">
+        <h2
+          style={{
+            ...inter,
+            fontWeight: 700,
+            fontSize: "22px",
+            lineHeight: "22px",
+            color: "#FFFFFF",
+          }}
+        >
+          Mastery of Attempted
+        </h2>
+        <Link
+          href="/parent-dashboard/children"
+          className="uppercase cursor-pointer hover:opacity-80 transition-opacity"
+          style={{
+            ...inter,
+            fontWeight: 700,
+            fontSize: "13.5px",
+            lineHeight: "18px",
+            letterSpacing: "0.8px",
+            color: "#00CED1",
+          }}
+        >
+          View All
+        </Link>
       </div>
 
-      {/* Mastery Progress Table */}
-      <div className="rounded-[12px] p-4 md:p-6" style={{ backgroundColor: "rgba(255, 255, 255, 0.05)" }}>
-        <div className="flex items-center justify-between mb-4 md:mb-5">
-          <h2 style={{ ...inter, fontWeight: 700, fontSize: "22px", lineHeight: "22px", color: "#FFFFFF" }}>Mastery Progress</h2>
-          <button className="uppercase cursor-pointer hover:opacity-80 transition-opacity" style={{ ...inter, fontWeight: 700, fontSize: "13.5px", lineHeight: "18px", letterSpacing: "0.8px", color: "#00CED1" }}>
-            View All
-          </button>
-        </div>
-
-        <div className="flex flex-col gap-2">
-          {masteryStudents.length === 0 ? (
-            <p style={{ ...inter, fontWeight: 400, fontSize: "14px", lineHeight: "22px", color: "rgba(255,255,255,0.5)" }}>
-              No children registered yet.
-            </p>
-          ) : (
-            masteryStudents.map((student) => (
-              <div
-                key={student.id}
-                className="md:grid md:grid-cols-[1fr_1fr_1fr_auto] items-center rounded-[12px] px-4 md:px-5 py-3 gap-3 md:gap-4 hover:bg-white/10 transition-colors flex flex-col"
-                style={{ backgroundColor: "#313044" }}
-              >
-                {/* Student Info */}
-                <div className="flex items-center gap-2.5 w-full">
-                  <div className="w-9 h-9 rounded-full bg-[#525162] overflow-hidden flex-shrink-0">
-                    <Image src="/assets/wayfinder Em.png" alt={student.userName} width={36} height={36} className="w-full h-full object-cover" />
-                  </div>
-                  <div>
-                    <p style={{ ...inter, fontWeight: 600, fontSize: "15px", lineHeight: "20px", color: "#FFFFFF" }}>{student.userName}</p>
-                    <p style={{ ...inter, fontWeight: 500, fontSize: "12px", lineHeight: "16px", color: "#858C94" }}>{formatChildGrade(student.grade)}</p>
-                  </div>
+      <div className="flex flex-col gap-2">
+        {students.length === 0 ? (
+          <p
+            style={{
+              ...inter,
+              fontWeight: 400,
+              fontSize: "14px",
+              lineHeight: "22px",
+              color: "rgba(255,255,255,0.5)",
+            }}
+          >
+            No children registered yet.
+          </p>
+        ) : (
+          students.map((student) => (
+            <div
+              key={student.id}
+              className="md:grid md:grid-cols-[minmax(140px,1fr)_minmax(200px,1.4fr)_minmax(160px,1fr)_auto] items-center rounded-[12px] px-4 md:px-5 py-3 gap-3 md:gap-4 hover:bg-white/10 transition-colors flex flex-col"
+              style={{ backgroundColor: "#313044" }}
+            >
+              <div className="flex items-center gap-2.5 w-full">
+                <ChildAvatar name={student.userName} />
+                <div>
+                  <p
+                    style={{
+                      ...inter,
+                      fontWeight: 600,
+                      fontSize: "15px",
+                      lineHeight: "20px",
+                      color: "#FFFFFF",
+                    }}
+                  >
+                    {student.userName}
+                  </p>
+                  <p
+                    style={{
+                      ...inter,
+                      fontWeight: 500,
+                      fontSize: "12px",
+                      lineHeight: "16px",
+                      color: "#858C94",
+                    }}
+                  >
+                    {formatChildGrade(student.grade)}
+                  </p>
                 </div>
-
-                {/* Plant Stage */}
-                <div className="flex items-center gap-2.5 w-full mt-2 md:mt-0">
-                  <div className="w-9 h-9 rounded-full bg-[#313044] border border-[#00CED1]/30 flex items-center justify-center flex-shrink-0">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00CED1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M12 22V8" /><path d="M5 12H2a10 10 0 0020 0h-3" /><path d="M8 5.2C9.2 3.6 10.5 3 12 3c1.5 0 2.8.6 4 2.2" />
-                    </svg>
-                  </div>
-                  <div>
-                    <p style={{ ...inter, fontWeight: 600, fontSize: "15px", lineHeight: "20px", color: "#FFFFFF" }}>{student.plantStage}</p>
-                    <p style={{ ...inter, fontWeight: 500, fontSize: "11px", lineHeight: "14px", color: "#00CED1" }}>{student.masteredLabel}</p>
-                  </div>
-                </div>
-
-                {/* Focus */}
-                <div className="rounded-[20px] w-full mt-2 md:mt-0" style={{ backgroundColor: "#525162", padding: "8px 16px" }}>
-                  <p style={{ ...inter, fontWeight: 600, fontSize: "15px", lineHeight: "20px", color: "#FFFFFF" }}>{student.focusArea}</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span style={{ ...inter, fontWeight: 400, fontSize: "12px", lineHeight: "16px", color: "#FFFFFF" }}>Confidence</span>
-                    <span className={`px-2 py-0.5 rounded-full ${confidenceBadgeColor(student.confidence)}`} style={{ ...inter, fontWeight: 500, fontSize: "10px", lineHeight: "10px", color: "#111023" }}>{student.confidence}</span>
-                  </div>
-                </div>
-
-                {/* Open Chat */}
-                <button className="uppercase flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity whitespace-nowrap mt-2 md:mt-0 self-start md:self-center" style={{ ...inter, fontWeight: 700, fontSize: "13.5px", lineHeight: "18px", letterSpacing: "0.8px", color: "#00CED1" }}>
-                  Open Chat
-                </button>
               </div>
-            ))
-          )}
-        </div>
+
+              <div className="flex items-start gap-2.5 w-full mt-2 md:mt-0">
+                <div className="w-9 h-9 rounded-full bg-[#313044] border border-[#00CED1]/30 flex items-center justify-center flex-shrink-0">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#00CED1"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M4 19.5A2.5 2.5 0 016.5 17H20" />
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <p
+                    style={{
+                      ...inter,
+                      fontWeight: 600,
+                      fontSize: "15px",
+                      lineHeight: "20px",
+                      color: "#FFFFFF",
+                    }}
+                  >
+                    {student.contentArea}
+                  </p>
+                  <p
+                    style={{
+                      ...inter,
+                      fontWeight: 500,
+                      fontSize: "11px",
+                      lineHeight: "14px",
+                      color: "#00CED1",
+                    }}
+                  >
+                    {student.masteredLabel}
+                  </p>
+                  <p
+                    style={{
+                      ...inter,
+                      fontWeight: 400,
+                      fontSize: "11px",
+                      lineHeight: "14px",
+                      color: "rgba(255,255,255,0.55)",
+                    }}
+                  >
+                    {student.attemptedLabel} · {student.remainingLabel}
+                  </p>
+                </div>
+              </div>
+
+              <div
+                className="rounded-[20px] w-full mt-2 md:mt-0"
+                style={{ backgroundColor: "#525162", padding: "8px 16px" }}
+              >
+                <p
+                  style={{
+                    ...inter,
+                    fontWeight: 600,
+                    fontSize: "15px",
+                    lineHeight: "20px",
+                    color: "#FFFFFF",
+                  }}
+                >
+                  {student.focusArea}
+                </p>
+                <div className="flex items-center gap-2 mt-1">
+                  <span
+                    style={{
+                      ...inter,
+                      fontWeight: 400,
+                      fontSize: "12px",
+                      lineHeight: "16px",
+                      color: "#FFFFFF",
+                    }}
+                  >
+                    Confidence
+                  </span>
+                  <span
+                    className={`px-2 py-0.5 rounded-full ${confidenceBadgeColor(student.confidence)}`}
+                    style={{
+                      ...inter,
+                      fontWeight: 500,
+                      fontSize: "10px",
+                      lineHeight: "10px",
+                      color: "#111023",
+                    }}
+                  >
+                    {student.confidence}
+                  </span>
+                </div>
+              </div>
+
+              <Link
+                href={`/parent-dashboard/message?childId=${student.id}`}
+                className="uppercase flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity whitespace-nowrap mt-2 md:mt-0 self-start md:self-center"
+                style={{
+                  ...inter,
+                  fontWeight: 700,
+                  fontSize: "13.5px",
+                  lineHeight: "18px",
+                  letterSpacing: "0.8px",
+                  color: "#00CED1",
+                }}
+              >
+                Open Chat
+              </Link>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
