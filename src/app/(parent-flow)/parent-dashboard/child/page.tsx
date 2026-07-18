@@ -176,7 +176,7 @@ function ChildDetailContent() {
   }
 
   function cancelEditInterests() {
-    setSelectedInterests(child.interestAreas ?? []);
+    setSelectedInterests(child?.interestAreas ?? []);
     setEditingInterests(false);
     setInterestError(null);
     setCustomInterest("");
