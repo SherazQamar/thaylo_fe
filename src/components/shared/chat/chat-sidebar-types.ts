@@ -42,6 +42,15 @@ export type ChatSidebarContact = {
   lastMessageAt?: string | null;
 };
 
+/** Person / student / child row in the left panel (replaces dropdown pickers). */
+export type ChatSidebarPerson = {
+  id: string;
+  label: string;
+  subtitle?: string;
+  avatarUrl?: string | null;
+  unreadCount?: number;
+};
+
 export function toggleChatFilter(
   current: ChatContactCategory[],
   filter: ChatContactCategory,

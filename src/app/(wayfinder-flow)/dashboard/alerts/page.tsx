@@ -7,15 +7,16 @@ import UserDropdown from "@/components/wayfinder/UserDropdown";
 import AlertDetailDrawer from "@/components/wayfinder/AlertDetailDrawer";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import ListPagination from "@/components/shared/ListPagination";
+import { formatStudentGrade } from "@/lib/wayfinder-student";
 import {
-  cardAccent,
-  cardDate,
-  cardPriority,
-  cardText,
-  cardTitle,
+  flagMeta,
+  groupAlertsByStudent,
   mapLessonAlertToCard,
+  mapParentAlertToCard,
   mapSelAlertToCard,
   type WayfinderAlertCard,
+  type WayfinderFlagKind,
+  type WayfinderStudentAlertGroup,
 } from "@/lib/wayfinder-alerts";
 import {
   dismissWayfinderAlert,
@@ -28,46 +29,57 @@ import {
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
 const STATUS_FILTERS = [
-  { value: "", label: "All statuses" },
   { value: "ACTIVE", label: "Active" },
+  { value: "", label: "All statuses" },
   { value: "RESOLVED", label: "Resolved" },
   { value: "DISMISSED", label: "Dismissed" },
 ] as const;
 
 const SEVERITY_FILTERS = [
   { value: "", label: "All flags" },
+  { value: "RED", label: "Red" },
   { value: "YELLOW", label: "Yellow" },
   { value: "ORANGE", label: "Orange" },
-  { value: "RED", label: "Red" },
+  { value: "BLUE", label: "Blue (parent)" },
 ] as const;
 
-function PriorityBadge({ priority, accent }: { priority: string; accent: string }) {
+function FlagPills({ flags }: { flags: WayfinderFlagKind[] }) {
   return (
-    <span
-      className="inline-flex items-center justify-center rounded-full border"
-      style={{
-        borderColor: accent,
-        color: accent,
-        backgroundColor: `${accent}15`,
-        fontWeight: 500,
-        fontSize: "12px",
-        padding: "5px 12px",
-      }}
-    >
-      {priority}
-    </span>
+    <div className="flex flex-wrap items-center gap-2">
+      {flags.map((flag) => {
+        const meta = flagMeta(flag);
+        return (
+          <span
+            key={flag}
+            className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1"
+            style={{
+              borderColor: meta.accent,
+              color: meta.accent,
+              backgroundColor: `${meta.accent}18`,
+              fontWeight: 600,
+              fontSize: "11px",
+            }}
+          >
+            <span
+              className="inline-block w-2 h-2 rounded-full"
+              style={{ backgroundColor: meta.accent }}
+            />
+            {meta.label}
+          </span>
+        );
+      })}
+    </div>
   );
 }
 
-function AlertCard({
-  card,
+function StudentAlertCard({
+  group,
   onClick,
 }: {
-  card: WayfinderAlertCard;
+  group: WayfinderStudentAlertGroup;
   onClick: () => void;
 }) {
-  const accent = cardAccent(card);
-  const priority = cardPriority(card);
+  const accent = group.flags[0] ? flagMeta(group.flags[0]).accent : "#00CED1";
 
   return (
     <div
@@ -80,22 +92,44 @@ function AlertCard({
           onClick();
         }
       }}
-      className="relative overflow-hidden rounded-2xl flex items-center cursor-pointer hover:bg-white/[0.02] transition-colors"
-      style={{ backgroundColor: "#313044", minHeight: "88px" }}
+      className="relative overflow-hidden rounded-2xl flex items-stretch cursor-pointer hover:bg-white/[0.02] transition-colors"
+      style={{ backgroundColor: "#313044", minHeight: "96px" }}
     >
       <span
         className="absolute left-0 top-0 bottom-0"
         style={{ width: "5px", backgroundColor: accent }}
       />
 
-      <div className="flex-1 px-7 py-5">
-        <p className="text-white text-base font-semibold leading-tight">{cardTitle(card)}</p>
-        <p className="text-white/60 text-sm mt-1">{cardText(card)}</p>
-        <p className="text-white/40 text-xs mt-2">{cardDate(card)}</p>
+      <div className="flex-1 px-7 py-5 min-w-0">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-white text-base font-semibold leading-tight truncate">
+              {group.childName}
+            </p>
+            <p className="text-white/45 text-xs mt-1">
+              {formatStudentGrade(group.grade)}
+              {group.parentName ? ` · Parent: ${group.parentName}` : ""}
+              {" · "}
+              {group.cards.length} alert{group.cards.length === 1 ? "" : "s"}
+            </p>
+          </div>
+          <FlagPills flags={group.flags} />
+        </div>
+
+        <ul className="mt-3 space-y-1">
+          {group.summaryLines.map((line) => (
+            <li key={line} className="text-white/60 text-sm leading-snug truncate">
+              {line}
+            </li>
+          ))}
+        </ul>
+
+        <p className="text-white/35 text-xs mt-2">
+          Latest {new Date(group.latestAt).toLocaleDateString()}
+        </p>
       </div>
 
-      <div className="flex items-center gap-3 pr-6">
-        {priority && <PriorityBadge priority={priority} accent={accent} />}
+      <div className="flex items-center pr-6">
         <span className="text-[#00CED1] text-xs font-semibold">View</span>
       </div>
     </div>
@@ -105,26 +139,31 @@ function AlertCard({
 export default function AlertsCenterPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const [selected, setSelected] = useState<WayfinderAlertCard | null>(null);
+  const [selectedGroup, setSelectedGroup] = useState<WayfinderStudentAlertGroup | null>(null);
+  const [selectedCard, setSelectedCard] = useState<WayfinderAlertCard | null>(null);
   const [cards, setCards] = useState<WayfinderAlertCard[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
-  const [statusFilter, setStatusFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ACTIVE");
   const [severityFilter, setSeverityFilter] = useState("");
   const [search, setSearch] = useState("");
   const [meta, setMeta] = useState({ total: 0, lastPage: 1, currentPage: 1, activeCount: 0 });
 
-  const queryParams = useMemo<WayfinderAlertsParams>(
-    () => ({
+  const queryParams = useMemo<WayfinderAlertsParams>(() => {
+    const severity =
+      severityFilter && severityFilter !== "BLUE"
+        ? (severityFilter as WayfinderAlertsParams["severity"])
+        : undefined;
+    return {
       page,
+      limit: 50,
       ...(statusFilter ? { status: statusFilter as WayfinderAlertsParams["status"] } : {}),
-      ...(severityFilter ? { severity: severityFilter as WayfinderAlertsParams["severity"] } : {}),
+      ...(severity ? { severity } : {}),
       ...(search.trim() ? { search: search.trim() } : {}),
-    }),
-    [page, statusFilter, severityFilter, search],
-  );
+    };
+  }, [page, statusFilter, severityFilter, search]);
 
   const loadAlerts = useCallback(async () => {
     setIsLoading(true);
@@ -132,9 +171,27 @@ export default function AlertsCenterPage() {
     try {
       const result = await fetchWayfinderAlerts(queryParams);
       const lessonCards = result.items.map(mapLessonAlertToCard);
-      const includeSel = !statusFilter && !severityFilter && page === 1;
-      const selCards = includeSel ? result.selAlerts.map(mapSelAlertToCard) : [];
-      setCards([...selCards, ...lessonCards]);
+      const includeSide =
+        (!statusFilter || statusFilter === "ACTIVE") &&
+        (!severityFilter || severityFilter === "BLUE") &&
+        page === 1;
+
+      const selCards =
+        includeSide && severityFilter !== "BLUE"
+          ? result.selAlerts.map(mapSelAlertToCard)
+          : [];
+      const parentCards =
+        includeSide && (!severityFilter || severityFilter === "BLUE")
+          ? result.parentAlerts.map(mapParentAlertToCard)
+          : [];
+
+      // Blue-only filter: show parent alerts alone
+      if (severityFilter === "BLUE") {
+        setCards(parentCards);
+      } else {
+        setCards([...selCards, ...parentCards, ...lessonCards]);
+      }
+
       setMeta({
         total: result.meta.total,
         lastPage: result.meta.lastPage,
@@ -153,16 +210,26 @@ export default function AlertsCenterPage() {
     void loadAlerts();
   }, [loadAlerts]);
 
+  const studentGroups = useMemo(() => groupAlertsByStudent(cards), [cards]);
+
   function handleStartChat(childId: number) {
-    setSelected(null);
+    setSelectedGroup(null);
+    setSelectedCard(null);
     router.push(`/dashboard/message?studentId=${childId}&contact=child`);
+  }
+
+  function handleStartParentChat(childId: number) {
+    setSelectedGroup(null);
+    setSelectedCard(null);
+    router.push(`/dashboard/message?studentId=${childId}&contact=parent`);
   }
 
   async function handleResolve(alertId: number) {
     setIsUpdating(true);
     try {
       await resolveWayfinderAlert(alertId);
-      setSelected(null);
+      setSelectedGroup(null);
+      setSelectedCard(null);
       await loadAlerts();
       void queryClient.invalidateQueries({ queryKey: wayfinderQueryKeys.alertCount() });
     } finally {
@@ -174,7 +241,8 @@ export default function AlertsCenterPage() {
     setIsUpdating(true);
     try {
       await dismissWayfinderAlert(alertId);
-      setSelected(null);
+      setSelectedGroup(null);
+      setSelectedCard(null);
       await loadAlerts();
       void queryClient.invalidateQueries({ queryKey: wayfinderQueryKeys.alertCount() });
     } finally {
@@ -207,9 +275,9 @@ export default function AlertsCenterPage() {
       <div className="mt-6 space-y-2">
         <h2 className="text-white text-2xl md:text-3xl font-bold tracking-tight">Alerts Center</h2>
         <p className="text-white/50 text-sm">
-          Lesson failures and SEL flags for your students.
+          Organized by student. Red flags first. Flags: red / yellow / orange / blue (parent request).
           {meta.activeCount > 0 && (
-            <span className="text-[#00CED1] ml-2">{meta.activeCount} active</span>
+            <span className="text-[#00CED1] ml-2">{meta.activeCount} active lesson alerts</span>
           )}
         </p>
       </div>
@@ -221,7 +289,7 @@ export default function AlertsCenterPage() {
             setSearch(e.target.value);
             setPage(1);
           }}
-          placeholder="Search student or lesson…"
+          placeholder="Search student…"
           className="flex-1 px-4 py-3 rounded-2xl bg-white/[0.05] text-white text-sm outline-none border border-transparent focus:border-[#00CED1]/40 placeholder:text-white/30"
         />
         <select
@@ -254,32 +322,35 @@ export default function AlertsCenterPage() {
         </select>
       </div>
 
-      {error && (
-        <p className="text-[#FF7B7B] text-sm mt-4">{error}</p>
-      )}
+      {error && <p className="text-[#FF7B7B] text-sm mt-4">{error}</p>}
 
-      {isLoading && (
-        <p className="text-white/40 text-sm mt-6">Loading alerts…</p>
-      )}
+      {isLoading && <p className="text-white/40 text-sm mt-6">Loading alerts…</p>}
 
-      {!isLoading && cards.length === 0 && (
-        <p className="text-white/40 text-sm mt-6">No alerts match these filters.</p>
+      {!isLoading && studentGroups.length === 0 && (
+        <p className="text-white/40 text-sm mt-6">No students match these filters.</p>
       )}
 
       <div className="flex flex-col gap-4 mt-6">
-        {cards.map((card) => (
-          <AlertCard key={card.id} card={card} onClick={() => setSelected(card)} />
+        {studentGroups.map((group) => (
+          <StudentAlertCard
+            key={group.childId}
+            group={group}
+            onClick={() => {
+              setSelectedGroup(group);
+              setSelectedCard(group.cards[0] ?? null);
+            }}
+          />
         ))}
       </div>
 
-      {meta.lastPage > 1 && (
+      {meta.lastPage > 1 && severityFilter !== "BLUE" && (
         <div className="mt-6">
           <ListPagination
             meta={{
               total: meta.total,
               lastPage: meta.lastPage,
               currentPage: meta.currentPage,
-              perPage: 10,
+              perPage: 50,
               prev: meta.currentPage > 1 ? meta.currentPage - 1 : null,
               next: meta.currentPage < meta.lastPage ? meta.currentPage + 1 : null,
             }}
@@ -290,10 +361,16 @@ export default function AlertsCenterPage() {
       )}
 
       <AlertDetailDrawer
-        open={!!selected}
-        card={selected}
-        onClose={() => setSelected(null)}
+        open={!!selectedGroup}
+        group={selectedGroup}
+        card={selectedCard}
+        onSelectCard={setSelectedCard}
+        onClose={() => {
+          setSelectedGroup(null);
+          setSelectedCard(null);
+        }}
         onStartChat={handleStartChat}
+        onStartParentChat={handleStartParentChat}
         onResolve={handleResolve}
         onDismiss={handleDismiss}
         isUpdating={isUpdating}

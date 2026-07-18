@@ -82,7 +82,7 @@ export default function ClassScoreSummary({
             className="w-full py-3.5 rounded-xl bg-[#00CED1] text-[#111023] text-sm font-semibold uppercase tracking-wide hover:opacity-90 transition-opacity"
             style={inter}
           >
-            Back to Progress
+            Back to Pathway
           </button>
         ) : (
           <div className="flex flex-col gap-3">
@@ -110,7 +110,7 @@ export default function ClassScoreSummary({
               className="w-full py-3 rounded-xl text-sm text-white/50 hover:text-white/80"
               style={inter}
             >
-              Back to Progress
+              Back to Pathway
             </button>
           </div>
         )}

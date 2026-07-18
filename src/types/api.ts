@@ -32,6 +32,8 @@ export interface User {
   phone?: string | null;
   country?: string | null;
   timeZone?: string | null;
+  /** Hiring / coverage region (Wayfinders). Sets operational timezone. */
+  region?: string | null;
   guardianType?: GuardianRelationType | null;
   secondaryGuardianName?: string | null;
   secondaryGuardianType?: GuardianRelationType | null;
@@ -47,6 +49,13 @@ export interface Child {
   secondName?: string | null;
   userName: string;
   grade: string | null;
+  interestAreas?: string[];
+  /** Note the child writes for their parent to read. */
+  notesForParent?: string | null;
+  /** Preferred class days (mon–sun). */
+  classGoalDays?: string[];
+  /** Target daily class minutes. */
+  classGoalDailyMinutes?: number | null;
   documentUrls: string[];
   permission: Record<string, unknown> | null;
   userId?: number;

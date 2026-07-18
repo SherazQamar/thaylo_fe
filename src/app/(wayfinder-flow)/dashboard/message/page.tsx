@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import UserDropdown from "@/components/wayfinder/UserDropdown";
+import WayfinderStudentSnapshotCard from "@/components/wayfinder/WayfinderStudentSnapshotCard";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import ChatSidebar from "@/components/shared/chat/ChatSidebar";
 import ChatMessageList from "@/components/shared/chat/ChatMessageList";
@@ -15,6 +16,7 @@ import {
   toggleChatFilter,
   type ChatContactCategory,
   type ChatSidebarContact,
+  type ChatSidebarPerson,
 } from "@/components/shared/chat/chat-sidebar-types";
 import { fetchWayfinderStudents } from "@/lib/wayfinder-api";
 import {
@@ -26,6 +28,10 @@ import {
 } from "@/lib/chat-api";
 import { useAuthStore } from "@/stores/auth.store";
 import { useChatConversation } from "@/hooks/use-chat-conversation";
+import {
+  formatStudentGrade,
+  formatWayfinderStudentName,
+} from "@/lib/wayfinder-student";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
@@ -134,6 +140,31 @@ export default function MessagePage() {
   });
 
   const selectedStudent = students.find((s) => s.id === activeStudentId);
+
+  const people = useMemo<ChatSidebarPerson[]>(() => {
+    const rooms = roomsQuery.data ?? [];
+    return students.map((student) => {
+      const displayName = formatWayfinderStudentName(student);
+      const unread =
+        roomMeta(
+          rooms,
+          (room) => room.type === "GROUP" && room.anchorChild?.id === student.id,
+        ).unreadCount +
+        roomMeta(
+          rooms,
+          (room) =>
+            room.type === "DIRECT" &&
+            room.otherParticipant?.type === "CHILD" &&
+            room.otherParticipant.id === student.id,
+        ).unreadCount;
+      return {
+        id: String(student.id),
+        label: displayName,
+        subtitle: formatStudentGrade(student.grade),
+        unreadCount: unread,
+      };
+    });
+  }, [students, roomsQuery.data]);
 
   const allContacts = useMemo<WayfinderContact[]>(() => {
     if (!selectedStudent) return [];
@@ -272,6 +303,14 @@ export default function MessagePage() {
     openRoomMutation.mutate(wayfinderContact);
   }
 
+  function handleSelectPerson(person: ChatSidebarPerson) {
+    const nextId = Number(person.id);
+    if (!Number.isFinite(nextId) || nextId === activeStudentId) return;
+    setActiveStudentId(nextId);
+    setActiveContactId(null);
+    setActiveRoomId(null);
+  }
+
   const activeGroupParticipants = activeRoom?.groupParticipants ?? undefined;
 
   return (
@@ -301,48 +340,34 @@ export default function MessagePage() {
         <ChatSidebar
           portal="wayfinder"
           className="md:w-[300px] md:border-r border-b md:border-b-0"
+          people={people}
+          peopleLabel="Students"
+          activePersonId={activeStudentId != null ? String(activeStudentId) : null}
+          onSelectPerson={handleSelectPerson}
           contacts={visibleContacts}
           activeContactId={activeContactId}
           selectedFilters={selectedFilters}
           onFilterToggle={handleFilterToggle}
           onSelectContact={handleSelectContact}
-          header={
-            <div className="space-y-2">
-              <p className="text-white/50 text-xs uppercase tracking-wide" style={inter}>
-                Student
-              </p>
-              <select
-                value={activeStudentId ?? ""}
-                onChange={(event) => {
-                  const nextId = Number(event.target.value);
-                  setActiveStudentId(nextId);
-                  setActiveContactId(null);
-                  setActiveRoomId(null);
-                }}
-                className="w-full rounded-[10px] px-3 py-2.5 bg-[#313044] text-white text-sm outline-none border border-white/10"
-                style={inter}
-              >
-                {students.map((student) => (
-                  <option key={student.id} value={student.id}>
-                    {student.userName}
-                  </option>
-                ))}
-              </select>
-            </div>
-          }
-          footer={`${visibleContacts.length} chat${visibleContacts.length === 1 ? "" : "s"} shown`}
+          footer={`${visibleContacts.length} chat${visibleContacts.length === 1 ? "" : "s"} · ${people.length} student${people.length === 1 ? "" : "s"}`}
         />
 
         <div className="flex-1 flex flex-col min-h-0">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 md:px-5 py-3 md:py-3.5 border-b border-white/10 gap-2">
-            <div>
+          <div className="flex flex-col lg:flex-row lg:items-start justify-between px-4 md:px-5 py-3 md:py-3.5 border-b border-white/10 gap-3">
+            <div className="min-w-0">
               <p style={{ ...inter, fontWeight: 700, fontSize: "18px", lineHeight: "24px", color: "#FFFFFF" }}>
                 {roomTitle(activeRoom)}
               </p>
               <p style={{ ...inter, fontWeight: 400, fontSize: "13px", lineHeight: "18px", color: "rgba(255,255,255,0.5)" }}>
-                {activeRoom?.type === "GROUP" ? "Group chat" : "Direct chat"}
+                {activeRoom?.type === "GROUP"
+                  ? `Group · ${selectedStudent ? formatWayfinderStudentName(selectedStudent) : "Student"}`
+                  : "Direct chat"}
               </p>
             </div>
+            <WayfinderStudentSnapshotCard
+              childId={activeStudentId}
+              className="lg:ml-auto shrink-0"
+            />
           </div>
 
           <ChatMessageList

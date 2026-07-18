@@ -27,7 +27,7 @@ const pathNodes2 = [
   { type: "lesson", icon: "plant" },
 ];
 
-export default function ChildProgressPage() {
+export default function ChildPathwayPage() {
   const router = useRouter();
   const child = useChildAuthStore((state) => state.child);
   const { settings } = useAiSettings("child");
@@ -38,6 +38,7 @@ export default function ChildProgressPage() {
   const [startError, setStartError] = useState<string | null>(null);
   const [latestMoodLabel, setLatestMoodLabel] = useState<string | null>(null);
   const canStartClass = hasAssignedClass && !classesLoading;
+  const focusArea = primaryClass?.focusArea?.trim() || null;
 
   useEffect(() => {
     fetchBloomBuddyTrends(7)
@@ -82,14 +83,14 @@ export default function ChildProgressPage() {
       {/* Header - full width */}
       <div className="flex flex-col gap-1 px-4 md:px-5 lg:px-6 pt-4 md:pt-5 lg:pt-6 pb-3 flex-shrink-0">
         <div className="flex items-center justify-between">
-          <h1 style={{ ...inter, fontWeight: 600, fontSize: "22px", color: "#DCE6EC" }}>Progress</h1>
+          <h1 style={{ ...inter, fontWeight: 600, fontSize: "22px", color: "#DCE6EC" }}>Pathway</h1>
           <div className="hidden md:block">
             <ChildUserDropdown />
           </div>
         </div>
         <Breadcrumbs
           showHome={false}
-          items={[{ href: "/child-dashboard", label: "Progress" }]}
+          items={[{ href: "/child-dashboard", label: "Pathway" }]}
         />
       </div>
 
@@ -111,7 +112,7 @@ export default function ChildProgressPage() {
                 ? primaryClass.needsRetake
                   ? `Retake: ${primaryClass.nextLessonTitle ?? primaryClass.title}`
                   : primaryClass.nextLessonTitle ?? primaryClass.title
-                : "Here's your learning path today"}
+                : "Here's your Learning Path"}
             </p>
             {hasAssignedClass && primaryClass && (
               <p style={{ ...inter, fontWeight: 400, fontSize: "12px", color: "rgba(255,255,255,0.65)", marginTop: "6px" }}>
@@ -272,23 +273,30 @@ export default function ChildProgressPage() {
           </div>
         </div>
 
-        {/* Today's Focus */}
+        {/* Focus — current lesson skill family */}
         <div className="rounded-[12px] p-4" style={{ backgroundColor: "#313044" }}>
-          <h3 style={{ ...inter, fontWeight: 700, fontSize: "14px", color: "#FFFFFF", marginBottom: "10px" }}>Today&apos;s Focus</h3>
+          <h3 style={{ ...inter, fontWeight: 700, fontSize: "14px", color: "#FFFFFF", marginBottom: "10px" }}>Focus</h3>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-[8px] bg-[#2d5a3e] flex items-center justify-center flex-shrink-0 text-lg">
               📗
             </div>
             <div>
-              <p style={{ ...inter, fontWeight: 500, fontSize: "13px", color: "#FFFFFF" }}>Reading for evidence</p>
-              <p style={{ ...inter, fontWeight: 400, fontSize: "12px", color: "rgba(255,255,255,0.5)" }}>Confidence: Medium</p>
+              <p style={{ ...inter, fontWeight: 500, fontSize: "13px", color: "#FFFFFF" }}>
+                {focusArea ?? (hasAssignedClass ? "Loading focus…" : "No lesson assigned yet")}
+              </p>
+              {primaryClass?.nextLessonTitle && (
+                <p style={{ ...inter, fontWeight: 400, fontSize: "12px", color: "rgba(255,255,255,0.5)" }}>
+                  {primaryClass.needsRetake ? "Retake · " : ""}
+                  {primaryClass.nextLessonTitle}
+                </p>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Tip from instructor */}
+        {/* Daily Message from Wayfinder */}
         <div className="rounded-[12px] p-4" style={{ backgroundColor: "#313044" }}>
-          <h3 style={{ ...inter, fontWeight: 700, fontSize: "14px", color: "#FFFFFF", marginBottom: "10px" }}>Tip from your instructor</h3>
+          <h3 style={{ ...inter, fontWeight: 700, fontSize: "14px", color: "#FFFFFF", marginBottom: "10px" }}>Daily Message from Wayfinder</h3>
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 rounded-[8px] bg-[#525162] flex items-center justify-center flex-shrink-0 text-lg">
               💡
