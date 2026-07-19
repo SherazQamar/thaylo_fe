@@ -399,7 +399,7 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
       <div className="flex flex-col items-center justify-center h-full px-6 text-center gap-4">
         <p className="text-[#FF7B7B] text-sm" style={inter}>{loadError}</p>
         <Link href="/child-dashboard" className="text-[#00CED1] text-sm font-semibold underline">
-          Back to Progress
+          Back to Pathway
         </Link>
       </div>
     );
@@ -437,7 +437,7 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <polyline points="15 18 9 12 15 6" />
           </svg>
-          Progress
+          Pathway
         </Link>
         <div className="hidden md:block">
           <ChildUserDropdown />

@@ -104,7 +104,7 @@ export default function WayfinderSignIn() {
 
   const maskedEmail = resetEmail
     ? resetEmail.replace(/(.{3})(.*)(@.*)/, "$1xxxxx$3")
-    : "allexxxxx@gmail.com";
+    : "john@gmail.com";
 
   return (
     <div className="h-screen flex flex-col lg:flex-row overflow-hidden bg-[#111023]">
@@ -296,7 +296,7 @@ export default function WayfinderSignIn() {
                   type="email"
                   value={resetEmail}
                   onChange={(e) => setResetEmail(e.target.value)}
-                  placeholder="Allex@gmail.com"
+                  placeholder="JaneDoe@gmail.com"
                   required
                   className="w-full px-4 py-3 rounded-full bg-[#111023] text-white text-sm outline-none border border-transparent focus:border-[#00CED1]/40 transition-colors placeholder:text-white/30"
                 />

@@ -2,9 +2,9 @@ import Image from "next/image";
 
 const mainPages = [
   { label: "Home", href: "/" },
-  { label: "About Us", href: "/about" },
   { label: "Learning Approach", href: "/learning-approach" },
-  { label: "Personalised Learning", href: "/personalised-learning" },
+  { label: "How Learning Works", href: "/learning-approach" },
+  { label: "Learning Model", href: "/personalised-learning" },
   { label: "Contact Us", href: "/contact" },
 ];
 
@@ -28,9 +28,9 @@ export default function Footer() {
           {/* Business Address */}
           <div>
             <h4 className="font-normal text-[#606B68] mb-4" style={{ fontFamily: "Inter, sans-serif", fontSize: "18px", lineHeight: "27px", letterSpacing: "-0.48px" }}>
-              Address
+              Business Address
             </h4>
-            <p className="text-[#0C211D]" style={{ fontSize: "18px", lineHeight: "27px", letterSpacing: "-0.48px" }}>5609 E Sprague Ave, Spokane Valley, WA 99212, USA</p>
+            <p className="text-[#0C211D]" style={{ fontSize: "18px", lineHeight: "27px", letterSpacing: "-0.48px" }}>Las Vegas, NV 89107</p>
           </div>
 
           {/* Main Pages */}
@@ -44,7 +44,7 @@ export default function Footer() {
                   <a
                     href={page.href}
                     className="text-[#0C211D] hover:text-[#14B8A6] transition-colors"
-                    style={{ fontSize: "18px", lineHeight: "27px", letterSpacing: "-0.48px" }}
+                    style={{ fontFamily: "Instrument Sans, sans-serif", fontWeight: 400, fontSize: "18px", lineHeight: "27px", letterSpacing: "-0.48px" }}
                   >
                     {page.label}
                   </a>

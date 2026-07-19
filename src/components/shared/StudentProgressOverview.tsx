@@ -6,13 +6,16 @@ import Link from "next/link";
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
 const curricularProgress = [
-  { label: "Reading", value: 65 },
-  { label: "Writing", value: 40 },
-  { label: "Vocabulary", value: 80 },
+  { label: "Word & Language Logic", value: 52 },
+  { label: "Reading & Observation", value: 40 },
+  { label: "Writing", value: 34 },
+  { label: "Communication", value: 28 },
+  { label: "Research", value: 22 },
+  { label: "Perspective", value: 18 },
 ];
 
 const learningSummary = [
-  { label: "Current Focus", value: "Reading – Inference" },
+  { label: "Current Focus", value: "Word & Language Logic" },
   { label: "Confidence Level", value: "Medium" },
   { label: "Engagement", value: "High" },
 ];

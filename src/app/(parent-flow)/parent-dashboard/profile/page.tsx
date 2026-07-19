@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { US_TIMEZONES } from "@/constants/us-timezones";
 import {
@@ -43,21 +44,6 @@ function formatChildGrade(grade: string | null | undefined): string {
 function getInitials(name: string | null | undefined): string {
   if (!name?.trim()) return "?";
   return name.trim().charAt(0).toUpperCase();
-}
-
-function plantStatusColor(status: string): string {
-  const normalized = status.toLowerCase();
-  if (normalized.includes("attention") || normalized.includes("needs")) {
-    return "#F59E0B";
-  }
-  if (
-    normalized.includes("track") ||
-    normalized.includes("progress") ||
-    normalized.includes("started")
-  ) {
-    return "#00CED1";
-  }
-  return "rgba(255,255,255,0.5)";
 }
 
 interface EditFormState {
@@ -356,7 +342,7 @@ export default function ParentProfilePage() {
             marginBottom: "16px",
           }}
         >
-          At-a-glance list (full details live in dashboards/reports).
+          At-a-glance list — click a child to open their profile and interest areas.
         </p>
 
         {childrenLoading ? (
@@ -386,16 +372,17 @@ export default function ParentProfilePage() {
         ) : (
           <div className="flex flex-col gap-2.5">
             {children.map((child) => (
-              <div
+              <Link
                 key={child.id}
-                className="flex items-center justify-between rounded-[12px] px-4 py-3"
+                href={`/parent-dashboard/child?id=${child.id}&from=profile`}
+                className="flex items-center justify-between rounded-[12px] px-4 py-3 hover:bg-white/10 transition-colors"
                 style={{ backgroundColor: "#525162" }}
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 min-w-0">
                   <div className="w-9 h-9 rounded-full bg-[#313044] overflow-hidden flex-shrink-0 flex items-center justify-center text-lg">
                     🧒
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p
                       style={{
                         ...inter,
@@ -408,6 +395,7 @@ export default function ParentProfilePage() {
                       {child.userName}
                     </p>
                     <p
+                      className="truncate"
                       style={{
                         ...inter,
                         fontWeight: 400,
@@ -417,23 +405,28 @@ export default function ParentProfilePage() {
                       }}
                     >
                       {formatChildGrade(child.grade)}
+                      {(child.interestAreas?.length ?? 0) > 0
+                        ? ` · ${child.interestAreas!.slice(0, 3).join(", ")}${
+                            child.interestAreas!.length > 3 ? "…" : ""
+                          }`
+                        : ""}
                     </p>
                   </div>
                 </div>
                 <span
-                  className="uppercase"
+                  className="uppercase shrink-0 ml-3"
                   style={{
                     ...inter,
                     fontWeight: 700,
                     fontSize: "12px",
                     lineHeight: "16px",
                     letterSpacing: "0.5px",
-                    color: plantStatusColor(child.plantStatus),
+                    color: "#00CED1",
                   }}
                 >
-                  {child.plantStatus}
+                  View
                 </span>
-              </div>
+              </Link>
             ))}
           </div>
         )}

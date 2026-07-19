@@ -185,7 +185,7 @@ export default function ParentRegister() {
             className="text-white text-[36px] font-semibold leading-[1.1] tracking-tight max-w-[400px] mt-6"
             style={{ fontFamily: "Inter, sans-serif" }}
           >
-            Courses Chosen for
+            Courses Created for
             <br />
             Your Child&apos;s Path
           </h1>
@@ -193,7 +193,7 @@ export default function ParentRegister() {
             className="text-white/70 text-lg mt-3 max-w-[350px]"
             style={{ fontFamily: "Inter, sans-serif" }}
           >
-            Thoughtfully designed lessons that grow skills, understanding, and independence.
+            Thoughtfully designed lessons that adapt to your Child&apos;s needs and interests to grow skills, understanding and independence.
           </p>
         </div>
 
@@ -273,7 +273,7 @@ export default function ParentRegister() {
                     type="text"
                     value={guardian1Name}
                     onChange={(e) => setGuardian1Name(e.target.value)}
-                    placeholder="Allex filler"
+                    placeholder="Jane Doe"
                     required
                     className="w-full rounded-[40px] bg-[#313044] text-white text-sm outline-none border border-transparent focus:border-[#00CED1]/40 transition-colors placeholder:text-white/30"
                     style={{ fontFamily: "Inter, sans-serif", padding: "12px 20px", height: "44px" }}
@@ -324,7 +324,7 @@ export default function ParentRegister() {
                     type="text"
                     value={guardian2Name}
                     onChange={(e) => setGuardian2Name(e.target.value)}
-                    placeholder="Allex filler"
+                    placeholder="John Doe"
                     className="w-full rounded-[40px] bg-[#313044] text-white text-sm outline-none border border-transparent focus:border-[#00CED1]/40 transition-colors placeholder:text-white/30"
                     style={{ fontFamily: "Inter, sans-serif", padding: "12px 20px", height: "44px" }}
                   />
@@ -374,7 +374,7 @@ export default function ParentRegister() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Allex@gmail.com"
+                    placeholder="JaneDoe@gmail.com"
                     required
                     className="w-full rounded-[40px] bg-[#313044] text-white text-sm outline-none border border-transparent focus:border-[#00CED1]/40 transition-colors placeholder:text-white/30"
                     style={{ fontFamily: "Inter, sans-serif", padding: "12px 20px", height: "44px" }}

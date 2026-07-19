@@ -50,7 +50,7 @@ export default function CoursePilot() {
         </div>
 
         {/* Course Cards */}
-        <div className="flex flex-col sm:grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-5">
+        <div className="flex flex-col sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
           {courses.map((course, index) => (
             <CourseCard key={index} {...course} />
           ))}
@@ -101,12 +101,12 @@ function CourseCard({
       </div>
 
       <div className="pt-5 px-2 pb-1">
-        <h3 className="font-medium text-[#0C211D] mb-1" style={{ fontSize: "26px", lineHeight: "31.2px", letterSpacing: "-0.48px" }}>{title}</h3>
-        <p className="font-normal text-[#606B68] mb-5" style={{ fontSize: "18px", lineHeight: "27px", letterSpacing: "-0.48px" }}>{instructor}</p>
+        <h3 className="font-medium text-[#0C211D] mb-1 text-[22px] lg:text-[26px]" style={{ lineHeight: "31.2px", letterSpacing: "-0.48px" }}>{title}</h3>
+        <p className="font-normal text-[#606B68] mb-5 text-[16px] lg:text-[18px]" style={{ lineHeight: "27px", letterSpacing: "-0.48px" }}>{instructor}</p>
 
         {/* Meta info */}
-        <div className="flex items-center mb-4" style={{ fontSize: "18px", lineHeight: "18px", letterSpacing: "-0.48px" }}>
-          <div className="flex items-center gap-1.5 pr-3 border-r border-gray-300 text-[#0C211D]" style={{ fontFamily: "Inter, sans-serif" }}>
+        <div className="flex items-center mb-4 text-[13px] lg:text-[16px] xl:text-[18px]" style={{ lineHeight: "18px", letterSpacing: "-0.48px" }}>
+          <div className="flex items-center gap-1.5 pr-2 lg:pr-3 border-r border-gray-300 text-[#0C211D] whitespace-nowrap" style={{ fontFamily: "Inter, sans-serif" }}>
             <svg
               width="16"
               height="16"
@@ -120,7 +120,7 @@ function CourseCard({
             </svg>
             <span>{lessons} Lessons</span>
           </div>
-          <div className="flex items-center gap-1.5 px-3 border-r border-gray-300 text-[#0C211D]" style={{ fontFamily: "Inter, sans-serif" }}>
+          <div className="flex items-center gap-1.5 px-2 lg:px-3 border-r border-gray-300 text-[#0C211D] whitespace-nowrap" style={{ fontFamily: "Inter, sans-serif" }}>
             <svg
               width="16"
               height="16"
@@ -134,7 +134,7 @@ function CourseCard({
             </svg>
             <span>{duration}</span>
           </div>
-          <div className="flex items-center gap-1.5 pl-3 text-[#0C211D]" style={{ fontFamily: "Inter, sans-serif" }}>
+          <div className="flex items-center gap-1.5 pl-2 lg:pl-3 text-[#0C211D] whitespace-nowrap" style={{ fontFamily: "Inter, sans-serif" }}>
             <svg
               width="16"
               height="16"
