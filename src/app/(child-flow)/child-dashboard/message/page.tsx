@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import ChildUserDropdown from "@/components/child/ChildUserDropdown";
+import ChildMessageSnapshotCard from "@/components/child/ChildMessageSnapshotCard";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import ChatSidebar from "@/components/shared/chat/ChatSidebar";
 import ChatMessageList from "@/components/shared/chat/ChatMessageList";
@@ -11,7 +12,6 @@ import {
   clearRoomUnreadInCache,
   filterContacts,
   roomMeta,
-  toggleChatFilter,
   type ChatContactCategory,
   type ChatSidebarContact,
   type ChatSidebarPerson,
@@ -35,17 +35,19 @@ type ChildContact = ChatSidebarContact & {
   action: "group" | "parent" | "wayfinder";
 };
 
+function formatChildGrade(grade: string | null | undefined): string {
+  if (!grade?.trim()) return "Student";
+  if (/^grade\s/i.test(grade.trim())) return grade.trim();
+  return `Grade ${grade.trim()}`;
+}
+
 export default function ChildMessagePage() {
   const queryClient = useQueryClient();
   const child = useChildAuthStore((s) => s.child);
   const [message, setMessage] = useState("");
   const [activeRoomId, setActiveRoomId] = useState<number | null>(null);
   const [activeContactId, setActiveContactId] = useState<string | null>(null);
-  const [selectedFilters, setSelectedFilters] = useState<ChatContactCategory[]>([
-    "group",
-    "parent",
-    "child",
-  ]);
+  const [activeCategory, setActiveCategory] = useState<ChatContactCategory>("group");
   const [groupName, setGroupName] = useState("Family Group");
   const [groupParticipants, setGroupParticipants] = useState<ChatParticipant[]>([]);
 
@@ -184,32 +186,49 @@ export default function ChildMessagePage() {
     return contacts;
   }, [groupName, parentParticipant, wayfinderParticipant, roomsQuery.data]);
 
+  const categoryCounts = useMemo(() => {
+    const counts: Record<ChatContactCategory, number> = {
+      child: 0,
+      parent: 0,
+      group: 0,
+    };
+    for (const contact of allContacts) {
+      counts[contact.category] += contact.unreadCount ?? 0;
+    }
+    return counts;
+  }, [allContacts]);
+
   const visibleContacts = useMemo(
-    () => filterContacts(allContacts, selectedFilters),
-    [allContacts, selectedFilters],
+    () => filterContacts(allContacts, [activeCategory]),
+    [allContacts, activeCategory],
   );
 
   const people = useMemo<ChatSidebarPerson[]>(
     () =>
-      visibleContacts.map((contact) => ({
-        id: contact.id,
-        label: contact.label,
-        subtitle: contact.subtitle,
-        unreadCount: contact.unreadCount,
-        avatarUrl: contact.avatarUrl,
-      })),
-    [visibleContacts],
+      child
+        ? [
+            {
+              id: String(child.id),
+              label: child.userName,
+              subtitle: formatChildGrade(child.grade),
+            },
+          ]
+        : [],
+    [child],
   );
 
   const hasAutoOpenedRef = useRef(false);
 
   useEffect(() => {
     if (hasAutoOpenedRef.current || activeRoomId || openRoomMutation.isPending) return;
-    const groupContact = allContacts.find((contact) => contact.action === "group");
-    if (!groupContact) return;
+    const preferred =
+      visibleContacts.find((c) => c.category === activeCategory) ??
+      allContacts.find((contact) => contact.action === "group");
+    if (!preferred) return;
     hasAutoOpenedRef.current = true;
-    setActiveContactId(groupContact.id);
-    openRoomMutation.mutate(groupContact);
+    setActiveContactId(preferred.id);
+    setActiveCategory(preferred.category);
+    openRoomMutation.mutate(preferred as ChildContact);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeRoomId, allContacts]);
 
@@ -221,8 +240,15 @@ export default function ChildMessagePage() {
     setActiveRoomId(null);
   }, [activeContactId, visibleContacts]);
 
+  useEffect(() => {
+    if (activeContactId || visibleContacts.length === 0) return;
+    const first = visibleContacts[0] as ChildContact;
+    setActiveContactId(first.id);
+    openRoomMutation.mutate(first);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeContactId, visibleContacts, activeCategory]);
+
   const activeRoom = (roomsQuery.data ?? []).find((room) => room.roomId === activeRoomId);
-  const activeContact = allContacts.find((contact) => contact.id === activeContactId);
 
   function handleSend(file?: File | null) {
     const content = message.trim();
@@ -232,22 +258,17 @@ export default function ChildMessagePage() {
     void send(content, file);
   }
 
-  const title = activeContact?.label ?? (activeRoom?.type === "GROUP" ? groupName : "Chat");
-
-  function handleFilterToggle(filter: ChatContactCategory) {
-    setSelectedFilters((current) => toggleChatFilter(current, filter));
-  }
-
   function handleSelectContact(contact: ChatSidebarContact) {
     const childContact = contact as ChildContact;
     setActiveContactId(childContact.id);
     openRoomMutation.mutate(childContact);
   }
 
-  function handleSelectPerson(person: ChatSidebarPerson) {
-    const contact = allContacts.find((item) => item.id === person.id);
-    if (!contact) return;
-    handleSelectContact(contact);
+  function handleCategorySelect(category: ChatContactCategory) {
+    if (category === activeCategory) return;
+    setActiveCategory(category);
+    setActiveContactId(null);
+    setActiveRoomId(null);
   }
 
   return (
@@ -276,26 +297,25 @@ export default function ChildMessagePage() {
       >
         <ChatSidebar
           portal="child"
-          className="md:w-[300px] md:border-r border-b md:border-b-0"
+          layout="focus"
+          className="md:w-[300px] lg:w-[320px] md:border-r border-b md:border-b-0"
+          backLink={{ href: "/child-dashboard", label: "Back to Dashboard" }}
           people={people}
-          peopleLabel="Contacts"
-          activePersonId={activeContactId}
-          onSelectPerson={handleSelectPerson}
-          contacts={[]}
-          hideFilters
+          activePersonId={child ? String(child.id) : null}
+          personStatus={{ label: "Online", online: true }}
+          contacts={visibleContacts}
           activeContactId={activeContactId}
-          selectedFilters={selectedFilters}
-          onFilterToggle={handleFilterToggle}
+          selectedFilters={[activeCategory]}
+          onFilterToggle={handleCategorySelect}
+          activeCategory={activeCategory}
+          onCategorySelect={handleCategorySelect}
+          categoryCounts={categoryCounts}
           onSelectContact={handleSelectContact}
-          footer={`${people.length} contact${people.length === 1 ? "" : "s"}`}
         />
 
         <div className="flex-1 flex flex-col min-h-0">
-          <div className="px-5 py-3 border-b border-white/5 flex-shrink-0">
-            <h2 style={{ ...inter, fontWeight: 700, fontSize: "16px", color: "#FFFFFF" }}>{title}</h2>
-            <p style={{ ...inter, fontWeight: 400, fontSize: "12px", color: "rgba(255,255,255,0.5)" }}>
-              {activeContact?.category === "group" ? "Group chat" : "Direct chat"}
-            </p>
+          <div className="px-3 md:px-4 py-3 border-b border-white/10">
+            <ChildMessageSnapshotCard />
           </div>
 
           <ChatMessageList
@@ -318,7 +338,7 @@ export default function ChildMessagePage() {
             onSend={handleSend}
             onTyping={notifyTyping}
             disabled={!activeRoomId}
-            placeholder={activeRoomId ? "Message" : "Select a chat"}
+            placeholder={activeRoomId ? "Type a message..." : "Select a chat"}
           />
         </div>
       </div>

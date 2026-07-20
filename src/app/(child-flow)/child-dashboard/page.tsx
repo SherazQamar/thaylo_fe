@@ -1,12 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import ChildUserDropdown from "@/components/child/ChildUserDropdown";
 import ChildNoClassBanner from "@/components/child/ChildNoClassBanner";
+import { BadgeShield } from "@/components/shared/BadgeArtwork";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import { useChildAssignedClasses } from "@/hooks/use-child-assigned-classes";
 import { useAiSettings } from "@/hooks/use-ai-settings";
+import { fetchChildBadges, syncChildBadgeActivity } from "@/lib/badge-api";
 import { fetchBloomBuddyTrends } from "@/lib/bloom-buddy-api";
 import { navigateToChildClass } from "@/lib/start-child-class";
 import { useChildAuthStore } from "@/stores/child-auth.store";
@@ -39,6 +43,17 @@ export default function ChildPathwayPage() {
   const [latestMoodLabel, setLatestMoodLabel] = useState<string | null>(null);
   const canStartClass = hasAssignedClass && !classesLoading;
   const focusArea = primaryClass?.focusArea?.trim() || null;
+
+  const badgesQuery = useQuery({
+    queryKey: ["child", "badges"],
+    queryFn: fetchChildBadges,
+  });
+
+  useEffect(() => {
+    void syncChildBadgeActivity().catch(() => {
+      // Optional streak sync.
+    });
+  }, []);
 
   useEffect(() => {
     fetchBloomBuddyTrends(7)
@@ -254,23 +269,55 @@ export default function ChildPathwayPage() {
         <div className="rounded-[12px] p-4" style={{ backgroundColor: "#313044" }}>
           <div className="flex items-center justify-between mb-3">
             <h3 style={{ ...inter, fontWeight: 700, fontSize: "14px", color: "#FFFFFF" }}>Unlock Next badge</h3>
-            <span style={{ ...inter, fontWeight: 700, fontSize: "12px", color: "#00CED1", cursor: "pointer" }}>SEE ALL</span>
+            <Link
+              href="/child-dashboard/profile/badges"
+              style={{ ...inter, fontWeight: 700, fontSize: "12px", color: "#00CED1" }}
+            >
+              SEE ALL
+            </Link>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-[8px] bg-[#525162] flex items-center justify-center flex-shrink-0">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00CED1" strokeWidth="2"><path d="M12 15l-2 5-3-1 1.5-4M12 15l2 5 3-1-1.5-4M6 9a6 6 0 1012 0 6 6 0 00-12 0z" /></svg>
-            </div>
-            <div className="flex-1">
-              <p style={{ ...inter, fontWeight: 500, fontSize: "12px", color: "rgba(255,255,255,0.6)" }}>Rising star</p>
-              <div className="flex items-center gap-2 mt-1">
-                <div className="flex-1 h-[6px] bg-[#525162] rounded-full overflow-hidden">
-                  <div className="h-full w-[20%] bg-[#00CED1] rounded-full" />
+          {badgesQuery.data?.nextUnlock ? (
+            <div className="flex items-center gap-3">
+              <BadgeShield
+                iconStyle={badgesQuery.data.nextUnlock.iconStyle}
+                earned={false}
+                size={40}
+              />
+              <div className="flex-1">
+                <p style={{ ...inter, fontWeight: 500, fontSize: "12px", color: "rgba(255,255,255,0.6)" }}>
+                  {badgesQuery.data.nextUnlock.name}
+                </p>
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="flex-1 h-[6px] bg-[#525162] rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-[#00CED1] rounded-full"
+                      style={{
+                        width: `${Math.min(
+                          100,
+                          (badgesQuery.data.nextUnlock.progressCurrent /
+                            Math.max(1, badgesQuery.data.nextUnlock.progressTarget)) *
+                            100,
+                        )}%`,
+                      }}
+                    />
+                  </div>
+                  <span style={{ ...inter, fontWeight: 700, fontSize: "12px", color: "#FFFFFF" }}>
+                    {badgesQuery.data.nextUnlock.progressCurrent} /{" "}
+                    {badgesQuery.data.nextUnlock.progressTarget}
+                  </span>
                 </div>
-                <span style={{ ...inter, fontWeight: 700, fontSize: "12px", color: "#FFFFFF" }}>2 / 10</span>
+                <p style={{ ...inter, fontWeight: 400, fontSize: "11px", color: "rgba(255,255,255,0.4)", marginTop: "2px" }}>
+                  {badgesQuery.data.nextUnlock.progressLabel}
+                </p>
               </div>
-              <p style={{ ...inter, fontWeight: 400, fontSize: "11px", color: "rgba(255,255,255,0.4)", marginTop: "2px" }}>Complete 8 more module</p>
             </div>
-          </div>
+          ) : (
+            <p style={{ ...inter, fontSize: "13px", color: "rgba(255,255,255,0.5)" }}>
+              {badgesQuery.isLoading
+                ? "Loading badge progress…"
+                : "Keep learning to unlock badges."}
+            </p>
+          )}
         </div>
 
         {/* Focus — current lesson skill family */}

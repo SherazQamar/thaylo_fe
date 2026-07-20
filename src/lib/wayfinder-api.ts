@@ -77,6 +77,13 @@ export async function fetchWayfinderStudents(
   return unwrapPaginated(data);
 }
 
+export interface WayfinderBadgePreview {
+  kind: string;
+  name: string;
+  imageUrl: string;
+  count: number;
+}
+
 export interface WayfinderStudentSnapshot {
   childId: number;
   firstName: string | null;
@@ -87,6 +94,7 @@ export interface WayfinderStudentSnapshot {
   contentArea: string;
   currentLessonTitle: string | null;
   currentLessonKey: string | null;
+  currentLessonOrder: number | null;
   lastActiveAt: string | null;
   masteryPassed: number;
   masteryAttempted: number;
@@ -96,7 +104,9 @@ export interface WayfinderStudentSnapshot {
   progressTotal: number;
   progressLabel: string;
   badgesEarned: number;
+  /** @deprecated Prefer badgePreviews */
   badgeIcons: string[];
+  badgePreviews?: WayfinderBadgePreview[];
 }
 
 export async function fetchWayfinderStudentSnapshot(

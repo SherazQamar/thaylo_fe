@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import ChildUserDropdown from "@/components/child/ChildUserDropdown";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import {
@@ -15,6 +15,7 @@ import {
   updateChildInterestAreas,
   updateChildNotesForParent,
 } from "@/lib/child-api";
+import { fetchChildBadges } from "@/lib/badge-api";
 import { useChildAuthStore } from "@/stores/child-auth.store";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
@@ -35,6 +36,12 @@ function formatJoinedDate(createdAt: string | undefined): string {
 export default function ChildProfilePage() {
   const child = useChildAuthStore((state) => state.child);
   const displayName = child?.userName?.trim() || "Student";
+
+  const badgesQuery = useQuery({
+    queryKey: ["child", "badges"],
+    queryFn: fetchChildBadges,
+  });
+  const badgesEarned = badgesQuery.data?.badgesEarned ?? 0;
 
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [customInterest, setCustomInterest] = useState("");
@@ -562,7 +569,7 @@ export default function ChildProfilePage() {
                 color: "#FFFFFF",
               }}
             >
-              0 Badges
+              {badgesEarned} Badge{badgesEarned === 1 ? "" : "s"}
             </span>
           </div>
         </div>
@@ -575,7 +582,9 @@ export default function ChildProfilePage() {
             marginTop: "10px",
           }}
         >
-          Lesson and badge counts will update as you complete activities.
+          {badgesQuery.data
+            ? `${badgesQuery.data.plantStatus} · ${badgesQuery.data.masteredCount} of ${badgesQuery.data.totalLessons} lessons mastered`
+            : "Lesson and badge counts update as you complete activities."}
         </p>
       </div>
 

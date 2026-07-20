@@ -1,3 +1,4 @@
+import { isAxiosError } from "axios";
 import { api } from "@/lib/api";
 import type { ApiResponse } from "@/types/api";
 
@@ -50,12 +51,20 @@ export interface ParentDashboardStats {
   childrenMastery: ParentDashboardChildMastery[];
 }
 
+export interface ParentChildBadgePreview {
+  kind: string;
+  name: string;
+  imageUrl: string;
+  count: number;
+}
+
 export interface ParentChildListItem {
   id: number;
   userName: string;
   grade: string | null;
   plantStatus: string;
   badgesEarned: number;
+  badgePreviews?: ParentChildBadgePreview[];
   interestAreas?: string[];
 }
 
@@ -208,4 +217,93 @@ export async function resetParentChildPin(childId: number, pin: string) {
     { pin },
   );
   return data.data;
+}
+
+export interface ParentProgressReportLesson {
+  lessonTitle: string;
+  lessonKey: string;
+  status: string;
+  passed: boolean | null;
+  scoreCorrect: number | null;
+  scoreTotal: number | null;
+  durationMinutes: number;
+  startedAt: string;
+  completedAt: string | null;
+}
+
+export interface ParentProgressReport {
+  childId: number;
+  childName: string;
+  grade: string | null;
+  from: string;
+  until: string;
+  generatedAt: string;
+  lessonsAttempted: number;
+  lessonsPassed: number;
+  masteryPercent: number;
+  totalMinutes: number;
+  averageScorePercent: number | null;
+  selHappy: number;
+  selConfused: number;
+  selSad: number;
+  lessons: ParentProgressReportLesson[];
+  pdfConsentGranted: boolean;
+}
+
+export async function fetchParentProgressReport(params: {
+  childId: number;
+  from: string;
+  until: string;
+}) {
+  const { data } = await api.get<ApiResponse<ParentProgressReport>>(
+    "/parent/reports/progress",
+    { params },
+  );
+  return data.data;
+}
+
+async function parseBlobErrorMessage(blob: Blob): Promise<string> {
+  try {
+    const text = await blob.text();
+    const parsed = JSON.parse(text) as {
+      message?: string | string[];
+    };
+    if (typeof parsed.message === "string") return parsed.message;
+    if (Array.isArray(parsed.message)) return parsed.message.join(", ");
+  } catch {
+    // Not JSON — fall through.
+  }
+  return "Could not download PDF";
+}
+
+export async function downloadParentProgressReportPdf(
+  params: {
+    childId: number;
+    from: string;
+    until: string;
+  },
+  options?: { signal?: AbortSignal },
+): Promise<Blob> {
+  try {
+    const response = await api.get<Blob>("/parent/reports/progress/pdf", {
+      params,
+      responseType: "blob",
+      signal: options?.signal,
+    });
+
+    const data = response.data;
+    if (!(data instanceof Blob) || data.size === 0) {
+      throw new Error("Could not download PDF");
+    }
+
+    return data;
+  } catch (error) {
+    if (isAxiosError(error) && error.response?.data instanceof Blob) {
+      throw new Error(await parseBlobErrorMessage(error.response.data));
+    }
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error("Could not download PDF");
+  }
 }

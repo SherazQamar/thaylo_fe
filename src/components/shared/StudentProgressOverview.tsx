@@ -2,6 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import BadgePreviewStrip, {
+  type BadgePreviewItem,
+} from "@/components/shared/BadgePreviewStrip";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
@@ -37,8 +40,6 @@ const wellbeing = [
   { label: "Low Mood", count: 0, emoji: "😔" },
 ];
 
-const badgeAssets = ["/assets/s1.png", "/assets/s2.png", "/assets/s3.png"];
-
 export interface StudentProgressOverviewProps {
   displayName: string;
   gradeLabel: string;
@@ -50,6 +51,7 @@ export interface StudentProgressOverviewProps {
   gardenStage?: number;
   gardenMessage?: string;
   badgeCount?: number;
+  badgePreviews?: BadgePreviewItem[];
 }
 
 export default function StudentProgressOverview({
@@ -62,7 +64,7 @@ export default function StudentProgressOverview({
   confidenceLabel = "Medium",
   gardenStage = 3,
   gardenMessage,
-  badgeCount = 4,
+  badgePreviews = [],
 }: StudentProgressOverviewProps) {
   const gardenText = gardenMessage ?? `${displayName}'s plant is thriving`;
 
@@ -284,19 +286,9 @@ export default function StudentProgressOverview({
             <p style={{ ...inter, fontWeight: 500, fontSize: "13px", lineHeight: "20px", color: "#00CED1", marginTop: "4px" }}>
               {gardenText}
             </p>
-            <div className="flex items-center gap-2 mt-3">
-              {badgeAssets.map((src) => (
-                <div key={src} className="w-7 h-7 rounded-full flex items-center justify-center" style={{ backgroundColor: "#525162" }}>
-                  <Image src={src} alt="badge" width={19} height={19} className="w-[19px] h-[19px] object-contain" unoptimized />
-                </div>
-              ))}
-              <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ backgroundColor: "#525162" }}>
-                <span style={{ ...inter, fontWeight: 500, fontSize: "16px", lineHeight: "100%", color: "#00CED1" }}>+1</span>
-              </div>
+            <div className="mt-3">
+              <BadgePreviewStrip previews={badgePreviews} />
             </div>
-            <p style={{ ...inter, fontWeight: 500, fontSize: "11px", lineHeight: "16px", color: "rgba(255,255,255,0.5)", marginTop: "6px" }}>
-              {badgeCount} Badges Earned
-            </p>
           </div>
 
           <div className="rounded-[12px] p-4" style={{ backgroundColor: "#313044" }}>

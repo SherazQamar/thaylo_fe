@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import ParentUserDropdown from "@/components/parent/ParentUserDropdown";
+import ParentChildMessageSnapshotCard from "@/components/parent/ParentChildMessageSnapshotCard";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import ChatSidebar from "@/components/shared/chat/ChatSidebar";
 import ChatMessageList from "@/components/shared/chat/ChatMessageList";
@@ -12,7 +13,6 @@ import {
   clearRoomUnreadInCache,
   filterContacts,
   roomMeta,
-  toggleChatFilter,
   type ChatContactCategory,
   type ChatSidebarContact,
   type ChatSidebarPerson,
@@ -37,11 +37,6 @@ type ParentContact = ChatSidebarContact & {
   targetId?: number;
 };
 
-function roomLabel(room: ChatRoomListItem) {
-  if (room.type === "GROUP") return room.groupName ?? "Family Group";
-  return room.otherParticipant?.name ?? "Direct Chat";
-}
-
 function formatChildGrade(grade: string | null | undefined): string {
   if (!grade?.trim()) return "Child";
   if (/^grade\s/i.test(grade.trim())) return grade.trim();
@@ -56,11 +51,7 @@ export default function ParentMessagePage() {
   const [messageText, setMessageText] = useState("");
   const [activeContactId, setActiveContactId] = useState<string | null>(null);
   const [activeChildId, setActiveChildId] = useState<number | null>(null);
-  const [selectedFilters, setSelectedFilters] = useState<ChatContactCategory[]>([
-    "group",
-    "child",
-    "parent",
-  ]);
+  const [activeCategory, setActiveCategory] = useState<ChatContactCategory>("child");
 
   const { data: children = [] } = useQuery({
     queryKey: ["parent-children"],
@@ -203,9 +194,21 @@ export default function ParentMessagePage() {
     return contacts;
   }, [selectedChild, roomsQuery.data]);
 
+  const categoryCounts = useMemo(() => {
+    const counts: Record<ChatContactCategory, number> = {
+      child: 0,
+      parent: 0,
+      group: 0,
+    };
+    for (const contact of allContacts) {
+      counts[contact.category] += contact.unreadCount ?? 0;
+    }
+    return counts;
+  }, [allContacts]);
+
   const visibleContacts = useMemo(
-    () => filterContacts(allContacts, selectedFilters),
-    [allContacts, selectedFilters],
+    () => filterContacts(allContacts, [activeCategory]),
+    [allContacts, activeCategory],
   );
 
   const ensureRoomMutation = useMutation({
@@ -262,7 +265,7 @@ export default function ParentMessagePage() {
     setActiveContactId(first.id);
     ensureRoomMutation.mutate(first);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeContactId, visibleContacts, activeChildId]);
+  }, [activeContactId, visibleContacts, activeChildId, activeCategory]);
 
   const activeRoom = (roomsQuery.data ?? []).find((room) => room.roomId === activeRoomId);
 
@@ -272,10 +275,6 @@ export default function ParentMessagePage() {
     if (!activeRoomId) return;
     setMessageText("");
     void send(content, file);
-  }
-
-  function handleFilterToggle(filter: ChatContactCategory) {
-    setSelectedFilters((current) => toggleChatFilter(current, filter));
   }
 
   function handleSelectContact(contact: ChatSidebarContact) {
@@ -288,6 +287,13 @@ export default function ParentMessagePage() {
     const nextId = Number(person.id);
     if (!Number.isFinite(nextId) || nextId === activeChildId) return;
     setActiveChildId(nextId);
+    setActiveContactId(null);
+    setActiveRoomId(null);
+  }
+
+  function handleCategorySelect(category: ChatContactCategory) {
+    if (category === activeCategory) return;
+    setActiveCategory(category);
     setActiveContactId(null);
     setActiveRoomId(null);
   }
@@ -318,29 +324,31 @@ export default function ParentMessagePage() {
       >
         <ChatSidebar
           portal="parent"
-          className="md:w-[300px] md:border-r border-b md:border-b-0"
+          layout="focus"
+          className="md:w-[300px] lg:w-[320px] md:border-r border-b md:border-b-0"
+          backLink={{ href: "/parent-dashboard/children", label: "Back to Children" }}
           people={people}
           peopleLabel="Children"
           activePersonId={activeChildId != null ? String(activeChildId) : null}
           onSelectPerson={handleSelectPerson}
+          personStatus={
+            selectedChild
+              ? { label: selectedChild.plantStatus || "Growing", online: false }
+              : null
+          }
           contacts={visibleContacts}
           activeContactId={activeContactId}
-          selectedFilters={selectedFilters}
-          onFilterToggle={handleFilterToggle}
+          selectedFilters={[activeCategory]}
+          onFilterToggle={handleCategorySelect}
+          activeCategory={activeCategory}
+          onCategorySelect={handleCategorySelect}
+          categoryCounts={categoryCounts}
           onSelectContact={handleSelectContact}
-          footer={`${visibleContacts.length} chat${visibleContacts.length === 1 ? "" : "s"} · ${people.length} child${people.length === 1 ? "" : "ren"}`}
         />
 
         <div className="flex-1 flex flex-col min-h-0">
-          <div className="px-4 md:px-5 py-3 border-b border-white/10">
-            <p style={{ ...inter, fontWeight: 700, fontSize: "18px", color: "#fff" }}>
-              {activeRoom ? roomLabel(activeRoom) : "Select a chat"}
-            </p>
-            <p style={{ ...inter, fontSize: "12px", color: "rgba(255,255,255,0.5)" }}>
-              {activeRoom?.type === "GROUP"
-                ? `Group · ${selectedChild?.userName ?? "Child"}`
-                : "Direct chat"}
-            </p>
+          <div className="px-3 md:px-4 py-3 border-b border-white/10">
+            <ParentChildMessageSnapshotCard childId={activeChildId} />
           </div>
 
           <ChatMessageList
@@ -363,7 +371,7 @@ export default function ParentMessagePage() {
             onSend={handleSend}
             onTyping={notifyTyping}
             disabled={!activeRoomId}
-            placeholder={activeRoomId ? "Message" : "Select a chat first"}
+            placeholder={activeRoomId ? "Type a message..." : "Select a chat first"}
           />
         </div>
       </div>
