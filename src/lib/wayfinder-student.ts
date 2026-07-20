@@ -51,6 +51,45 @@ export function formatLastActiveLabel(lastActiveAt: string | null | undefined): 
   return `Last active: ${formatLastActiveAt(lastActiveAt)}`;
 }
 
+/**
+ * Header status line for message snapshot, e.g. "Active today at 10:15 AM".
+ */
+export function formatActiveStatus(lastActiveAt: string | null | undefined): string {
+  if (!lastActiveAt) return "Not yet active";
+
+  const at = new Date(lastActiveAt);
+  if (Number.isNaN(at.getTime())) return "Not yet active";
+
+  const now = new Date();
+  const dayMs = 24 * 60 * 60 * 1000;
+  const todayStart = startOfLocalDay(now);
+  const atStart = startOfLocalDay(at);
+  const dayDiff = Math.round((todayStart.getTime() - atStart.getTime()) / dayMs);
+  const time = at.toLocaleTimeString(undefined, {
+    hour: "numeric",
+    minute: "2-digit",
+  });
+
+  if (dayDiff === 0) return `Active today at ${time}`;
+  if (dayDiff === 1) return `Active yesterday at ${time}`;
+  if (dayDiff > 1 && dayDiff < 7) {
+    const weekday = at.toLocaleDateString(undefined, { weekday: "long" });
+    return `Active ${weekday} at ${time}`;
+  }
+  return `Last active ${at.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+  })}`;
+}
+
+/** True when last activity was within the last ~2 hours (for green "Active" dot). */
+export function isRecentlyActive(lastActiveAt: string | null | undefined): boolean {
+  if (!lastActiveAt) return false;
+  const at = new Date(lastActiveAt);
+  if (Number.isNaN(at.getTime())) return false;
+  return Date.now() - at.getTime() < 2 * 60 * 60 * 1000;
+}
+
 /** Elapsed lesson timer as MM:SS or H:MM:SS. */
 export function formatElapsedTimer(elapsedSeconds: number): string {
   const total = Math.max(0, Math.floor(elapsedSeconds));

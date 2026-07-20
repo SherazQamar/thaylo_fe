@@ -158,7 +158,19 @@ export async function updateParentProfile(payload: UpdateParentProfilePayload) {
   return refreshParentSession();
 }
 
+export function isIgnorableRequestError(error: unknown): boolean {
+  if (!isAxiosError(error)) return false;
+  return (
+    error.code === "ERR_CANCELED" ||
+    error.name === "CanceledError" ||
+    error.message === "canceled"
+  );
+}
+
 export function getApiErrorMessage(error: unknown): string {
+  if (isIgnorableRequestError(error)) {
+    return "";
+  }
   if (error instanceof Error && !isAxiosError(error)) {
     return error.message;
   }

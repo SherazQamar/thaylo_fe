@@ -1,5 +1,6 @@
 import { needsOnboardingBeforeClass } from "@/lib/onboarding-api";
 import { fetchBloomBuddyStatus } from "@/lib/bloom-buddy-api";
+import { fetchChildPretest } from "@/lib/badge-api";
 import { startChildClass } from "@/lib/curriculum-api";
 import { getStartClassErrorMessage, NO_CLASS_AVAILABLE_MESSAGE } from "@/lib/child-class-messages";
 
@@ -9,10 +10,11 @@ type RouterLike = {
 
 type NavigateOptions = {
   skipBloomBuddy?: boolean;
+  skipPretest?: boolean;
 };
 
 /**
- * Gate onboarding + Bloom Buddy check-in, start class, open lesson view.
+ * Gate onboarding + Bloom Buddy + pre-test, then start class / open lesson.
  */
 export async function navigateToChildClass(
   router: RouterLike,
@@ -42,6 +44,18 @@ export async function navigateToChildClass(
       }
     } catch {
       // If Bloom Buddy is unavailable, do not block the lesson.
+    }
+  }
+
+  if (!options.skipPretest) {
+    try {
+      const pretest = await fetchChildPretest();
+      if (pretest.available && pretest.questions.length > 0) {
+        router.push("/child-dashboard/pre-test");
+        return;
+      }
+    } catch {
+      // If pre-test is unavailable, continue into the lesson.
     }
   }
 
