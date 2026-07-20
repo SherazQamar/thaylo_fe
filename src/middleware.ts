@@ -26,8 +26,17 @@ const PROTECTED_PORTALS: ProtectedPortal[] = [
   },
 ];
 
+/** Design-preview escape hatch: set NEXT_PUBLIC_DISABLE_PARENT_AUTH=true in .env.local. */
+const parentAuthDisabled =
+  process.env.NEXT_PUBLIC_DISABLE_PARENT_AUTH === "true";
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  if (parentAuthDisabled && pathname.startsWith("/parent-dashboard")) {
+    return NextResponse.next();
+  }
+
   const portal = PROTECTED_PORTALS.find((entry) =>
     pathname.startsWith(entry.prefix),
   );

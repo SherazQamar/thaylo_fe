@@ -12,6 +12,10 @@ interface OnboardingGateProps {
   children: React.ReactNode;
 }
 
+/** Design-preview escape hatch: set NEXT_PUBLIC_DISABLE_PARENT_AUTH=true in .env.local. */
+const parentAuthDisabled =
+  process.env.NEXT_PUBLIC_DISABLE_PARENT_AUTH === "true";
+
 export default function OnboardingGate({
   portal,
   onboardingPath,
@@ -19,9 +23,12 @@ export default function OnboardingGate({
 }: OnboardingGateProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const [ready, setReady] = useState(false);
+  const bypass = parentAuthDisabled && portal === "parent";
+  const [ready, setReady] = useState(bypass);
 
   useEffect(() => {
+    if (bypass) return;
+
     let cancelled = false;
 
     fetchOnboardingStatus(portal)
@@ -43,7 +50,7 @@ export default function OnboardingGate({
     return () => {
       cancelled = true;
     };
-  }, [portal, onboardingPath, pathname, router]);
+  }, [bypass, portal, onboardingPath, pathname, router]);
 
   if (!ready) {
     return (

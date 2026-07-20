@@ -1,19 +1,11 @@
 import Image from "next/image";
 
-const mainPages = [
-  { label: "Home", href: "/" },
-  { label: "Learning Approach", href: "/learning-approach" },
-  { label: "How Learning Works", href: "/learning-approach" },
-  { label: "Learning Model", href: "/personalised-learning" },
-  { label: "Contact Us", href: "/contact" },
-];
-
 export default function Footer() {
   return (
     <footer id="contact" className="bg-[#F8FAFB] pt-10 sm:pt-16 pb-8 px-4 sm:px-6 lg:px-12">
       <div className="max-w-[1320px] mx-auto">
         {/* Top Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-10 sm:mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-10 sm:mb-12">
           {/* Contact */}
           <div>
             <h4 className="font-normal text-[#606B68] mb-4" style={{ fontFamily: "Inter, sans-serif", fontSize: "18px", lineHeight: "27px", letterSpacing: "-0.48px" }}>
@@ -31,26 +23,6 @@ export default function Footer() {
               Business Address
             </h4>
             <p className="text-[#0C211D]" style={{ fontSize: "18px", lineHeight: "27px", letterSpacing: "-0.48px" }}>Las Vegas, NV 89107</p>
-          </div>
-
-          {/* Main Pages */}
-          <div>
-            <h4 className="font-normal text-[#606B68] mb-4" style={{ fontFamily: "Inter, sans-serif", fontSize: "18px", lineHeight: "27px", letterSpacing: "-0.48px" }}>
-              Main Pages
-            </h4>
-            <ul className="space-y-2">
-              {mainPages.map((page) => (
-                <li key={page.label}>
-                  <a
-                    href={page.href}
-                    className="text-[#0C211D] hover:text-[#14B8A6] transition-colors"
-                    style={{ fontFamily: "Instrument Sans, sans-serif", fontWeight: 400, fontSize: "18px", lineHeight: "27px", letterSpacing: "-0.48px" }}
-                  >
-                    {page.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
           </div>
 
           {/* Newsletter */}
