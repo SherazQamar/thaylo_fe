@@ -47,6 +47,48 @@ export async function fetchChildProfile() {
   return sanitizeChildProfile(data.data);
 }
 
+export async function updateChildInterestAreas(interestAreas: string[]) {
+  const { data } = await api.patch<
+    ApiResponse<Child & { rejectedInterests?: string[] }>
+  >(
+    "/child/profile/interest-areas",
+    { interestAreas },
+    { authMode: "child" },
+  );
+  const { rejectedInterests: _, ...child } = data.data;
+  const sanitized = sanitizeChildProfile(child as Child & { pin?: string });
+  useChildAuthStore.getState().setChild(sanitized);
+  return {
+    child: sanitized,
+    rejectedInterests: data.data.rejectedInterests ?? [],
+  };
+}
+
+export async function updateChildNotesForParent(notesForParent: string) {
+  const { data } = await api.patch<ApiResponse<Child>>(
+    "/child/profile/notes-for-parent",
+    { notesForParent },
+    { authMode: "child" },
+  );
+  const sanitized = sanitizeChildProfile(data.data as Child & { pin?: string });
+  useChildAuthStore.getState().setChild(sanitized);
+  return sanitized;
+}
+
+export async function updateChildClassGoals(payload: {
+  classGoalDays: string[];
+  classGoalDailyMinutes?: number | null;
+}) {
+  const { data } = await api.patch<ApiResponse<Child>>(
+    "/child/profile/class-goals",
+    payload,
+    { authMode: "child" },
+  );
+  const sanitized = sanitizeChildProfile(data.data as Child & { pin?: string });
+  useChildAuthStore.getState().setChild(sanitized);
+  return sanitized;
+}
+
 export async function refreshChildSession() {
   const profile = await fetchChildProfile();
   useChildAuthStore.getState().setChild(profile);

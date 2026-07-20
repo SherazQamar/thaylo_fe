@@ -1,65 +1,86 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import UserDropdown from "@/components/wayfinder/UserDropdown";
 import AlertDetailDrawer from "@/components/wayfinder/AlertDetailDrawer";
-import AlertChatDrawer from "@/components/wayfinder/AlertChatDrawer";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
-import { WAYFINDER_ALERTS, type WayfinderAlert } from "@/lib/wayfinder-alerts";
+import ListPagination from "@/components/shared/ListPagination";
+import { formatStudentGrade } from "@/lib/wayfinder-student";
+import {
+  flagMeta,
+  groupAlertsByStudent,
+  mapLessonAlertToCard,
+  mapParentAlertToCard,
+  mapSelAlertToCard,
+  type WayfinderAlertCard,
+  type WayfinderFlagKind,
+  type WayfinderStudentAlertGroup,
+} from "@/lib/wayfinder-alerts";
+import {
+  dismissWayfinderAlert,
+  fetchWayfinderAlerts,
+  resolveWayfinderAlert,
+  wayfinderQueryKeys,
+  type WayfinderAlertsParams,
+} from "@/lib/wayfinder-api";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
-function PriorityBadge({ priority, accent }: { priority: string; accent: string }) {
+const STATUS_FILTERS = [
+  { value: "ACTIVE", label: "Active" },
+  { value: "", label: "All statuses" },
+  { value: "RESOLVED", label: "Resolved" },
+  { value: "DISMISSED", label: "Dismissed" },
+] as const;
+
+const SEVERITY_FILTERS = [
+  { value: "", label: "All flags" },
+  { value: "RED", label: "Red" },
+  { value: "YELLOW", label: "Yellow" },
+  { value: "ORANGE", label: "Orange" },
+  { value: "BLUE", label: "Blue (parent)" },
+] as const;
+
+function FlagPills({ flags }: { flags: WayfinderFlagKind[] }) {
   return (
-    <span
-      className="inline-flex items-center justify-center rounded-full border"
-      style={{
-        borderColor: accent,
-        color: accent,
-        backgroundColor: `${accent}15`,
-        fontWeight: 500,
-        fontSize: "12px",
-        padding: "5px 12px",
-      }}
-    >
-      {priority}
-    </span>
+    <div className="flex flex-wrap items-center gap-2">
+      {flags.map((flag) => {
+        const meta = flagMeta(flag);
+        return (
+          <span
+            key={flag}
+            className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1"
+            style={{
+              borderColor: meta.accent,
+              color: meta.accent,
+              backgroundColor: `${meta.accent}18`,
+              fontWeight: 600,
+              fontSize: "11px",
+            }}
+          >
+            <span
+              className="inline-block w-2 h-2 rounded-full"
+              style={{ backgroundColor: meta.accent }}
+            />
+            {meta.label}
+          </span>
+        );
+      })}
+    </div>
   );
 }
 
-function ViewButton({ onClick }: { onClick: (e: React.MouseEvent<HTMLButtonElement>) => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="hover:bg-[#00B8BB] transition-colors cursor-pointer"
-      style={{
-        backgroundColor: "#00CED1",
-        borderRadius: "12px",
-        padding: "6px 16px",
-        width: "111.25px",
-        height: "28px",
-        fontWeight: 500,
-        fontSize: "11px",
-        lineHeight: "16px",
-        color: "#111023",
-      }}
-    >
-      View
-    </button>
-  );
-}
-
-function AlertCard({
-  alert,
-  onView,
+function StudentAlertCard({
+  group,
   onClick,
 }: {
-  alert: WayfinderAlert;
-  onView: () => void;
+  group: WayfinderStudentAlertGroup;
   onClick: () => void;
 }) {
+  const accent = group.flags[0] ? flagMeta(group.flags[0]).accent : "#00CED1";
+
   return (
     <div
       role="button"
@@ -71,28 +92,45 @@ function AlertCard({
           onClick();
         }
       }}
-      className="relative overflow-hidden rounded-2xl flex items-center cursor-pointer hover:bg-white/[0.02] transition-colors"
-      style={{ backgroundColor: "#313044", minHeight: "88px" }}
+      className="relative overflow-hidden rounded-2xl flex items-stretch cursor-pointer hover:bg-white/[0.02] transition-colors"
+      style={{ backgroundColor: "#313044", minHeight: "96px" }}
     >
       <span
         className="absolute left-0 top-0 bottom-0"
-        style={{ width: "5px", backgroundColor: alert.accent }}
+        style={{ width: "5px", backgroundColor: accent }}
       />
 
-      <div className="flex-1 px-7 py-5">
-        <p className="text-white text-base font-semibold leading-tight">{alert.title}</p>
-        <p className="text-white/60 text-sm mt-1">{alert.text}</p>
-        <p className="text-white/40 text-xs mt-2">{alert.date}</p>
+      <div className="flex-1 px-7 py-5 min-w-0">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-white text-base font-semibold leading-tight truncate">
+              {group.childName}
+            </p>
+            <p className="text-white/45 text-xs mt-1">
+              {formatStudentGrade(group.grade)}
+              {group.parentName ? ` · Parent: ${group.parentName}` : ""}
+              {" · "}
+              {group.cards.length} alert{group.cards.length === 1 ? "" : "s"}
+            </p>
+          </div>
+          <FlagPills flags={group.flags} />
+        </div>
+
+        <ul className="mt-3 space-y-1">
+          {group.summaryLines.map((line) => (
+            <li key={line} className="text-white/60 text-sm leading-snug truncate">
+              {line}
+            </li>
+          ))}
+        </ul>
+
+        <p className="text-white/35 text-xs mt-2">
+          Latest {new Date(group.latestAt).toLocaleDateString()}
+        </p>
       </div>
 
-      <div className="flex items-center gap-3 pr-6">
-        {alert.priority && <PriorityBadge priority={alert.priority} accent={alert.accent} />}
-        <ViewButton
-          onClick={(e) => {
-            e.stopPropagation();
-            onView();
-          }}
-        />
+      <div className="flex items-center pr-6">
+        <span className="text-[#00CED1] text-xs font-semibold">View</span>
       </div>
     </div>
   );
@@ -100,23 +138,116 @@ function AlertCard({
 
 export default function AlertsCenterPage() {
   const router = useRouter();
-  const [selected, setSelected] = useState<WayfinderAlert | null>(null);
-  const [chatOpen, setChatOpen] = useState(false);
+  const queryClient = useQueryClient();
+  const [selectedGroup, setSelectedGroup] = useState<WayfinderStudentAlertGroup | null>(null);
+  const [selectedCard, setSelectedCard] = useState<WayfinderAlertCard | null>(null);
+  const [cards, setCards] = useState<WayfinderAlertCard[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState("ACTIVE");
+  const [severityFilter, setSeverityFilter] = useState("");
+  const [search, setSearch] = useState("");
+  const [meta, setMeta] = useState({ total: 0, lastPage: 1, currentPage: 1, activeCount: 0 });
 
-  function handleCardClick(alert: WayfinderAlert) {
-    if (alert.type === "message") {
-      setChatOpen(true);
-    } else {
-      setSelected(alert);
+  const queryParams = useMemo<WayfinderAlertsParams>(() => {
+    const severity =
+      severityFilter && severityFilter !== "BLUE"
+        ? (severityFilter as WayfinderAlertsParams["severity"])
+        : undefined;
+    return {
+      page,
+      limit: 50,
+      ...(statusFilter ? { status: statusFilter as WayfinderAlertsParams["status"] } : {}),
+      ...(severity ? { severity } : {}),
+      ...(search.trim() ? { search: search.trim() } : {}),
+    };
+  }, [page, statusFilter, severityFilter, search]);
+
+  const loadAlerts = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const result = await fetchWayfinderAlerts(queryParams);
+      const lessonCards = result.items.map(mapLessonAlertToCard);
+      const includeSide =
+        (!statusFilter || statusFilter === "ACTIVE") &&
+        (!severityFilter || severityFilter === "BLUE") &&
+        page === 1;
+
+      const selCards =
+        includeSide && severityFilter !== "BLUE"
+          ? result.selAlerts.map(mapSelAlertToCard)
+          : [];
+      const parentCards =
+        includeSide && (!severityFilter || severityFilter === "BLUE")
+          ? result.parentAlerts.map(mapParentAlertToCard)
+          : [];
+
+      // Blue-only filter: show parent alerts alone
+      if (severityFilter === "BLUE") {
+        setCards(parentCards);
+      } else {
+        setCards([...selCards, ...parentCards, ...lessonCards]);
+      }
+
+      setMeta({
+        total: result.meta.total,
+        lastPage: result.meta.lastPage,
+        currentPage: result.meta.currentPage,
+        activeCount: result.meta.activeCount ?? 0,
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load alerts");
+      setCards([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [queryParams, statusFilter, severityFilter, page]);
+
+  useEffect(() => {
+    void loadAlerts();
+  }, [loadAlerts]);
+
+  const studentGroups = useMemo(() => groupAlertsByStudent(cards), [cards]);
+
+  function handleStartChat(childId: number) {
+    setSelectedGroup(null);
+    setSelectedCard(null);
+    router.push(`/dashboard/message?studentId=${childId}&contact=child`);
+  }
+
+  function handleStartParentChat(childId: number) {
+    setSelectedGroup(null);
+    setSelectedCard(null);
+    router.push(`/dashboard/message?studentId=${childId}&contact=parent`);
+  }
+
+  async function handleResolve(alertId: number) {
+    setIsUpdating(true);
+    try {
+      await resolveWayfinderAlert(alertId);
+      setSelectedGroup(null);
+      setSelectedCard(null);
+      await loadAlerts();
+      void queryClient.invalidateQueries({ queryKey: wayfinderQueryKeys.alertCount() });
+    } finally {
+      setIsUpdating(false);
     }
   }
 
-  function handleView(alert: WayfinderAlert) {
-    if (alert.type === "message") {
-      setChatOpen(true);
-      return;
+  async function handleDismiss(alertId: number) {
+    setIsUpdating(true);
+    try {
+      await dismissWayfinderAlert(alertId);
+      setSelectedGroup(null);
+      setSelectedCard(null);
+      await loadAlerts();
+      void queryClient.invalidateQueries({ queryKey: wayfinderQueryKeys.alertCount() });
+    } finally {
+      setIsUpdating(false);
     }
-    router.push("/dashboard/alerts/insights");
   }
 
   return (
@@ -143,30 +274,107 @@ export default function AlertsCenterPage() {
 
       <div className="mt-6 space-y-2">
         <h2 className="text-white text-2xl md:text-3xl font-bold tracking-tight">Alerts Center</h2>
-        <p className="text-white/50 text-sm">All active alerts requiring attention.</p>
+        <p className="text-white/50 text-sm">
+          Organized by student. Red flags first. Flags: red / yellow / orange / blue (parent request).
+          {meta.activeCount > 0 && (
+            <span className="text-[#00CED1] ml-2">{meta.activeCount} active lesson alerts</span>
+          )}
+        </p>
       </div>
 
+      <div className="mt-6 flex flex-col lg:flex-row gap-3 lg:items-center">
+        <input
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
+          placeholder="Search student…"
+          className="flex-1 px-4 py-3 rounded-2xl bg-white/[0.05] text-white text-sm outline-none border border-transparent focus:border-[#00CED1]/40 placeholder:text-white/30"
+        />
+        <select
+          value={statusFilter}
+          onChange={(e) => {
+            setStatusFilter(e.target.value);
+            setPage(1);
+          }}
+          className="px-4 py-3 rounded-2xl bg-white/[0.05] text-white text-sm outline-none border border-transparent focus:border-[#00CED1]/40"
+        >
+          {STATUS_FILTERS.map((f) => (
+            <option key={f.value || "all"} value={f.value} className="bg-[#313044]">
+              {f.label}
+            </option>
+          ))}
+        </select>
+        <select
+          value={severityFilter}
+          onChange={(e) => {
+            setSeverityFilter(e.target.value);
+            setPage(1);
+          }}
+          className="px-4 py-3 rounded-2xl bg-white/[0.05] text-white text-sm outline-none border border-transparent focus:border-[#00CED1]/40"
+        >
+          {SEVERITY_FILTERS.map((f) => (
+            <option key={f.value || "all"} value={f.value} className="bg-[#313044]">
+              {f.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {error && <p className="text-[#FF7B7B] text-sm mt-4">{error}</p>}
+
+      {isLoading && <p className="text-white/40 text-sm mt-6">Loading alerts…</p>}
+
+      {!isLoading && studentGroups.length === 0 && (
+        <p className="text-white/40 text-sm mt-6">No students match these filters.</p>
+      )}
+
       <div className="flex flex-col gap-4 mt-6">
-        {WAYFINDER_ALERTS.map((alert) => (
-          <AlertCard
-            key={alert.title}
-            alert={alert}
-            onClick={() => handleCardClick(alert)}
-            onView={() => handleView(alert)}
+        {studentGroups.map((group) => (
+          <StudentAlertCard
+            key={group.childId}
+            group={group}
+            onClick={() => {
+              setSelectedGroup(group);
+              setSelectedCard(group.cards[0] ?? null);
+            }}
           />
         ))}
       </div>
 
+      {meta.lastPage > 1 && severityFilter !== "BLUE" && (
+        <div className="mt-6">
+          <ListPagination
+            meta={{
+              total: meta.total,
+              lastPage: meta.lastPage,
+              currentPage: meta.currentPage,
+              perPage: 50,
+              prev: meta.currentPage > 1 ? meta.currentPage - 1 : null,
+              next: meta.currentPage < meta.lastPage ? meta.currentPage + 1 : null,
+            }}
+            onPageChange={setPage}
+            itemLabel="alerts"
+          />
+        </div>
+      )}
+
       <AlertDetailDrawer
-        open={!!selected}
-        alert={selected}
-        onClose={() => setSelected(null)}
-        onMessageParent={() => {
-          setSelected(null);
-          setChatOpen(true);
+        open={!!selectedGroup}
+        group={selectedGroup}
+        card={selectedCard}
+        onSelectCard={setSelectedCard}
+        onClose={() => {
+          setSelectedGroup(null);
+          setSelectedCard(null);
         }}
+        onStartChat={handleStartChat}
+        onStartParentChat={handleStartParentChat}
+        onResolve={handleResolve}
+        onDismiss={handleDismiss}
+        isUpdating={isUpdating}
       />
-      <AlertChatDrawer open={chatOpen} onClose={() => setChatOpen(false)} />
     </div>
   );
 }

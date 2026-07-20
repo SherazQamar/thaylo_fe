@@ -2,7 +2,10 @@
 
 import { FormEvent, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { US_TIMEZONES } from "@/constants/us-timezones";
+import {
+  formatHiringRegionLabel,
+  formatHiringTimezoneLabel,
+} from "@/constants/wayfinder-hiring-regions";
 import {
   getApiErrorMessage,
   updateParentProfile,
@@ -26,12 +29,6 @@ function formatDisplayValue(value: string | null | undefined): string {
   return trimmed ? trimmed : "—";
 }
 
-function formatTimezoneLabel(timeZone: string | null | undefined): string {
-  if (!timeZone?.trim()) return "—";
-  const match = US_TIMEZONES.find((tz) => tz.value === timeZone);
-  return match ? match.label : timeZone;
-}
-
 function getInitials(name: string | null | undefined): string {
   if (!name?.trim()) return "?";
   return name.trim().charAt(0).toUpperCase();
@@ -41,7 +38,6 @@ interface EditFormState {
   name: string;
   phone: string;
   country: string;
-  timeZone: string;
 }
 
 export default function ProfilePage() {
@@ -51,9 +47,14 @@ export default function ProfilePage() {
     name: "",
     phone: "",
     country: "",
-    timeZone: "",
   });
   const [saveError, setSaveError] = useState<string | null>(null);
+
+  const hiringRegionLabel = formatHiringRegionLabel(user?.region, user?.timeZone);
+  const hiringTimezoneLabel = formatHiringTimezoneLabel(
+    user?.region,
+    user?.timeZone,
+  );
 
   const saveMutation = useMutation({
     mutationFn: () =>
@@ -61,7 +62,8 @@ export default function ProfilePage() {
         name: form.name.trim(),
         phone: normalizePhoneDigits(form.phone),
         country: form.country.trim(),
-        timeZone: form.timeZone.trim(),
+        // Locked to hiring region on the server; sent for DTO validation only.
+        timeZone: user?.timeZone?.trim() || "America/Los_Angeles",
       }),
     onSuccess: () => {
       setSaveError(null);
@@ -77,7 +79,6 @@ export default function ProfilePage() {
       name: user?.name ?? "",
       phone: formatPhoneInput(user?.phone ?? ""),
       country: user?.country ?? "USA",
-      timeZone: user?.timeZone ?? "",
     });
     setSaveError(null);
     setShowEdit(true);
@@ -105,17 +106,14 @@ export default function ProfilePage() {
       setSaveError("Country is required");
       return;
     }
-    if (!form.timeZone.trim()) {
-      setSaveError("Timezone is required");
-      return;
-    }
 
     saveMutation.mutate();
   }
 
   const profileRows = [
     { label: "Country", value: formatDisplayValue(user?.country) },
-    { label: "Timezone", value: formatTimezoneLabel(user?.timeZone) },
+    { label: "Hiring region", value: hiringRegionLabel },
+    { label: "Timezone", value: hiringTimezoneLabel },
     { label: "Role", value: "Wayfinder" },
   ];
 
@@ -158,7 +156,7 @@ export default function ProfilePage() {
           marginBottom: "24px",
         }}
       >
-        Update your account details and preferences.
+        Update your account details. Hiring region and timezone are set during onboarding.
       </p>
 
       <div className="rounded-[12px] p-4 md:p-6" style={{ backgroundColor: "#313044" }}>
@@ -521,30 +519,50 @@ export default function ProfilePage() {
                     marginBottom: "4px",
                   }}
                 >
-                  Timezone
+                  Hiring region
                 </label>
-                <select
-                  value={form.timeZone}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, timeZone: e.target.value }))
-                  }
-                  required
-                  className="w-full rounded-[12px] px-4 py-2.5 outline-none text-white"
+                <p
+                  className="w-full rounded-[12px] px-4 py-2.5 text-white/80"
                   style={{
-                    backgroundColor: "#525162",
+                    backgroundColor: "#3f3e52",
                     ...inter,
                     fontSize: "14px",
                   }}
                 >
-                  <option value="" disabled>
-                    Select timezone
-                  </option>
-                  {US_TIMEZONES.map((tz) => (
-                    <option key={tz.value} value={tz.value}>
-                      {tz.label}
-                    </option>
-                  ))}
-                </select>
+                  {hiringRegionLabel}
+                </p>
+                <p
+                  className="mt-1.5 text-white/40"
+                  style={{ ...inter, fontSize: "12px", lineHeight: "18px" }}
+                >
+                  Set during hiring. Timezone follows this region’s operational hours.
+                </p>
+              </div>
+
+              <div>
+                <label
+                  style={{
+                    ...inter,
+                    fontWeight: 600,
+                    fontSize: "13px",
+                    lineHeight: "20px",
+                    color: "#FFFFFF",
+                    display: "block",
+                    marginBottom: "4px",
+                  }}
+                >
+                  Timezone
+                </label>
+                <p
+                  className="w-full rounded-[12px] px-4 py-2.5 text-white/80"
+                  style={{
+                    backgroundColor: "#3f3e52",
+                    ...inter,
+                    fontSize: "14px",
+                  }}
+                >
+                  {hiringTimezoneLabel}
+                </p>
               </div>
 
               {saveError && (

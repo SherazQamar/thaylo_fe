@@ -1,18 +1,257 @@
 "use client";
 
-import React, { useState } from "react";
-import Image from "next/image";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import ChildUserDropdown from "@/components/child/ChildUserDropdown";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
+import ChatSidebar from "@/components/shared/chat/ChatSidebar";
+import ChatMessageList from "@/components/shared/chat/ChatMessageList";
+import ChatComposer from "@/components/shared/chat/ChatComposer";
+import {
+  clearRoomUnreadInCache,
+  filterContacts,
+  roomMeta,
+  toggleChatFilter,
+  type ChatContactCategory,
+  type ChatSidebarContact,
+  type ChatSidebarPerson,
+} from "@/components/shared/chat/chat-sidebar-types";
+import {
+  findOrCreateDirectRoom,
+  findOrCreateGroupRoom,
+  isFindOrCreateGroupRoomResult,
+  listChatRooms,
+  markRoomAsRead,
+  type ChatParticipant,
+  type ChatRoomListItem,
+} from "@/lib/chat-api";
+import { useChildAuthStore } from "@/stores/child-auth.store";
+import { useChatConversation } from "@/hooks/use-chat-conversation";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
+type ChildContact = ChatSidebarContact & {
+  participant?: ChatParticipant;
+  action: "group" | "parent" | "wayfinder";
+};
+
 export default function ChildMessagePage() {
+  const queryClient = useQueryClient();
+  const child = useChildAuthStore((s) => s.child);
   const [message, setMessage] = useState("");
+  const [activeRoomId, setActiveRoomId] = useState<number | null>(null);
+  const [activeContactId, setActiveContactId] = useState<string | null>(null);
+  const [selectedFilters, setSelectedFilters] = useState<ChatContactCategory[]>([
+    "group",
+    "parent",
+    "child",
+  ]);
+  const [groupName, setGroupName] = useState("Family Group");
+  const [groupParticipants, setGroupParticipants] = useState<ChatParticipant[]>([]);
+
+  const roomsQuery = useQuery({
+    queryKey: ["chat-rooms", "child"],
+    queryFn: () => listChatRooms("child"),
+    refetchInterval: 8000,
+  });
+
+  const openRoomMutation = useMutation({
+    mutationFn: async (contact: ChildContact) => {
+      if (contact.action === "group") {
+        return findOrCreateGroupRoom("child");
+      }
+      if (!contact.participant) {
+        throw new Error("Contact is not available yet.");
+      }
+      return findOrCreateDirectRoom("child", {
+        targetType: contact.participant.type,
+        targetId: contact.participant.id,
+      });
+    },
+    onSuccess: async (room, contact) => {
+      if (contact.action === "group" && isFindOrCreateGroupRoomResult(room)) {
+        setGroupName(room.groupName);
+        setGroupParticipants(room.participants);
+      }
+      setActiveRoomId(room.roomId);
+      queryClient.setQueryData<ChatRoomListItem[]>(
+        ["chat-rooms", "child"],
+        (prev) => clearRoomUnreadInCache(prev, room.roomId),
+      );
+      await markRoomAsRead("child", room.roomId);
+      await queryClient.invalidateQueries({ queryKey: ["chat-rooms", "child"] });
+    },
+  });
+
+  const {
+    messages: activeMessages,
+    isLoading: messagesLoading,
+    send,
+    retry,
+    othersTyping,
+    notifyTyping,
+    scrollRef,
+    onScroll,
+  } = useChatConversation({
+    roleMode: "child",
+    scope: "child",
+    roomId: activeRoomId,
+    self: { type: "CHILD", id: child?.id, role: "CHILD" },
+  });
+
+  const groupRoomId =
+    (roomsQuery.data ?? []).find((room) => room.type === "GROUP")?.roomId ?? null;
+
+  useEffect(() => {
+    const groupRoom = (roomsQuery.data ?? []).find((room) => room.type === "GROUP");
+    if (!groupRoom) return;
+    if (groupRoom.groupName) setGroupName(groupRoom.groupName);
+    if (groupRoom.groupParticipants?.length) {
+      setGroupParticipants(groupRoom.groupParticipants);
+    }
+  }, [groupRoomId, roomsQuery.dataUpdatedAt, roomsQuery.data]);
+
+  const resolvedParticipants =
+    groupParticipants.length > 0
+      ? groupParticipants
+      : ((roomsQuery.data ?? []).find((room) => room.type === "GROUP")?.groupParticipants ?? []);
+
+  const parentParticipant = resolvedParticipants.find((p) => p.role === "PARENT");
+  const wayfinderParticipant = resolvedParticipants.find((p) => p.role === "WAYFINDER");
+
+  const allContacts = useMemo<ChildContact[]>(() => {
+    const rooms = roomsQuery.data ?? [];
+    const groupMeta = roomMeta(rooms, (room) => room.type === "GROUP");
+
+    const contacts: ChildContact[] = [
+      {
+        id: "group",
+        category: "group",
+        label: groupName,
+        subtitle: "Group chat",
+        action: "group",
+        roomId: groupMeta.roomId,
+        unreadCount: groupMeta.unreadCount,
+        lastMessage: groupMeta.lastMessage,
+        lastMessageAt: groupMeta.lastMessageAt,
+      },
+    ];
+
+    if (parentParticipant) {
+      const parentMeta = roomMeta(
+        rooms,
+        (room) =>
+          room.type === "DIRECT" &&
+          room.otherParticipant?.type === parentParticipant.type &&
+          room.otherParticipant.id === parentParticipant.id,
+      );
+      contacts.push({
+        id: `parent-${parentParticipant.id}`,
+        category: "parent",
+        label: parentParticipant.name ?? "Parent",
+        subtitle: "Direct with parent",
+        participant: parentParticipant,
+        action: "parent",
+        roomId: parentMeta.roomId,
+        unreadCount: parentMeta.unreadCount,
+        lastMessage: parentMeta.lastMessage,
+        lastMessageAt: parentMeta.lastMessageAt,
+      });
+    }
+
+    if (wayfinderParticipant) {
+      const wayfinderMeta = roomMeta(
+        rooms,
+        (room) =>
+          room.type === "DIRECT" &&
+          room.otherParticipant?.type === wayfinderParticipant.type &&
+          room.otherParticipant.id === wayfinderParticipant.id,
+      );
+      contacts.push({
+        id: `wayfinder-${wayfinderParticipant.id}`,
+        category: "child",
+        label: wayfinderParticipant.name ?? "Wayfinder",
+        subtitle: "Direct with wayfinder",
+        participant: wayfinderParticipant,
+        action: "wayfinder",
+        roomId: wayfinderMeta.roomId,
+        unreadCount: wayfinderMeta.unreadCount,
+        lastMessage: wayfinderMeta.lastMessage,
+        lastMessageAt: wayfinderMeta.lastMessageAt,
+      });
+    }
+
+    return contacts;
+  }, [groupName, parentParticipant, wayfinderParticipant, roomsQuery.data]);
+
+  const visibleContacts = useMemo(
+    () => filterContacts(allContacts, selectedFilters),
+    [allContacts, selectedFilters],
+  );
+
+  const people = useMemo<ChatSidebarPerson[]>(
+    () =>
+      visibleContacts.map((contact) => ({
+        id: contact.id,
+        label: contact.label,
+        subtitle: contact.subtitle,
+        unreadCount: contact.unreadCount,
+        avatarUrl: contact.avatarUrl,
+      })),
+    [visibleContacts],
+  );
+
+  const hasAutoOpenedRef = useRef(false);
+
+  useEffect(() => {
+    if (hasAutoOpenedRef.current || activeRoomId || openRoomMutation.isPending) return;
+    const groupContact = allContacts.find((contact) => contact.action === "group");
+    if (!groupContact) return;
+    hasAutoOpenedRef.current = true;
+    setActiveContactId(groupContact.id);
+    openRoomMutation.mutate(groupContact);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeRoomId, allContacts]);
+
+  useEffect(() => {
+    if (!activeContactId || visibleContacts.some((contact) => contact.id === activeContactId)) {
+      return;
+    }
+    setActiveContactId(null);
+    setActiveRoomId(null);
+  }, [activeContactId, visibleContacts]);
+
+  const activeRoom = (roomsQuery.data ?? []).find((room) => room.roomId === activeRoomId);
+  const activeContact = allContacts.find((contact) => contact.id === activeContactId);
+
+  function handleSend(file?: File | null) {
+    const content = message.trim();
+    if (!content && !file) return;
+    if (!activeRoomId) return;
+    setMessage("");
+    void send(content, file);
+  }
+
+  const title = activeContact?.label ?? (activeRoom?.type === "GROUP" ? groupName : "Chat");
+
+  function handleFilterToggle(filter: ChatContactCategory) {
+    setSelectedFilters((current) => toggleChatFilter(current, filter));
+  }
+
+  function handleSelectContact(contact: ChatSidebarContact) {
+    const childContact = contact as ChildContact;
+    setActiveContactId(childContact.id);
+    openRoomMutation.mutate(childContact);
+  }
+
+  function handleSelectPerson(person: ChatSidebarPerson) {
+    const contact = allContacts.find((item) => item.id === person.id);
+    if (!contact) return;
+    handleSelectContact(contact);
+  }
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
       <div className="flex flex-col gap-1 px-4 md:px-6 pt-4 pb-2 flex-shrink-0">
         <div className="flex items-center justify-between">
           <h1 className="uppercase" style={{ ...inter, fontWeight: 700, fontSize: "22px", letterSpacing: "0.8px", color: "#DCE6EC" }}>
@@ -31,124 +270,56 @@ export default function ChildMessagePage() {
         />
       </div>
 
-      {/* Chat Area */}
-      <div className="flex-1 flex flex-col min-h-0 mx-4 md:mx-6 mb-4 rounded-[16px] overflow-hidden" style={{ backgroundColor: "#1a1930" }}>
-        {/* Chat Header */}
-        <div className="flex items-center justify-between px-5 py-3 border-b border-white/5 flex-shrink-0">
-          <div>
-            <h2 style={{ ...inter, fontWeight: 700, fontSize: "16px", color: "#FFFFFF" }}>Group Chat</h2>
-            <p style={{ ...inter, fontWeight: 400, fontSize: "12px", color: "rgba(255,255,255,0.5)" }}>Wayfinder, Mom, Alex</p>
-          </div>
-          <div className="flex items-center gap-2 rounded-[10px] px-3 py-2" style={{ backgroundColor: "rgba(255,255,255,0.05)" }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" />
-            </svg>
-            <span style={{ ...inter, fontWeight: 400, fontSize: "11px", color: "rgba(255,255,255,0.4)", lineHeight: "14px" }}>
-              This chat is for lesson updates and<br />learning-related discussion only.
-            </span>
-          </div>
-        </div>
+      <div
+        className="flex-1 flex flex-col md:flex-row min-h-0 mx-4 md:mx-6 mb-4 rounded-[16px] overflow-hidden"
+        style={{ backgroundColor: "#1a1930" }}
+      >
+        <ChatSidebar
+          portal="child"
+          className="md:w-[300px] md:border-r border-b md:border-b-0"
+          people={people}
+          peopleLabel="Contacts"
+          activePersonId={activeContactId}
+          onSelectPerson={handleSelectPerson}
+          contacts={[]}
+          hideFilters
+          activeContactId={activeContactId}
+          selectedFilters={selectedFilters}
+          onFilterToggle={handleFilterToggle}
+          onSelectContact={handleSelectContact}
+          footer={`${people.length} contact${people.length === 1 ? "" : "s"}`}
+        />
 
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto scrollbar-hide px-5 py-4 flex flex-col gap-5">
-          {/* Date */}
-          <p className="text-center" style={{ ...inter, fontWeight: 500, fontSize: "12px", color: "rgba(255,255,255,0.3)" }}>
-            Today 10:27am
-          </p>
-
-          {/* Mom message */}
-          <div className="flex items-start gap-2.5 max-w-[80%]">
-            <div className="w-9 h-9 rounded-full bg-[#525162] overflow-hidden flex-shrink-0">
-              <Image src="/assets/wayfinder Em.png" alt="Mom" width={36} height={36} className="w-full h-full object-cover" />
-            </div>
-            <div>
-              <span className="inline-block rounded-full px-2.5 py-0.5 mb-1" style={{ backgroundColor: "#313044", ...inter, fontWeight: 600, fontSize: "11px", color: "rgba(255,255,255,0.6)" }}>
-                Mom
-              </span>
-              <div className="rounded-[16px] rounded-tl-[4px] px-4 py-2.5" style={{ backgroundColor: "#00CED1" }}>
-                <p style={{ ...inter, fontWeight: 400, fontSize: "14px", color: "#FFFFFF" }}>
-                  Alex, how&apos;s your 4th Grade English going? What did you learn today?
-                </p>
-              </div>
-            </div>
+        <div className="flex-1 flex flex-col min-h-0">
+          <div className="px-5 py-3 border-b border-white/5 flex-shrink-0">
+            <h2 style={{ ...inter, fontWeight: 700, fontSize: "16px", color: "#FFFFFF" }}>{title}</h2>
+            <p style={{ ...inter, fontWeight: 400, fontSize: "12px", color: "rgba(255,255,255,0.5)" }}>
+              {activeContact?.category === "group" ? "Group chat" : "Direct chat"}
+            </p>
           </div>
 
-          {/* User reply */}
-          <div className="flex justify-end">
-            <div className="rounded-[16px] rounded-tr-[4px] px-4 py-2.5 max-w-[70%]" style={{ backgroundColor: "#313044" }}>
-              <p style={{ ...inter, fontWeight: 400, fontSize: "14px", color: "rgba(255,255,255,0.85)" }}>
-                Hi Mom! I learned about main ideas and new vocabulary words.
-              </p>
-            </div>
-          </div>
-
-          {/* Wayfinder message */}
-          <div className="flex items-start gap-2.5 max-w-[80%]">
-            <div className="w-9 h-9 rounded-full bg-[#00CED1]/20 flex items-center justify-center flex-shrink-0">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00CED1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="3" />
-                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
-              </svg>
-            </div>
-            <div>
-              <span className="inline-block rounded-full px-2.5 py-0.5 mb-1" style={{ backgroundColor: "#313044", ...inter, fontWeight: 600, fontSize: "11px", color: "rgba(255,255,255,0.6)" }}>
-                Wayfinder
-              </span>
-              <div className="rounded-[16px] rounded-tl-[4px] px-4 py-2.5" style={{ backgroundColor: "#00CED1" }}>
-                <p style={{ ...inter, fontWeight: 400, fontSize: "14px", color: "#FFFFFF" }}>
-                  That sounds great! Alex did very well today. Do you remember the main idea of the story?
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* User reply */}
-          <div className="flex justify-end">
-            <div className="rounded-[16px] rounded-tr-[4px] px-4 py-2.5 max-w-[70%]" style={{ backgroundColor: "#313044" }}>
-              <p style={{ ...inter, fontWeight: 400, fontSize: "14px", color: "rgba(255,255,255,0.85)" }}>
-                The main idea was about a magical garden. My favorite new word is &quot;gleaming&quot;!
-              </p>
-            </div>
-          </div>
-
-          {/* Help Bot */}
-          <div className="flex justify-center mt-4">
-            <div className="flex items-center gap-2.5 rounded-full px-4 py-2 relative" style={{ backgroundColor: "#313044" }}>
-              <div className="w-10 h-10 rounded-full bg-[#00CED1]/20 flex items-center justify-center flex-shrink-0">
-                <span className="text-xl">🤖</span>
-              </div>
-              <span style={{ ...inter, fontWeight: 500, fontSize: "14px", color: "rgba(255,255,255,0.7)" }}>
-                Need help? Say &quot;<span className="text-[#00CED1] font-bold">WayFinder</span>&quot;
-              </span>
-              <button className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#525162] flex items-center justify-center cursor-pointer">
-                <svg width="8" height="8" viewBox="0 0 10 10" fill="none">
-                  <path d="M1 1l8 8M9 1l-8 8" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Message Input */}
-        <div className="flex items-center gap-3 px-4 py-3 border-t border-white/5 flex-shrink-0">
-          <button className="w-9 h-9 rounded-full flex items-center justify-center cursor-pointer flex-shrink-0 text-[#00CED1]">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="16" /><line x1="8" y1="12" x2="16" y2="12" />
-            </svg>
-          </button>
-          <input
-            type="text"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder="Message"
-            className="flex-1 px-4 py-2.5 rounded-[12px] bg-[#313044] text-white text-sm outline-none placeholder:text-white/30"
-            style={inter}
+          <ChatMessageList
+            messages={activeMessages}
+            isLoading={messagesLoading}
+            self={{ type: "CHILD", id: child?.id }}
+            selfDisplayName={child?.userName ?? "You"}
+            activeRoom={activeRoom}
+            groupParticipants={resolvedParticipants}
+            othersTyping={othersTyping}
+            scrollRef={scrollRef}
+            onScroll={onScroll}
+            onRetry={retry}
+            emptyLabel="No messages yet. Start by sending hello."
           />
-          <button className="flex-shrink-0 text-[#00CED1] cursor-pointer hover:opacity-80">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" />
-            </svg>
-          </button>
+
+          <ChatComposer
+            value={message}
+            onChange={setMessage}
+            onSend={handleSend}
+            onTyping={notifyTyping}
+            disabled={!activeRoomId}
+            placeholder={activeRoomId ? "Message" : "Select a chat"}
+          />
         </div>
       </div>
     </div>

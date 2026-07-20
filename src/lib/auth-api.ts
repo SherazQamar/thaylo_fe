@@ -169,3 +169,7 @@ export function getApiErrorMessage(error: unknown): string {
   }
   return "Something went wrong. Please try again.";
 }
+
+export function isEmailAlreadyRegisteredMessage(message: string): boolean {
+  return message.toLowerCase().includes("email already exists");
+}

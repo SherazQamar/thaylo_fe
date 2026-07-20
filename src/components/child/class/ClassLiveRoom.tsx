@@ -11,8 +11,10 @@ import ClassLessonHeader from "@/components/child/class/ClassLessonHeader";
 import ClassMediaControls from "@/components/child/class/ClassMediaControls";
 import ClassMediaSetupGate from "@/components/child/class/ClassMediaSetupGate";
 import ClassScoreSummary from "@/components/child/class/ClassScoreSummary";
+import ClassInstructorCaption from "@/components/child/class/ClassInstructorCaption";
 import ClassTextChat from "@/components/child/class/ClassTextChat";
 import { useBlackboardNarration } from "@/hooks/use-blackboard-narration";
+import { useClassSessionClock } from "@/hooks/use-class-session-clock";
 import { useAiSettings } from "@/hooks/use-ai-settings";
 import { useClassChat } from "@/hooks/use-class-chat";
 import { useClassMedia } from "@/hooks/use-class-media";
@@ -30,7 +32,8 @@ import {
 } from "@/lib/curriculum-api";
 import { buildClassGreeting, buildRetakeClassGreeting } from "@/lib/calyx-class-chat";
 import { delay } from "@/lib/tts-word-sync";
-import { navigateToChildClass } from "@/lib/start-child-class";
+import { navigateToChildClass, navigateAfterChildClass } from "@/lib/start-child-class";
+import { computeTeachUntilMinute } from "@/lib/class-duration";
 import { FACE_MONITOR_DEFAULTS, type FaceMonitorStatus } from "@/lib/face-monitor/types";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
@@ -45,11 +48,12 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
   const router = useRouter();
   const [classJoined, setClassJoined] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
-  const [activeCaption, setActiveCaption] = useState<string | null>(null);
+  const [caption, setCaption] = useState<{ text: string; visibleWords: number } | null>(null);
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
   const [answeredCorrectly, setAnsweredCorrectly] = useState<boolean | null>(null);
   const [answerLocked, setAnswerLocked] = useState(false);
   const [classScore, setClassScore] = useState<ClassSessionScore | null>(null);
+  const [retakeBlocked, setRetakeBlocked] = useState(false);
   const [chatInitialized, setChatInitialized] = useState(false);
   const [greetingDone, setGreetingDone] = useState(false);
   const [isGreeting, setIsGreeting] = useState(false);
@@ -82,6 +86,10 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
         lessonScript: session?.lessonScript,
       }),
     [session?.lessonTitle, session?.lessonScript],
+  );
+  const firstAssessmentStepIndex = useMemo(
+    () => blackboardSteps.findIndex((step) => step.phase === "quick_check"),
+    [blackboardSteps],
   );
   const currentStep = blackboardSteps[stepIndex] ?? blackboardSteps[0];
   const currentPhase: ClassPhase = currentStep
@@ -117,16 +125,29 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
   const showStayInViewNudge = classJoined && cameraEnabled && faceMissingLong;
 
   const { settings: aiSettings } = useAiSettings("child");
+  const instructorName = aiSettings.instructor?.name?.trim() || "AI Instructor";
+  const totalClassMinutes = aiSettings.pacing.classDurationMinutes ?? 15;
+  const teachUntilMinute = computeTeachUntilMinute(totalClassMinutes);
+
+  const sessionClock = useClassSessionClock({
+    active: classJoined && greetingDone && !classScore,
+    totalMinutes: totalClassMinutes,
+    teachUntilMinute,
+  });
 
   const { speak, speakProgress, stop: stopSpeaking } = useSpeechSynthesis(aiSettings.voice, "child");
 
   const handleCaption = useCallback((text: string) => {
-    setActiveCaption(text);
+    setCaption({ text, visibleWords: 0 });
+  }, []);
+
+  const handleCaptionWords = useCallback((visibleWords: number) => {
+    setCaption((prev) => (prev ? { ...prev, visibleWords } : prev));
   }, []);
 
   const handleCalyxSpeak = useCallback(
     (text: string) => {
-      setActiveCaption(text);
+      setCaption({ text, visibleWords: 0 });
       void speak(text);
     },
     [speak],
@@ -144,6 +165,7 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
     try {
       const score = await completeClassSession(session.sessionId);
       setClassScore(score);
+      setRetakeBlocked(!score.passed && (session.attemptNumber ?? 1) >= 3);
     } catch {
       setClassScore({
         sessionId: session.sessionId,
@@ -157,6 +179,29 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
       });
     }
   }, [session]);
+
+  const finishClassRef = useRef(finishClass);
+  useEffect(() => {
+    finishClassRef.current = finishClass;
+  }, [finishClass]);
+
+  useEffect(() => {
+    if (!sessionClock.isTeachWindowOver || classScore) return;
+    if (firstAssessmentStepIndex < 0) return;
+    if (stepIndexRef.current >= firstAssessmentStepIndex) return;
+
+    stopSpeaking();
+    setSelectedOptionId(null);
+    setAnsweredCorrectly(null);
+    setAnswerLocked(false);
+    setStepIndex(firstAssessmentStepIndex);
+  }, [sessionClock.isTeachWindowOver, firstAssessmentStepIndex, classScore, stopSpeaking]);
+
+  useEffect(() => {
+    if (!sessionClock.isClassTimeOver || classScore) return;
+    stopSpeaking();
+    void finishClassRef.current();
+  }, [sessionClock.isClassTimeOver, classScore, stopSpeaking]);
 
   const handleNarrationComplete = useCallback(() => {
     const completedStepIndex = stepIndexRef.current;
@@ -188,13 +233,17 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
     voiceEnabled: true,
     speakProgress,
     onCaption: handleCaption,
+    onCaptionWords: handleCaptionWords,
     onNarrationComplete: handleNarrationComplete,
     pacing: aiSettings.pacing,
   });
 
+  const interactionActive = Boolean(reveal.interactionVisible && currentStep?.interaction);
+
   const { messages, isTyping, sendMessage, pushCalyxMessage } = useClassChat({
     lessonTitle,
     stepTitle: currentStep?.title,
+    instructorName,
     onCalyxSpeak: handleCalyxSpeak,
     voiceEnabled: true,
   });
@@ -208,9 +257,12 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
       setIsGreeting(true);
       const greeting = session.isRetake
         ? buildRetakeClassGreeting(studentName, lessonTitle, session.calyxIntro)
-        : buildClassGreeting(studentName, lessonTitle);
-      setActiveCaption(greeting);
-      await speakProgress(greeting, { wordMs: aiSettings.pacing.wordMs });
+        : buildClassGreeting(studentName, lessonTitle, instructorName);
+      setCaption({ text: greeting, visibleWords: 0 });
+      await speakProgress(greeting, {
+        wordMs: aiSettings.pacing.wordMs,
+        onWord: (index) => handleCaptionWords(index + 1),
+      });
       if (!chatInitialized) {
         pushCalyxMessage(greeting, { speak: false });
         setChatInitialized(true);
@@ -225,10 +277,12 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
     chatInitialized,
     classJoined,
     lessonTitle,
+    instructorName,
     pushCalyxMessage,
     session,
     speakProgress,
     studentName,
+    handleCaptionWords,
   ]);
 
   useEffect(() => {
@@ -243,13 +297,13 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
   const handleEndCall = () => {
     stopSpeaking();
     stopStream();
-    router.push("/child-dashboard");
+    void navigateAfterChildClass(router);
   };
 
   const advanceAfterFeedback = useCallback(
     async (feedback: string, answeredStepIndex: number) => {
       pushCalyxMessage(feedback, { speak: false });
-      setActiveCaption(feedback);
+      setCaption({ text: feedback, visibleWords: 0 });
       await speak(feedback);
       await delay(600);
 
@@ -268,7 +322,7 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
     [advanceStep, blackboardSteps.length, finishClass, pushCalyxMessage, speak],
   );
 
-  const handleBlackboardSelect = (optionId: string) => {
+  const handleBlackboardSelect = async (optionId: string) => {
     const interaction = currentStep?.interaction;
     if (!interaction || selectedOptionId || answerLocked || !session || !currentStep) return;
 
@@ -282,15 +336,17 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
     setSelectedOptionId(optionId);
     setAnsweredCorrectly(isCorrect);
 
-    void submitClassAnswer(session.sessionId, {
-      stepId: currentStep.id,
-      interactionId: interaction.id,
-      optionId: option.id,
-      optionLabel: option.label,
-      isCorrect,
-    }).catch(() => {
+    try {
+      await submitClassAnswer(session.sessionId, {
+        stepId: currentStep.id,
+        interactionId: interaction.id,
+        optionId: option.id,
+        optionLabel: option.label,
+        isCorrect,
+      });
+    } catch {
       // Keep local flow even if persistence fails temporarily.
-    });
+    }
 
     const feedback = isCorrect
       ? `Yes! ${option.label} is the strongest. Great work!`
@@ -299,7 +355,7 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
     void advanceAfterFeedback(feedback, answeredStepIndex);
   };
 
-  const handleWordLadderSubmit = (orderedIds: string[]) => {
+  const handleWordLadderSubmit = async (orderedIds: string[]) => {
     const interaction = currentStep?.interaction;
     if (!interaction || interaction.type !== "word_ladder" || selectedOptionId || answerLocked || !session || !currentStep) {
       return;
@@ -319,15 +375,17 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
     setSelectedOptionId("word-ladder-submitted");
     setAnsweredCorrectly(isCorrect);
 
-    void submitClassAnswer(session.sessionId, {
-      stepId: currentStep.id,
-      interactionId: interaction.id,
-      optionId: "word-ladder-order",
-      optionLabel: labels.join(" → "),
-      isCorrect,
-    }).catch(() => {
+    try {
+      await submitClassAnswer(session.sessionId, {
+        stepId: currentStep.id,
+        interactionId: interaction.id,
+        optionId: "word-ladder-order",
+        optionLabel: labels.join(" → "),
+        isCorrect,
+      });
+    } catch {
       // Keep local flow even if persistence fails temporarily.
-    });
+    }
 
     const feedback = isCorrect
       ? "Perfect! You put the Word Ladder in the right order. Excellent work!"
@@ -341,7 +399,7 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
       <div className="flex flex-col items-center justify-center h-full px-6 text-center gap-4">
         <p className="text-[#FF7B7B] text-sm" style={inter}>{loadError}</p>
         <Link href="/child-dashboard" className="text-[#00CED1] text-sm font-semibold underline">
-          Back to Progress
+          Back to Pathway
         </Link>
       </div>
     );
@@ -358,6 +416,7 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
         canJoinClass={canJoinClass}
         hasVideo={hasVideo}
         hasAudio={hasAudio}
+        instructorName={instructorName}
         onEnableMedia={() => void startMedia()}
         onJoinClass={handleJoinClass}
         onBack={() => router.push("/child-dashboard")}
@@ -378,7 +437,7 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <polyline points="15 18 9 12 15 6" />
           </svg>
-          Progress
+          Pathway
         </Link>
         <div className="hidden md:block">
           <ChildUserDropdown />
@@ -393,6 +452,17 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
             subtitle={subtitle}
             currentPhase={currentPhase}
             quickCheckLabel={currentPhase === "quick_check" ? "Quick Check now" : "Quick Check coming up"}
+            sessionTimer={
+              classJoined && greetingDone && !classScore
+                ? {
+                    elapsedLabel: sessionClock.elapsedLabel,
+                    phaseLabel: sessionClock.phaseLabel,
+                    phaseRemainingLabel: sessionClock.phaseRemainingLabel,
+                    totalMinutes: totalClassMinutes,
+                    teachUntilMinute,
+                  }
+                : undefined
+            }
           />
 
           <div className="flex-1 min-h-0 relative flex flex-col gap-2 overflow-hidden">
@@ -402,6 +472,7 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
                   step={currentStep}
                   reveal={reveal}
                   isNarrating={isNarrating || isGreeting}
+                  instructorName={instructorName}
                   greeting={
                     isGreeting || !greetingDone
                       ? { studentName, inProgress: isGreeting }
@@ -420,6 +491,7 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
                   onEnableMedia={() => void startMedia()}
                   faceMonitorEnabled={classJoined && cameraEnabled}
                   onFaceStatusChange={setFaceStatus}
+                  dock={interactionActive ? "top" : "bottom"}
                 />
 
                 {showStayInViewNudge && (
@@ -428,7 +500,7 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
                     style={{ backgroundColor: "rgba(255,123,123,0.15)" }}
                   >
                     <p className="text-xs font-medium text-[#FF7B7B]" style={inter}>
-                      Please stay in view of your camera so Calyx can see you.
+                      Please stay in view of your camera so {instructorName} can see you.
                     </p>
                   </div>
                 )}
@@ -446,28 +518,30 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
               </div>
             )}
 
-            {activeCaption && (
-              <div
-                className="shrink-0 rounded-[10px] px-4 py-2.5 border border-[#00CED1]/20"
-                style={{ backgroundColor: "rgba(0,206,209,0.08)" }}
-              >
-                <p style={{ ...inter, fontWeight: 500, fontSize: "13px", color: "rgba(255,255,255,0.85)", textAlign: "center" }}>
-                  {activeCaption}
-                </p>
-              </div>
+            {caption && (
+              <ClassInstructorCaption
+                text={caption.text}
+                visibleWords={caption.visibleWords}
+                instructorName={instructorName}
+                isSpeaking={isNarrating || isGreeting}
+              />
             )}
           </div>
 
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <span className="text-xs text-white/40" style={inter}>
               {isGreeting
-                ? "Calyx is greeting you…"
+                ? `${instructorName} is greeting you…`
                 : isNarrating
-                  ? "Calyx is teaching…"
+                  ? `${instructorName} is teaching…`
                   : reveal.interactionVisible
-                    ? currentStep?.interaction?.type === "word_ladder"
-                      ? "Drag words into order on the board"
-                      : "Tap an answer on the board"
+                    ? currentStep?.phase === "quick_check"
+                      ? currentStep?.interaction?.type === "word_ladder"
+                        ? "Drag words into order — tap ⓘ for clues"
+                        : "Tap an answer — use ⓘ for clues if you need help"
+                      : currentStep?.interaction?.type === "word_ladder"
+                        ? "Drag words into order on the board"
+                        : "Tap an answer on the board"
                     : "Listen and follow along"}
             </span>
             {session && (
@@ -490,6 +564,7 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
         <ClassTextChat
           messages={messages}
           isTyping={isTyping}
+          instructorName={instructorName}
           onSend={sendMessage}
           showQuickCheck={false}
         />
@@ -500,16 +575,23 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
           scoreCorrect={classScore.scoreCorrect}
           scoreTotal={classScore.scoreTotal}
           lessonTitle={lessonTitle}
+          instructorName={instructorName}
           passed={classScore.passed}
           passThreshold={classScore.passThreshold}
+          wayfinderBlocked={retakeBlocked}
           onContinue={handleEndCall}
           onRetake={async () => {
             stopSpeaking();
             stopStream();
             try {
               await navigateToChildClass(router, true);
-            } catch {
-              router.push("/child-dashboard");
+            } catch (error) {
+              const message = error instanceof Error ? error.message : "";
+              if (message.toLowerCase().includes("wayfinder")) {
+                setRetakeBlocked(true);
+              } else {
+                router.push("/child-dashboard");
+              }
             }
           }}
         />

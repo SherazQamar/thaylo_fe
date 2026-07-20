@@ -2,10 +2,11 @@
 
 import React, { useState, FormEvent } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { US_TIMEZONES } from "@/constants/us-timezones";
-import { getApiErrorMessage, registerParent } from "@/lib/auth-api";
+import { getApiErrorMessage, isEmailAlreadyRegisteredMessage, registerParent } from "@/lib/auth-api";
 import {
   setPendingVerification,
   startResendCooldown,
@@ -80,6 +81,7 @@ export default function ParentRegister() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [timezone, setTimezone] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const showLoginLink = error != null && isEmailAlreadyRegisteredMessage(error);
 
   const registerMutation = useMutation({
     mutationFn: async () => {
@@ -183,7 +185,7 @@ export default function ParentRegister() {
             className="text-white text-[36px] font-semibold leading-[1.1] tracking-tight max-w-[400px] mt-6"
             style={{ fontFamily: "Inter, sans-serif" }}
           >
-            Courses Chosen for
+            Courses Created for
             <br />
             Your Child&apos;s Path
           </h1>
@@ -191,7 +193,7 @@ export default function ParentRegister() {
             className="text-white/70 text-lg mt-3 max-w-[350px]"
             style={{ fontFamily: "Inter, sans-serif" }}
           >
-            Thoughtfully designed lessons that grow skills, understanding, and independence.
+            Thoughtfully designed lessons that adapt to your Child&apos;s needs and interests to grow skills, understanding and independence.
           </p>
         </div>
 
@@ -271,7 +273,7 @@ export default function ParentRegister() {
                     type="text"
                     value={guardian1Name}
                     onChange={(e) => setGuardian1Name(e.target.value)}
-                    placeholder="Allex filler"
+                    placeholder="Jane Doe"
                     required
                     className="w-full rounded-[40px] bg-[#313044] text-white text-sm outline-none border border-transparent focus:border-[#00CED1]/40 transition-colors placeholder:text-white/30"
                     style={{ fontFamily: "Inter, sans-serif", padding: "12px 20px", height: "44px" }}
@@ -322,7 +324,7 @@ export default function ParentRegister() {
                     type="text"
                     value={guardian2Name}
                     onChange={(e) => setGuardian2Name(e.target.value)}
-                    placeholder="Allex filler"
+                    placeholder="John Doe"
                     className="w-full rounded-[40px] bg-[#313044] text-white text-sm outline-none border border-transparent focus:border-[#00CED1]/40 transition-colors placeholder:text-white/30"
                     style={{ fontFamily: "Inter, sans-serif", padding: "12px 20px", height: "44px" }}
                   />
@@ -372,7 +374,7 @@ export default function ParentRegister() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Allex@gmail.com"
+                    placeholder="JaneDoe@gmail.com"
                     required
                     className="w-full rounded-[40px] bg-[#313044] text-white text-sm outline-none border border-transparent focus:border-[#00CED1]/40 transition-colors placeholder:text-white/30"
                     style={{ fontFamily: "Inter, sans-serif", padding: "12px 20px", height: "44px" }}
@@ -534,13 +536,25 @@ export default function ParentRegister() {
                 </div>
 
                 {error && (
-                  <p
+                  <div
                     className="text-sm text-red-400 text-center"
                     style={inter}
                     role="alert"
                   >
-                    {error}
-                  </p>
+                    <p>{error}</p>
+                    {showLoginLink && (
+                      <p className="mt-2 text-white/60">
+                        Already started signing up?{" "}
+                        <Link
+                          href="/parent-sign-in"
+                          className="text-[#00CED1] font-medium hover:underline"
+                        >
+                          Sign in
+                        </Link>{" "}
+                        to verify your email or continue.
+                      </p>
+                    )}
+                  </div>
                 )}
 
                 {/* Continue Button */}

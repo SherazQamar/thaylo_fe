@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import NavUnreadBadge from "@/components/shared/chat/NavUnreadBadge";
+import { useChatUnreadCount } from "@/hooks/use-chat-unread-count";
 
 const navItems = [
   {
@@ -31,7 +33,7 @@ const navItems = [
     ),
   },
   {
-    label: "SUBSCRIPTION",
+    label: "BILLING",
     href: "/parent-dashboard/subscription",
     matchPaths: ["/parent-dashboard/subscription"],
     icon: (
@@ -78,6 +80,7 @@ const navItems = [
 export default function ParentSidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const { unreadTotal } = useChatUnreadCount("parent");
 
   return (
     <>
@@ -131,12 +134,15 @@ export default function ParentSidebar() {
                 <span className="flex-shrink-0">{item.icon}</span>
                 {!collapsed && (
                   <span
-                    className="text-[13px] font-medium tracking-wider"
+                    className="text-[13px] font-medium tracking-wider flex-1"
                     style={{ fontFamily: "Inter, sans-serif" }}
                   >
                     {item.label}
                   </span>
                 )}
+                {item.label === "MESSAGE" ? (
+                  <NavUnreadBadge count={unreadTotal} collapsed={collapsed} />
+                ) : null}
               </Link>
             );
           })}
@@ -214,13 +220,17 @@ export default function ParentSidebar() {
             <Link
               key={item.label}
               href={item.href}
-              className={`flex items-center justify-center w-12 h-12 rounded-xl transition-all ${
+              aria-label={item.label}
+              className={`relative flex items-center justify-center w-12 h-12 rounded-xl transition-all ${
                 isActive
                   ? "text-[#00CED1] bg-[#111023]"
                   : "text-white/40"
               }`}
             >
               {item.icon}
+              {item.label === "MESSAGE" ? (
+                <NavUnreadBadge count={unreadTotal} collapsed />
+              ) : null}
             </Link>
           );
         })}

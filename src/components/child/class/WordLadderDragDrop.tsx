@@ -1,11 +1,13 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import OptionHintButton from "@/components/child/class/OptionHintButton";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
 type WordLadderDragDropProps = {
-  words: Array<{ id: string; label: string }>;
+  words: Array<{ id: string; label: string; hint?: string }>;
+  showHints?: boolean;
   disabled?: boolean;
   submitted?: boolean;
   isCorrect?: boolean | null;
@@ -13,7 +15,7 @@ type WordLadderDragDropProps = {
   onSubmit: (orderedIds: string[]) => void;
 };
 
-function shuffleWords(words: Array<{ id: string; label: string }>) {
+function shuffleWords(words: Array<{ id: string; label: string; hint?: string }>) {
   const copy = [...words];
   for (let attempt = 0; attempt < 8; attempt += 1) {
     for (let i = copy.length - 1; i > 0; i -= 1) {
@@ -31,6 +33,7 @@ function shuffleWords(words: Array<{ id: string; label: string }>) {
 
 export default function WordLadderDragDrop({
   words,
+  showHints = false,
   disabled = false,
   submitted = false,
   isCorrect = null,
@@ -107,9 +110,12 @@ export default function WordLadderDragDrop({
               >
                 {index + 1}
               </span>
-              <span style={{ fontWeight: 600, fontSize: compact ? "clamp(11px, 1.8vh, 13px)" : "14px", color: "#E8F5E9" }}>
+              <span className="flex-1 min-w-0" style={{ fontWeight: 600, fontSize: compact ? "clamp(11px, 1.8vh, 13px)" : "14px", color: "#E8F5E9" }}>
                 {word.label}
               </span>
+              {showHints && word.hint?.trim() && (
+                <OptionHintButton hint={word.hint.trim()} compact={compact} placement="above" />
+              )}
               {!compact && (
               <svg
                 className="ml-auto shrink-0 opacity-40"
@@ -138,8 +144,13 @@ export default function WordLadderDragDrop({
           type="button"
           disabled={disabled}
           onClick={handleSubmit}
-          className={`w-full rounded-xl font-semibold transition-opacity hover:opacity-90 disabled:opacity-50 ${compact ? "py-2 text-xs" : "py-3 text-sm"}`}
-          style={{ backgroundColor: "#00CED1", color: "#111023", ...inter }}
+          className={`sticky bottom-0 z-10 w-full rounded-xl font-semibold transition-opacity hover:opacity-90 disabled:opacity-50 ${compact ? "py-2.5 text-xs" : "py-3 text-sm"}`}
+          style={{
+            backgroundColor: "#00CED1",
+            color: "#111023",
+            boxShadow: "0 -8px 24px rgba(15,41,34,0.65)",
+            ...inter,
+          }}
         >
           Check my order
         </button>

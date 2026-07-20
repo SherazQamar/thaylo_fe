@@ -8,8 +8,7 @@ import { useMutation } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import ThayloBrandLink from "@/components/shared/ThayloBrandLink";
 import { forgotPassword, getApiErrorMessage, loginParent } from "@/lib/auth-api";
-import { fetchOnboardingStatus } from "@/lib/onboarding-api";
-import { startResendCooldown } from "@/lib/pending-verification";
+import { clearResendCooldown } from "@/lib/pending-verification";
 import { logoutParent, setParentSession } from "@/lib/auth-session";
 import { hasCompletedFamilyRegistration } from "@/lib/parent-registration";
 
@@ -63,19 +62,6 @@ export default function ParentSignIn() {
         return;
       }
 
-      let onboardingComplete = true;
-      try {
-        const status = await fetchOnboardingStatus("parent");
-        onboardingComplete = status.isComplete;
-      } catch {
-        onboardingComplete = true;
-      }
-
-      if (!onboardingComplete) {
-        router.push("/parent-onboarding");
-        return;
-      }
-
       if (
         returnUrl?.startsWith("/child-onboarding") &&
         hasCompletedFamilyRegistration(user)
@@ -101,9 +87,12 @@ export default function ParentSignIn() {
         email.trim()
       ) {
         const emailTrimmed = email.trim();
-        startResendCooldown();
+        clearResendCooldown();
         router.push(
-          `/verify-email?${new URLSearchParams({ email: emailTrimmed }).toString()}`,
+          `/verify-email?${new URLSearchParams({
+            email: emailTrimmed,
+            source: "login",
+          }).toString()}`,
         );
         return;
       }
@@ -145,7 +134,7 @@ export default function ParentSignIn() {
   // Mask email for display
   const maskedEmail = resetEmail
     ? resetEmail.replace(/(.{3})(.*)(@.*)/, "$1xxxxx$3")
-    : "allexxxxx@gmail.com";
+    : "john@gmail.com";
 
   return (
     <div className="h-screen flex flex-col lg:flex-row overflow-hidden bg-[#111023]">
@@ -157,17 +146,15 @@ export default function ParentSignIn() {
             className="text-white text-[36px] font-semibold leading-[1.1] tracking-tight max-w-[400px] mt-6"
             style={{ fontFamily: "Inter, sans-serif" }}
           >
-            Learn Anytime,
-            <br />
-            Anywhere
+            Education Without Walls
           </h1>
           <p
             className="text-white/70 text-lg mt-3"
             style={{ fontFamily: "Inter, sans-serif" }}
           >
-            Access high-quality courses on your schedule—at home,
+            A flexible learning experience that keeps students, families,
             <br />
-            on campus, or on the go.
+            and Wayfinders connected—wherever they are.
           </p>
         </div>
 
@@ -343,7 +330,7 @@ export default function ParentSignIn() {
                   type="email"
                   value={resetEmail}
                   onChange={(e) => setResetEmail(e.target.value)}
-                  placeholder="Allex@gmail.com"
+                  placeholder="JaneDoe@gmail.com"
                   required
                   className="w-full px-4 py-3 rounded-full bg-[#111023] text-white text-sm outline-none border border-transparent focus:border-[#00CED1]/40 transition-colors placeholder:text-white/30"
                 />

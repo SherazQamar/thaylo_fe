@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, FormEvent, Suspense } from "react";
+import React, { useEffect, useRef, useState, FormEvent, Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -33,6 +33,7 @@ function VerifyEmailContent() {
   const queryId = searchParams.get("id");
   const queryEmail = searchParams.get("email");
   const queryCode = searchParams.get("code");
+  const fromLogin = searchParams.get("source") === "login";
 
   const [userId, setUserId] = useState<number | null>(null);
   const [email, setEmail] = useState("");
@@ -40,9 +41,10 @@ function VerifyEmailContent() {
   const [error, setError] = useState<string | null>(null);
   const [codeExpired, setCodeExpired] = useState(false);
   const [resendMessage, setResendMessage] = useState<string | null>(null);
+  const autoResendTriggeredRef = useRef(false);
 
   const { remaining: resendCooldown, canResend, restartCooldown } =
-    useResendCooldown();
+    useResendCooldown({ skipInitialCooldown: fromLogin });
 
   /** Timer first; resend only after 90s or when the code has expired. */
   const showResendAction = codeExpired ? true : canResend;
@@ -66,6 +68,45 @@ function VerifyEmailContent() {
       setDigits(queryCode.split(""));
     }
   }, [queryId, queryEmail, queryCode]);
+
+  const resendMutation = useMutation({
+    mutationFn: async () => {
+      const targetEmail = email.trim();
+      if (!targetEmail) {
+        throw new Error("Email address is required to resend the code");
+      }
+      await resendVerificationEmail(targetEmail);
+    },
+    onSuccess: () => {
+      setCodeExpired(false);
+      setError(null);
+      setDigits(["", "", "", "", "", ""]);
+      setResendMessage("A new verification code has been sent to your email.");
+      restartCooldown();
+    },
+    onError: (err) => {
+      setResendMessage(null);
+      setError(getApiErrorMessage(err));
+    },
+  });
+
+  useEffect(() => {
+    if (!fromLogin || !email.trim() || autoResendTriggeredRef.current) return;
+    autoResendTriggeredRef.current = true;
+
+    void resendVerificationEmail(email.trim())
+      .then(() => {
+        setCodeExpired(false);
+        setError(null);
+        setDigits(["", "", "", "", "", ""]);
+        setResendMessage("A new verification code has been sent to your email.");
+        restartCooldown();
+      })
+      .catch((err) => {
+        setResendMessage(null);
+        setError(getApiErrorMessage(err));
+      });
+  }, [email, fromLogin, restartCooldown]);
 
   const verifyMutation = useMutation({
     mutationFn: async () => {
@@ -99,27 +140,6 @@ function VerifyEmailContent() {
         setCodeExpired(false);
         setError(message);
       }
-    },
-  });
-
-  const resendMutation = useMutation({
-    mutationFn: async () => {
-      const targetEmail = email.trim();
-      if (!targetEmail) {
-        throw new Error("Email address is required to resend the code");
-      }
-      await resendVerificationEmail(targetEmail);
-    },
-    onSuccess: () => {
-      setCodeExpired(false);
-      setError(null);
-      setDigits(["", "", "", "", "", ""]);
-      setResendMessage("A new verification code has been sent to your email.");
-      restartCooldown();
-    },
-    onError: (err) => {
-      setResendMessage(null);
-      setError(getApiErrorMessage(err));
     },
   });
 
@@ -188,9 +208,13 @@ function VerifyEmailContent() {
               className="text-white/50 text-sm text-center mb-6"
               style={inter}
             >
-              {email
-                ? `Enter the code sent to ${email}`
-                : "Enter the 6-digit code from your email"}
+              {fromLogin
+                ? email
+                  ? `Your email is not verified yet. We are sending a fresh code to ${email}.`
+                  : "Your email is not verified yet. Enter the code we send to your inbox."
+                : email
+                  ? `Enter the code sent to ${email}`
+                  : "Enter the 6-digit code from your email"}
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -261,7 +285,11 @@ function VerifyEmailContent() {
             </form>
 
             <div className="mt-5 text-center space-y-2">
-              {showResendAction ? (
+              {resendMutation.isPending && fromLogin && !resendMessage ? (
+                <p className="text-white/50 text-sm" style={inter}>
+                  Sending a new verification code…
+                </p>
+              ) : showResendAction ? (
                 <button
                   type="button"
                   onClick={handleResend}

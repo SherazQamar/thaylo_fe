@@ -42,7 +42,6 @@ function getToken(portal: Portal) {
 }
 
 const AI_AVATAR_SRC = "/assets/green-robot-hero.png";
-const AI_NAME = "Calyx";
 
 function buildAnswerValue(
   questionType: string,
@@ -88,6 +87,8 @@ export default function OnboardingAssistant({
 }: OnboardingAssistantProps) {
   const router = useRouter();
   const { settings: aiSettings } = useAiSettings(portal === "child" ? "child" : "user");
+  const aiName = aiSettings.instructor?.name?.trim() || "AI Instructor";
+  const aiTagline = aiSettings.instructor?.tagline?.trim() || "your learning guide";
   const { speak, stop: stopSpeaking, speaking, supported: ttsSupported } =
     useSpeechSynthesis(aiSettings.voice, portal === "child" ? "child" : "user");
   const {
@@ -161,7 +162,7 @@ export default function OnboardingAssistant({
 
     socket.on("connect_error", () => {
       setError(
-        `Could not connect to ${AI_NAME}. Make sure thaylo-ai is running on port 3002.`,
+        `Could not connect to ${aiName}. Make sure thaylo-ai is running on port 3002.`,
       );
       setStage("error");
     });
@@ -490,7 +491,7 @@ export default function OnboardingAssistant({
       <LoadingScreen
         label={
           stage === "connecting"
-            ? `Connecting to ${AI_NAME}…`
+            ? `Connecting to ${aiName}…`
             : "Preparing your onboarding…"
         }
       />
@@ -530,7 +531,7 @@ export default function OnboardingAssistant({
               className="text-white text-lg font-semibold"
               style={{ fontFamily: "Inter, sans-serif" }}
             >
-              {turn?.walkthroughTitle ?? AI_NAME}
+              {turn?.walkthroughTitle ?? aiName}
             </h1>
           </div>
           {turn?.progress.total ? (
@@ -554,7 +555,7 @@ export default function OnboardingAssistant({
           <div className="flex flex-col items-center">
             <Image
               src={AI_AVATAR_SRC}
-              alt={`${AI_NAME}, your Bloom Buddy`}
+              alt={`${aiName}, ${aiTagline}`}
               width={240}
               height={240}
               className={`w-[200px] h-[200px] sm:w-[240px] sm:h-[240px] object-contain transition-transform duration-300 ${
@@ -573,7 +574,7 @@ export default function OnboardingAssistant({
                     ? "All done!"
                     : stage === "awaiting-answer"
                       ? "Tap the mic and speak"
-                      : AI_NAME}
+                      : aiName}
             </p>
             {stage === "awaiting-answer" && sttSupported && (
               <button
@@ -620,7 +621,7 @@ export default function OnboardingAssistant({
             <div className="rounded-[24px] border border-[#525162]/50 bg-[#313044] p-6 sm:p-8 min-h-[160px]">
               <div className="flex items-start gap-3 mb-3">
                 <div className="w-8 h-8 rounded-full bg-[#00CED1]/20 flex items-center justify-center shrink-0">
-                  <span className="text-[#00CED1] text-[10px] font-bold">{AI_NAME}</span>
+                  <span className="text-[#00CED1] text-[10px] font-bold">{aiName}</span>
                 </div>
                 <p
                   className="text-white/90 text-base sm:text-lg leading-relaxed whitespace-pre-line"
