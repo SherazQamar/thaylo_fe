@@ -52,6 +52,7 @@ export type MessageSnapshotData = {
   activeStatus?: string | null;
   profileHref: string;
   profileLabel?: string;
+  avatarUrl?: string | null;
   currentLessonTitle?: string | null;
   lessonSubtitle?: string;
   masteryPercent?: number | null;
@@ -110,7 +111,12 @@ function SnapshotBody({ data }: { data: MessageSnapshotData }) {
   return (
     <div className="flex flex-col xl:flex-row xl:items-center gap-4 xl:gap-5 w-full min-w-0">
       <div className="flex items-center gap-3 min-w-0 shrink-0">
-        <PortalAvatar name={data.displayName} size={52} useWordInitials />
+        <PortalAvatar
+          name={data.displayName}
+          avatarUrl={data.avatarUrl}
+          size={52}
+          useWordInitials
+        />
         <div className="min-w-0">
           <p
             className="truncate"

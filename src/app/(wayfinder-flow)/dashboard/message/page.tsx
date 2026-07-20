@@ -169,6 +169,7 @@ export default function MessagePage() {
         label: displayName,
         subtitle: formatStudentGrade(student.grade),
         unreadCount: unread,
+        avatarUrl: student.avatarUrl,
       };
     });
   }, [students, roomsQuery.data]);
@@ -216,6 +217,7 @@ export default function MessagePage() {
         unreadCount: groupMeta.unreadCount,
         lastMessage: groupMeta.lastMessage,
         lastMessageAt: groupMeta.lastMessageAt,
+        avatarUrl: selectedStudent.avatarUrl,
       },
       {
         id: `child-${selectedStudent.id}`,
@@ -228,6 +230,7 @@ export default function MessagePage() {
         unreadCount: childMeta.unreadCount,
         lastMessage: childMeta.lastMessage,
         lastMessageAt: childMeta.lastMessageAt,
+        avatarUrl: selectedStudent.avatarUrl,
       },
       {
         id: `parent-${selectedStudent.id}`,
@@ -242,6 +245,7 @@ export default function MessagePage() {
         unreadCount: parentMeta.unreadCount,
         lastMessage: parentMeta.lastMessage,
         lastMessageAt: parentMeta.lastMessageAt,
+        avatarUrl: parent?.avatarUrl,
       },
     ];
   }, [roomsQuery.data, selectedStudent]);
@@ -257,6 +261,34 @@ export default function MessagePage() {
     }
     return counts;
   }, [allContacts]);
+
+  const categoryAvatars = useMemo(() => {
+    if (!selectedStudent) return {};
+
+    const rooms = roomsQuery.data ?? [];
+    const groupRoom = rooms.find(
+      (room) => room.type === "GROUP" && room.anchorChild?.id === selectedStudent.id,
+    );
+    const parent = groupRoom?.groupParticipants?.find((p) => p.role === "PARENT");
+    const childAvatar = {
+      name: formatWayfinderStudentName(selectedStudent),
+      avatarUrl: selectedStudent.avatarUrl,
+    };
+    const parentAvatar = parent
+      ? { name: parent.name ?? "Parent", avatarUrl: parent.avatarUrl }
+      : undefined;
+    const wayfinderSelf = user
+      ? { name: user.name ?? "Wayfinder", avatarUrl: user.avatarUrl }
+      : undefined;
+
+    return {
+      child: childAvatar,
+      parent: parentAvatar,
+      group: [childAvatar, parentAvatar, wayfinderSelf].filter(
+        (item): item is { name: string; avatarUrl?: string | null } => Boolean(item),
+      ),
+    };
+  }, [roomsQuery.data, selectedStudent, user]);
 
   const visibleContacts = useMemo(
     () => filterContacts(allContacts, [activeCategory]),
@@ -381,6 +413,7 @@ export default function MessagePage() {
           activeCategory={activeCategory}
           onCategorySelect={handleCategorySelect}
           categoryCounts={categoryCounts}
+          categoryAvatars={categoryAvatars}
           onSelectContact={handleSelectContact}
         />
 
@@ -394,6 +427,7 @@ export default function MessagePage() {
             isLoading={messagesLoading}
             self={{ type: "USER", id: user?.id }}
             selfDisplayName={user?.name ?? "You"}
+            selfAvatarUrl={user?.avatarUrl}
             activeRoom={activeRoom}
             groupParticipants={activeGroupParticipants}
             othersTyping={othersTyping}

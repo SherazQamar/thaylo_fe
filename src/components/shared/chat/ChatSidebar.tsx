@@ -14,6 +14,11 @@ import {
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
+export type CategoryAvatarItem = {
+  name?: string | null;
+  avatarUrl?: string | null;
+};
+
 function CategoryIcon({ category }: { category: ChatContactCategory }) {
   if (category === "child") {
     return (
@@ -73,6 +78,62 @@ function CategoryIcon({ category }: { category: ChatContactCategory }) {
   );
 }
 
+function CategoryAvatarVisual({
+  category,
+  avatars,
+  active,
+}: {
+  category: ChatContactCategory;
+  avatars?: CategoryAvatarItem | CategoryAvatarItem[] | null;
+  active: boolean;
+}) {
+  const list = Array.isArray(avatars) ? avatars.filter(Boolean) : avatars ? [avatars] : [];
+  const hasAnyImage = list.some((a) => Boolean(a.avatarUrl?.trim()) || Boolean(a.name?.trim()));
+
+  if (!hasAnyImage || list.length === 0) {
+    return (
+      <span className={active ? "text-[#00CED1]" : "text-white/45"}>
+        <CategoryIcon category={category} />
+      </span>
+    );
+  }
+
+  if (list.length === 1) {
+    return (
+      <PortalAvatar
+        name={list[0].name ?? category}
+        avatarUrl={list[0].avatarUrl}
+        size={28}
+        useWordInitials
+      />
+    );
+  }
+
+  const stack = list.slice(0, 3);
+  const size = 22;
+  const overlap = 10;
+  const width = size + (stack.length - 1) * overlap;
+
+  return (
+    <div className="relative shrink-0" style={{ width, height: size }}>
+      {stack.map((item, index) => (
+        <div
+          key={`${item.name ?? "a"}-${index}`}
+          className="absolute top-0 rounded-full ring-2 ring-[#1a1930]"
+          style={{ left: index * overlap, zIndex: stack.length - index }}
+        >
+          <PortalAvatar
+            name={item.name ?? category}
+            avatarUrl={item.avatarUrl}
+            size={size}
+            useWordInitials
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 type ChatSidebarProps = {
   contacts: ChatSidebarContact[];
   activeContactId: string | null;
@@ -97,6 +158,13 @@ type ChatSidebarProps = {
   backLink?: { href: string; label: string };
   /** Unread (or message) counts per category for focus layout badges. */
   categoryCounts?: Partial<Record<ChatContactCategory, number>>;
+  /**
+   * Optional avatars for category nav rows.
+   * Single item for Child/Parent (or Wayfinder label); array for Group stack.
+   */
+  categoryAvatars?: Partial<
+    Record<ChatContactCategory, CategoryAvatarItem | CategoryAvatarItem[]>
+  >;
   /** Single-select category for focus layout. */
   activeCategory?: ChatContactCategory;
   onCategorySelect?: (category: ChatContactCategory) => void;
@@ -122,6 +190,7 @@ export default function ChatSidebar({
   layout = "default",
   backLink,
   categoryCounts,
+  categoryAvatars,
   activeCategory,
   onCategorySelect,
   personStatus,
@@ -333,9 +402,11 @@ export default function ChatSidebar({
                 }
                 style={inter}
               >
-                <span className={active ? "text-[#00CED1]" : "text-white/45"}>
-                  <CategoryIcon category={option.id} />
-                </span>
+                <CategoryAvatarVisual
+                  category={option.id}
+                  avatars={categoryAvatars?.[option.id]}
+                  active={active}
+                />
                 <span className="flex-1 text-left text-sm font-semibold">{option.label}</span>
                 <span
                   className={

@@ -563,6 +563,7 @@ function ChildDetailContent() {
           <StudentProgressOverview
             displayName={displayName}
             gradeLabel={formatChildGrade(child.grade)}
+            avatarSrc={child.avatarUrl || undefined}
             messagesHref="/parent-dashboard/message"
             progressLabel={badgesQuery.data?.plantStatus}
             gardenStage={badgesQuery.data?.plantStage}

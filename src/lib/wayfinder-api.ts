@@ -26,6 +26,7 @@ export interface WayfinderStudent {
   lastActiveAt: string | null;
   badgesEarned: number;
   plantStatus: string;
+  avatarUrl?: string | null;
   parent: WayfinderStudentParent;
 }
 
@@ -91,6 +92,7 @@ export interface WayfinderStudentSnapshot {
   userName: string;
   grade: string | null;
   parentName: string | null;
+  avatarUrl?: string | null;
   contentArea: string;
   currentLessonTitle: string | null;
   currentLessonKey: string | null;

@@ -44,6 +44,7 @@ export default function WayfinderStudentSnapshotCard({
       metaLine: snapshot.parentName,
       activeStatus: formatActiveStatus(snapshot.lastActiveAt),
       profileHref: `/dashboard/student?id=${snapshot.childId}`,
+      avatarUrl: snapshot.avatarUrl,
       currentLessonTitle: snapshot.currentLessonTitle,
       lessonSubtitle:
         snapshot.currentLessonOrder != null && snapshot.progressTotal > 0

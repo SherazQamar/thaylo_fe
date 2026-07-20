@@ -115,6 +115,7 @@ export default function ParentMessagePage() {
         label: child.userName,
         subtitle: formatChildGrade(child.grade),
         unreadCount: unread,
+        avatarUrl: child.avatarUrl,
       };
     });
   }, [children, roomsQuery.data]);
@@ -150,6 +151,7 @@ export default function ParentMessagePage() {
         unreadCount: groupMeta.unreadCount,
         lastMessage: groupMeta.lastMessage,
         lastMessageAt: groupMeta.lastMessageAt,
+        avatarUrl: selectedChild.avatarUrl,
       },
       {
         id: `child-${selectedChild.id}`,
@@ -163,6 +165,7 @@ export default function ParentMessagePage() {
         unreadCount: childMeta.unreadCount,
         lastMessage: childMeta.lastMessage,
         lastMessageAt: childMeta.lastMessageAt,
+        avatarUrl: selectedChild.avatarUrl,
       },
     ];
 
@@ -179,6 +182,7 @@ export default function ParentMessagePage() {
         unreadCount: wayfinderRoom.unreadCount,
         lastMessage: wayfinderRoom.lastMessage,
         lastMessageAt: wayfinderRoom.lastMessageAt,
+        avatarUrl: wayfinderRoom.otherParticipant.avatarUrl,
       });
     } else {
       contacts.push({
@@ -205,6 +209,26 @@ export default function ParentMessagePage() {
     }
     return counts;
   }, [allContacts]);
+
+  const categoryAvatars = useMemo(() => {
+    const childAvatar = selectedChild
+      ? { name: selectedChild.userName, avatarUrl: selectedChild.avatarUrl }
+      : undefined;
+    const wayfinderContact = allContacts.find((c) => c.category === "parent");
+    const wayfinder = wayfinderContact
+      ? { name: wayfinderContact.label, avatarUrl: wayfinderContact.avatarUrl }
+      : undefined;
+    const parentSelf = user
+      ? { name: user.name ?? "Parent", avatarUrl: user.avatarUrl }
+      : undefined;
+    return {
+      child: childAvatar,
+      parent: wayfinder,
+      group: [childAvatar, parentSelf, wayfinder].filter(
+        (item): item is { name: string; avatarUrl?: string | null } => Boolean(item),
+      ),
+    };
+  }, [allContacts, selectedChild, user]);
 
   const visibleContacts = useMemo(
     () => filterContacts(allContacts, [activeCategory]),
@@ -343,6 +367,7 @@ export default function ParentMessagePage() {
           activeCategory={activeCategory}
           onCategorySelect={handleCategorySelect}
           categoryCounts={categoryCounts}
+          categoryAvatars={categoryAvatars}
           onSelectContact={handleSelectContact}
         />
 
@@ -356,6 +381,7 @@ export default function ParentMessagePage() {
             isLoading={messagesLoading}
             self={{ type: "USER", id: user?.id }}
             selfDisplayName={user?.name ?? "You"}
+            selfAvatarUrl={user?.avatarUrl}
             activeRoom={activeRoom}
             groupParticipants={activeGroupParticipants}
             othersTyping={othersTyping}

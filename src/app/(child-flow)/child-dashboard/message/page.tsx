@@ -136,6 +136,7 @@ export default function ChildMessagePage() {
         unreadCount: groupMeta.unreadCount,
         lastMessage: groupMeta.lastMessage,
         lastMessageAt: groupMeta.lastMessageAt,
+        avatarUrl: child?.avatarUrl,
       },
     ];
 
@@ -158,6 +159,7 @@ export default function ChildMessagePage() {
         unreadCount: parentMeta.unreadCount,
         lastMessage: parentMeta.lastMessage,
         lastMessageAt: parentMeta.lastMessageAt,
+        avatarUrl: parentParticipant.avatarUrl,
       });
     }
 
@@ -180,11 +182,12 @@ export default function ChildMessagePage() {
         unreadCount: wayfinderMeta.unreadCount,
         lastMessage: wayfinderMeta.lastMessage,
         lastMessageAt: wayfinderMeta.lastMessageAt,
+        avatarUrl: wayfinderParticipant.avatarUrl,
       });
     }
 
     return contacts;
-  }, [groupName, parentParticipant, wayfinderParticipant, roomsQuery.data]);
+  }, [child?.avatarUrl, groupName, parentParticipant, wayfinderParticipant, roomsQuery.data]);
 
   const categoryCounts = useMemo(() => {
     const counts: Record<ChatContactCategory, number> = {
@@ -211,11 +214,37 @@ export default function ChildMessagePage() {
               id: String(child.id),
               label: child.userName,
               subtitle: formatChildGrade(child.grade),
+              avatarUrl: child.avatarUrl,
             },
           ]
         : [],
     [child],
   );
+
+  const categoryAvatars = useMemo(() => {
+    const wayfinder = wayfinderParticipant
+      ? {
+          name: wayfinderParticipant.name ?? "Wayfinder",
+          avatarUrl: wayfinderParticipant.avatarUrl,
+        }
+      : undefined;
+    const parent = parentParticipant
+      ? {
+          name: parentParticipant.name ?? "Parent",
+          avatarUrl: parentParticipant.avatarUrl,
+        }
+      : undefined;
+    const self = child
+      ? { name: child.userName, avatarUrl: child.avatarUrl }
+      : undefined;
+    return {
+      child: wayfinder,
+      parent,
+      group: [self, parent, wayfinder].filter(
+        (item): item is { name: string; avatarUrl?: string | null } => Boolean(item),
+      ),
+    };
+  }, [child, parentParticipant, wayfinderParticipant]);
 
   const hasAutoOpenedRef = useRef(false);
 
@@ -310,6 +339,7 @@ export default function ChildMessagePage() {
           activeCategory={activeCategory}
           onCategorySelect={handleCategorySelect}
           categoryCounts={categoryCounts}
+          categoryAvatars={categoryAvatars}
           onSelectContact={handleSelectContact}
         />
 
@@ -323,6 +353,7 @@ export default function ChildMessagePage() {
             isLoading={messagesLoading}
             self={{ type: "CHILD", id: child?.id }}
             selfDisplayName={child?.userName ?? "You"}
+            selfAvatarUrl={child?.avatarUrl}
             activeRoom={activeRoom}
             groupParticipants={resolvedParticipants}
             othersTyping={othersTyping}

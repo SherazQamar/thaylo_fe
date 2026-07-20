@@ -45,6 +45,7 @@ export default function ChildMessageSnapshotCard({
       metaLine: badges.plantStatus,
       profileHref: "/child-dashboard/profile",
       profileLabel: "My Profile",
+      avatarUrl: child.avatarUrl,
       currentLessonTitle: null,
       lessonSubtitle: `${badges.masteredCount} of ${badges.totalLessons} mastered`,
       masteryPercent,

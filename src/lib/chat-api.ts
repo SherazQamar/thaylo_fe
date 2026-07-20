@@ -10,6 +10,7 @@ export interface ChatParticipant {
   id: number;
   name: string | null;
   role: ChatRole;
+  avatarUrl?: string | null;
 }
 
 export interface ChatAnchorChild {

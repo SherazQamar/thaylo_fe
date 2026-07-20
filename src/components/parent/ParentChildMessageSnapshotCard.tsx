@@ -73,6 +73,7 @@ export default function ParentChildMessageSnapshotCard({
       gradeLabel: formatChildGrade(child.grade),
       metaLine: badges.plantStatus,
       profileHref: `/parent-dashboard/child?id=${childId}`,
+      avatarUrl: child.avatarUrl,
       currentLessonTitle: null,
       lessonSubtitle: `${badges.masteredCount} of ${badges.totalLessons} mastered`,
       masteryPercent,
