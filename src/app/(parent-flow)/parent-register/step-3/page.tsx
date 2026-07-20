@@ -11,8 +11,10 @@ import {
   isAddChildWizardMode,
   withAddChildWizardMode,
 } from "@/lib/parent-registration";
-import { useRegisterWizardStore } from "@/stores/register-wizard.store";
-import ParentUserDropdown from "@/components/parent/ParentUserDropdown";
+import {
+  useRegisterWizardStore,
+  type RegisterChildDraft,
+} from "@/stores/register-wizard.store";
 import ThayloBrandLink from "@/components/shared/ThayloBrandLink";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
@@ -70,17 +72,6 @@ function ParentRegisterStep3Content() {
           <div className="lg:hidden mb-3">
             <ThayloBrandLink size="sm" />
           </div>
-
-          {isAddMode && (
-            <div className="w-full max-w-[420px] lg:max-w-[560px] mx-auto mb-4 flex items-center justify-between">
-              <h2 className="text-white text-base sm:text-lg font-semibold uppercase tracking-[0.12em]" style={inter}>
-                Add Child
-              </h2>
-              <div className="hidden md:block">
-                <ParentUserDropdown />
-              </div>
-            </div>
-          )}
 
           <div className="w-full max-w-[420px] lg:max-w-[560px] mx-auto mb-4">
             <div className="w-full h-[6px] bg-[#313044] rounded-full overflow-hidden mb-3">

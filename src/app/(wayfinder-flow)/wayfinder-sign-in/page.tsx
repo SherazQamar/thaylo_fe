@@ -129,7 +129,7 @@ export default function WayfinderSignIn() {
 
         <div className="relative z-10 flex justify-start mt-auto">
           <Image
-            src="/assets/wayfinder Em.png"
+            src="/assets/new-hero.png"
             alt="Wayfinder character"
             width={320}
             height={360}
