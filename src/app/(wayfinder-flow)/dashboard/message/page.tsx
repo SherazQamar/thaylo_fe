@@ -6,7 +6,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import UserDropdown from "@/components/wayfinder/UserDropdown";
 import WayfinderStudentSnapshotCard from "@/components/wayfinder/WayfinderStudentSnapshotCard";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
-import ChatSidebar from "@/components/shared/chat/ChatSidebar";
+import ChatSidebar, {
+  type CategoryAvatarItem,
+} from "@/components/shared/chat/ChatSidebar";
 import ChatMessageList from "@/components/shared/chat/ChatMessageList";
 import ChatComposer from "@/components/shared/chat/ChatComposer";
 import {
@@ -270,14 +272,14 @@ export default function MessagePage() {
       (room) => room.type === "GROUP" && room.anchorChild?.id === selectedStudent.id,
     );
     const parent = groupRoom?.groupParticipants?.find((p) => p.role === "PARENT");
-    const childAvatar = {
+    const childAvatar: CategoryAvatarItem = {
       name: formatWayfinderStudentName(selectedStudent),
       avatarUrl: selectedStudent.avatarUrl,
     };
-    const parentAvatar = parent
+    const parentAvatar: CategoryAvatarItem | undefined = parent
       ? { name: parent.name ?? "Parent", avatarUrl: parent.avatarUrl }
       : undefined;
-    const wayfinderSelf = user
+    const wayfinderSelf: CategoryAvatarItem | undefined = user
       ? { name: user.name ?? "Wayfinder", avatarUrl: user.avatarUrl }
       : undefined;
 
@@ -285,7 +287,7 @@ export default function MessagePage() {
       child: childAvatar,
       parent: parentAvatar,
       group: [childAvatar, parentAvatar, wayfinderSelf].filter(
-        (item): item is { name: string; avatarUrl?: string | null } => Boolean(item),
+        (item): item is CategoryAvatarItem => Boolean(item),
       ),
     };
   }, [roomsQuery.data, selectedStudent, user]);

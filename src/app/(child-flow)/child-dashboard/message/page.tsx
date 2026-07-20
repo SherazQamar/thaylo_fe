@@ -5,7 +5,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import ChildUserDropdown from "@/components/child/ChildUserDropdown";
 import ChildMessageSnapshotCard from "@/components/child/ChildMessageSnapshotCard";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
-import ChatSidebar from "@/components/shared/chat/ChatSidebar";
+import ChatSidebar, {
+  type CategoryAvatarItem,
+} from "@/components/shared/chat/ChatSidebar";
 import ChatMessageList from "@/components/shared/chat/ChatMessageList";
 import ChatComposer from "@/components/shared/chat/ChatComposer";
 import {
@@ -222,26 +224,26 @@ export default function ChildMessagePage() {
   );
 
   const categoryAvatars = useMemo(() => {
-    const wayfinder = wayfinderParticipant
+    const wayfinder: CategoryAvatarItem | undefined = wayfinderParticipant
       ? {
           name: wayfinderParticipant.name ?? "Wayfinder",
           avatarUrl: wayfinderParticipant.avatarUrl,
         }
       : undefined;
-    const parent = parentParticipant
+    const parent: CategoryAvatarItem | undefined = parentParticipant
       ? {
           name: parentParticipant.name ?? "Parent",
           avatarUrl: parentParticipant.avatarUrl,
         }
       : undefined;
-    const self = child
+    const self: CategoryAvatarItem | undefined = child
       ? { name: child.userName, avatarUrl: child.avatarUrl }
       : undefined;
     return {
       child: wayfinder,
       parent,
       group: [self, parent, wayfinder].filter(
-        (item): item is { name: string; avatarUrl?: string | null } => Boolean(item),
+        (item): item is CategoryAvatarItem => Boolean(item),
       ),
     };
   }, [child, parentParticipant, wayfinderParticipant]);
