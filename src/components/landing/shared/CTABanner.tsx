@@ -28,15 +28,15 @@ export default function CTABanner() {
               <span className="block">confidence, and growth.</span>
             </p>
             <button className="w-full max-w-[300px] px-8 py-3 bg-white hover:bg-white/90 transition-colors cursor-pointer shadow-lg mb-3" style={{ borderRadius: "12px", fontFamily: "Instrument Sans, sans-serif", fontWeight: 500, fontSize: "18px", lineHeight: "21.6px", letterSpacing: "-0.48px", color: "#111023" }}>
-              Apply Now
+              Start Your Free 7-Day Trial
             </button>
-            <div className="w-full max-w-[320px] h-[280px] overflow-hidden flex justify-center">
+            <div className="w-full max-w-[320px] flex justify-center pb-8">
               <Image
-                src="/assets/new-hero.png"
+                src="/assets/help-chil.png"
                 alt="Thaylo Character"
                 width={420}
                 height={560}
-                className="w-[320px] h-[420px] object-cover object-top drop-shadow-2xl"
+                className="w-[220px] h-auto object-contain drop-shadow-2xl"
               />
             </div>
           </div>
@@ -55,22 +55,22 @@ export default function CTABanner() {
             {/* Center - Character */}
             <div className="flex justify-center relative">
               <Image
-                src="/assets/new-hero.png"
+                src="/assets/help-chil.png"
                 alt="Thaylo Character"
                 width={400}
                 height={450}
-                className="lg:w-[340px] md:w-[280px] h-auto object-contain drop-shadow-2xl md:-mt-6 lg:-mt-8 md:mb-[-150px] lg:mb-[-200px]"
+                className="md:w-[200px] lg:w-[240px] h-auto object-contain drop-shadow-2xl md:-my-4 lg:-my-6"
               />
             </div>
 
             {/* Right */}
             <div className="text-right">
-              <p className="italic mb-4 sm:mb-6" style={{ fontFamily: "Inter, sans-serif", fontWeight: 400, fontSize: "18px", lineHeight: "27px", letterSpacing: "-0.48px", color: "#FFFFFF" }}>
+              <p className="mb-4 sm:mb-6" style={{ fontFamily: "Inter, sans-serif", fontStyle: "normal", fontWeight: 400, fontSize: "18px", lineHeight: "27px", letterSpacing: "-0.48px", color: "#FFFFFF" }}>
                 A thoughtful learning experience designed to support
                 understanding, confidence, and growth.
               </p>
               <button className="px-6 sm:px-8 py-3 sm:py-3.5 bg-white hover:bg-white/90 transition-colors cursor-pointer shadow-lg" style={{ borderRadius: "12px", fontFamily: "Instrument Sans, sans-serif", fontWeight: 500, fontSize: "18px", lineHeight: "21.6px", letterSpacing: "-0.48px", color: "#111023" }}>
-                Apply Now
+                Start Your Free 7-Day Trial
               </button>
             </div>
           </div>
