@@ -13,12 +13,15 @@ import {
   clearRoomUnreadInCache,
   filterContacts,
   roomMeta,
-  toggleChatFilter,
   type ChatContactCategory,
   type ChatSidebarContact,
   type ChatSidebarPerson,
 } from "@/components/shared/chat/chat-sidebar-types";
-import { fetchWayfinderStudents } from "@/lib/wayfinder-api";
+import {
+  fetchWayfinderStudentSnapshot,
+  fetchWayfinderStudents,
+  wayfinderQueryKeys,
+} from "@/lib/wayfinder-api";
 import {
   findOrCreateDirectRoom,
   findOrCreateGroupRoom,
@@ -31,6 +34,7 @@ import { useChatConversation } from "@/hooks/use-chat-conversation";
 import {
   formatStudentGrade,
   formatWayfinderStudentName,
+  isRecentlyActive,
 } from "@/lib/wayfinder-student";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
@@ -50,11 +54,7 @@ export default function MessagePage() {
   const [activeRoomId, setActiveRoomId] = useState<number | null>(null);
   const [activeStudentId, setActiveStudentId] = useState<number | null>(null);
   const [activeContactId, setActiveContactId] = useState<string | null>(null);
-  const [selectedFilters, setSelectedFilters] = useState<ChatContactCategory[]>([
-    "group",
-    "child",
-    "parent",
-  ]);
+  const [activeCategory, setActiveCategory] = useState<ChatContactCategory>("parent");
 
   const studentsQuery = useQuery({
     queryKey: ["wayfinder-students-chat"],
@@ -77,6 +77,13 @@ export default function MessagePage() {
     queryKey: ["chat-rooms", "wayfinder"],
     queryFn: () => listChatRooms("user"),
     refetchInterval: 8000,
+  });
+
+  const snapshotQuery = useQuery({
+    queryKey: wayfinderQueryKeys.studentSnapshot(activeStudentId ?? 0),
+    queryFn: () => fetchWayfinderStudentSnapshot(activeStudentId!),
+    enabled: typeof activeStudentId === "number" && activeStudentId > 0,
+    refetchInterval: 30_000,
   });
 
   const openRoomMutation = useMutation({
@@ -213,7 +220,7 @@ export default function MessagePage() {
       {
         id: `child-${selectedStudent.id}`,
         category: "child",
-        label: selectedStudent.userName,
+        label: formatWayfinderStudentName(selectedStudent),
         subtitle: "Direct with child",
         studentId: selectedStudent.id,
         action: "child",
@@ -225,7 +232,9 @@ export default function MessagePage() {
       {
         id: `parent-${selectedStudent.id}`,
         category: "parent",
-        label: parentName,
+        label: parentName.startsWith("Mom") || parentName.startsWith("Dad")
+          ? parentName
+          : `Parent – ${parentName}`,
         subtitle: "Direct with parent",
         studentId: selectedStudent.id,
         action: "parent",
@@ -237,16 +246,28 @@ export default function MessagePage() {
     ];
   }, [roomsQuery.data, selectedStudent]);
 
+  const categoryCounts = useMemo(() => {
+    const counts: Record<ChatContactCategory, number> = {
+      child: 0,
+      parent: 0,
+      group: 0,
+    };
+    for (const contact of allContacts) {
+      counts[contact.category] += contact.unreadCount ?? 0;
+    }
+    return counts;
+  }, [allContacts]);
+
   const visibleContacts = useMemo(
-    () => filterContacts(allContacts, selectedFilters),
-    [allContacts, selectedFilters],
+    () => filterContacts(allContacts, [activeCategory]),
+    [allContacts, activeCategory],
   );
 
   useEffect(() => {
     if (!Number.isFinite(deepLinkStudentId) || !activeStudentId) return;
     if (deepLinkStudentId !== activeStudentId) return;
 
-    const contactType =
+    const contactType: ChatContactCategory =
       deepLinkContact === "parent"
         ? "parent"
         : deepLinkContact === "group"
@@ -256,7 +277,7 @@ export default function MessagePage() {
     const contact = allContacts.find((item) => item.id === contactId) as WayfinderContact | undefined;
     if (!contact) return;
 
-    setSelectedFilters([contactType]);
+    setActiveCategory(contactType);
     setActiveContactId(contactId);
     openRoomMutation.mutate(contact);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -276,7 +297,7 @@ export default function MessagePage() {
     setActiveContactId(first.id);
     openRoomMutation.mutate(first);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeContactId, visibleContacts, activeStudentId]);
+  }, [activeContactId, visibleContacts, activeStudentId, activeCategory]);
 
   const activeRoom = (roomsQuery.data ?? []).find((room) => room.roomId === activeRoomId);
 
@@ -286,15 +307,6 @@ export default function MessagePage() {
     if (!activeRoomId) return;
     setMessage("");
     void send(content, file);
-  }
-
-  function roomTitle(room: ChatRoomListItem | undefined) {
-    if (!room) return "Select a chat";
-    return room.type === "GROUP" ? room.groupName ?? "Family Group" : room.otherParticipant?.name ?? "Direct Chat";
-  }
-
-  function handleFilterToggle(filter: ChatContactCategory) {
-    setSelectedFilters((current) => toggleChatFilter(current, filter));
   }
 
   function handleSelectContact(contact: ChatSidebarContact) {
@@ -311,7 +323,15 @@ export default function MessagePage() {
     setActiveRoomId(null);
   }
 
+  function handleCategorySelect(category: ChatContactCategory) {
+    if (category === activeCategory) return;
+    setActiveCategory(category);
+    setActiveContactId(null);
+    setActiveRoomId(null);
+  }
+
   const activeGroupParticipants = activeRoom?.groupParticipants ?? undefined;
+  const personOnline = isRecentlyActive(snapshotQuery.data?.lastActiveAt);
 
   return (
     <div className="flex flex-col h-full">
@@ -339,35 +359,34 @@ export default function MessagePage() {
       >
         <ChatSidebar
           portal="wayfinder"
-          className="md:w-[300px] md:border-r border-b md:border-b-0"
+          layout="focus"
+          className="md:w-[300px] lg:w-[320px] md:border-r border-b md:border-b-0"
+          backLink={{ href: "/dashboard/students", label: "Back to Students" }}
           people={people}
           peopleLabel="Students"
           activePersonId={activeStudentId != null ? String(activeStudentId) : null}
           onSelectPerson={handleSelectPerson}
+          personStatus={
+            selectedStudent
+              ? {
+                  label: personOnline ? "Active" : "Away",
+                  online: personOnline,
+                }
+              : null
+          }
           contacts={visibleContacts}
           activeContactId={activeContactId}
-          selectedFilters={selectedFilters}
-          onFilterToggle={handleFilterToggle}
+          selectedFilters={[activeCategory]}
+          onFilterToggle={handleCategorySelect}
+          activeCategory={activeCategory}
+          onCategorySelect={handleCategorySelect}
+          categoryCounts={categoryCounts}
           onSelectContact={handleSelectContact}
-          footer={`${visibleContacts.length} chat${visibleContacts.length === 1 ? "" : "s"} · ${people.length} student${people.length === 1 ? "" : "s"}`}
         />
 
         <div className="flex-1 flex flex-col min-h-0">
-          <div className="flex flex-col lg:flex-row lg:items-start justify-between px-4 md:px-5 py-3 md:py-3.5 border-b border-white/10 gap-3">
-            <div className="min-w-0">
-              <p style={{ ...inter, fontWeight: 700, fontSize: "18px", lineHeight: "24px", color: "#FFFFFF" }}>
-                {roomTitle(activeRoom)}
-              </p>
-              <p style={{ ...inter, fontWeight: 400, fontSize: "13px", lineHeight: "18px", color: "rgba(255,255,255,0.5)" }}>
-                {activeRoom?.type === "GROUP"
-                  ? `Group · ${selectedStudent ? formatWayfinderStudentName(selectedStudent) : "Student"}`
-                  : "Direct chat"}
-              </p>
-            </div>
-            <WayfinderStudentSnapshotCard
-              childId={activeStudentId}
-              className="lg:ml-auto shrink-0"
-            />
+          <div className="px-3 md:px-4 py-3 border-b border-white/10">
+            <WayfinderStudentSnapshotCard childId={activeStudentId} />
           </div>
 
           <ChatMessageList
@@ -390,7 +409,7 @@ export default function MessagePage() {
             onSend={handleSend}
             onTyping={notifyTyping}
             disabled={!activeRoomId}
-            placeholder={activeRoomId ? "Message" : "Select a chat"}
+            placeholder={activeRoomId ? "Type a message..." : "Select a chat"}
           />
         </div>
       </div>

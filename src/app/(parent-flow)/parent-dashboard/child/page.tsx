@@ -14,6 +14,8 @@ import {
   resetParentChildPin,
   updateParentChild,
 } from "@/lib/parent-api";
+import { fetchParentChildBadges } from "@/lib/badge-api";
+import { BadgeShield } from "@/components/shared/BadgeArtwork";
 import { getApiErrorMessage } from "@/lib/auth-api";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
@@ -53,6 +55,12 @@ function ChildDetailContent() {
   const { data: child, isLoading, isError } = useQuery({
     queryKey: ["parent-child", childId],
     queryFn: () => fetchParentChild(childId),
+    enabled: Number.isFinite(childId) && childId > 0,
+  });
+
+  const badgesQuery = useQuery({
+    queryKey: ["parent-child-badges", childId],
+    queryFn: () => fetchParentChildBadges(childId),
     enabled: Number.isFinite(childId) && childId > 0,
   });
 
@@ -552,46 +560,99 @@ function ChildDetailContent() {
             )}
           </div>
 
-          <div className="flex flex-wrap gap-3 mb-6">
-            <button
-              type="button"
-              onClick={() => {
-                setActionError(null);
-                setShowPinModal(true);
-              }}
-              className="rounded-[16px] px-5 py-2 cursor-pointer hover:opacity-90 transition-opacity"
-              style={{
-                backgroundColor: "#00CED1",
-                ...inter,
-                fontWeight: 600,
-                fontSize: "14px",
-                color: "#111023",
-              }}
-            >
-              Reset PIN
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setActionError(null);
-                setShowArchiveConfirm(true);
-              }}
-              className="rounded-[16px] px-5 py-2 cursor-pointer hover:opacity-90 transition-opacity border border-red-400/40 text-red-300"
-              style={{ ...inter, fontWeight: 600, fontSize: "14px" }}
-            >
-              Archive
-            </button>
-          </div>
-          {actionError && !showPinModal && !showArchiveConfirm && (
-            <p className="text-red-400 text-sm mb-4" role="alert" style={inter}>
-              {actionError}
-            </p>
-          )}
           <StudentProgressOverview
             displayName={displayName}
             gradeLabel={formatChildGrade(child.grade)}
             messagesHref="/parent-dashboard/message"
+            progressLabel={badgesQuery.data?.plantStatus}
+            gardenStage={badgesQuery.data?.plantStage}
+            gardenMessage={
+              badgesQuery.data
+                ? `${displayName}'s plant · ${badgesQuery.data.masteredCount} of ${badgesQuery.data.totalLessons} mastered`
+                : undefined
+            }
+            badgeCount={badgesQuery.data?.badgesEarned}
+            badgePreviews={
+              badgesQuery.data?.badges
+                .filter((b) => b.count > 0 && b.imageUrl)
+                .map((b) => ({
+                  kind: b.kind,
+                  name: b.name,
+                  imageUrl: b.imageUrl!,
+                  count: b.count,
+                })) ?? []
+            }
           />
+
+          {badgesQuery.data && (
+            <div
+              className="rounded-[12px] p-4 md:p-5 mt-6"
+              style={{ backgroundColor: "#313044" }}
+            >
+              <h3
+                style={{
+                  ...inter,
+                  fontWeight: 700,
+                  fontSize: "16px",
+                  color: "#FFFFFF",
+                  marginBottom: "12px",
+                }}
+              >
+                Badges ({badgesQuery.data.badgesEarned} earned)
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {badgesQuery.data.badges.map((badge) => (
+                  <div
+                    key={badge.kind}
+                    className="rounded-[10px] px-3 py-2.5 flex items-center gap-3"
+                    style={{ backgroundColor: "#3A3954" }}
+                  >
+                    <BadgeShield
+                      iconStyle={badge.iconStyle}
+                      earned={badge.count > 0}
+                      size={40}
+                      imageUrl={badge.imageUrl}
+                      alt={badge.name}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <p
+                          style={{
+                            ...inter,
+                            fontWeight: 600,
+                            fontSize: "13px",
+                            color: "#FFFFFF",
+                          }}
+                        >
+                          {badge.name}
+                        </p>
+                        <p
+                          style={{
+                            ...inter,
+                            fontWeight: 700,
+                            fontSize: "13px",
+                            color: badge.count > 0 ? "#00CED1" : "rgba(255,255,255,0.4)",
+                          }}
+                        >
+                          {badge.count}
+                          {badge.maxCount != null ? `/${badge.maxCount}` : ""}
+                        </p>
+                      </div>
+                      <p
+                        style={{
+                          ...inter,
+                          fontSize: "11px",
+                          color: "rgba(255,255,255,0.45)",
+                        }}
+                      >
+                        {badge.description}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </>
       ) : (
         <div
@@ -604,6 +665,42 @@ function ChildDetailContent() {
             emptyMessage="This child has not completed an onboarding assessment yet."
           />
         </div>
+      )}
+
+      <div className="flex flex-wrap items-center gap-3 mt-8 mb-2">
+        <button
+          type="button"
+          onClick={() => {
+            setActionError(null);
+            setShowPinModal(true);
+          }}
+          className="rounded-[16px] px-5 py-2 cursor-pointer hover:opacity-90 transition-opacity"
+          style={{
+            backgroundColor: "#00CED1",
+            ...inter,
+            fontWeight: 600,
+            fontSize: "14px",
+            color: "#111023",
+          }}
+        >
+          Reset PIN
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setActionError(null);
+            setShowArchiveConfirm(true);
+          }}
+          className="rounded-[16px] px-5 py-2 cursor-pointer hover:opacity-90 transition-opacity border border-red-400/40 text-red-300"
+          style={{ ...inter, fontWeight: 600, fontSize: "14px" }}
+        >
+          Archive
+        </button>
+      </div>
+      {actionError && !showPinModal && !showArchiveConfirm && (
+        <p className="text-red-400 text-sm mt-2 mb-4" role="alert" style={inter}>
+          {actionError}
+        </p>
       )}
 
       {showArchiveConfirm && (

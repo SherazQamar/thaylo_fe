@@ -160,8 +160,8 @@ export default function ParentSignIn() {
 
         <div className="relative z-10 flex justify-start mt-auto mb-0">
           <Image
-            src="/assets/Parent P1.png"
-            alt="Parent character"
+            src="/assets/new-hero.png"
+            alt="Thaylo character"
             width={320}
             height={360}
             className="w-[280px] max-h-[50vh] object-contain object-bottom"
