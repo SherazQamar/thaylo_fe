@@ -4,7 +4,7 @@ export default function Hero() {
   return (
     <section
       id="home"
-      className="relative lg:h-screen bg-[#0B1D2E] overflow-hidden rounded-b-3xl lg:rounded-b-none"
+      className="relative lg:h-screen bg-[#111023] overflow-hidden rounded-b-3xl lg:rounded-b-none"
     >
       {/* Background glow effects */}
       <div className="absolute inset-0 pointer-events-none">
@@ -16,7 +16,7 @@ export default function Hero() {
       {/* Character - hidden on mobile, absolute on desktop */}
       <div className="hidden lg:flex absolute right-0 lg:right-[5%] xl:right-[8%] top-[5%] bottom-0 w-[45%] z-[5] justify-center">
         <Image
-          src="/assets/green-robot-hero.png"
+          src="/assets/new-hero.png"
           alt="Calyx, your Bloom Buddy"
           width={800}
           height={900}
@@ -59,9 +59,9 @@ export default function Hero() {
           {/* Avatar group - desktop only */}
           <div className="hidden lg:flex items-center gap-4 justify-start">
             <div className="flex -space-x-3">
-              <Image src="/assets/hero 1.jpg" alt="Student 1" width={44} height={44} className="w-9 h-9 lg:w-11 lg:h-11 rounded-full border-[2.5px] border-[#0B1D2E] object-cover" />
-              <Image src="/assets/hero 2.jpg" alt="Student 2" width={44} height={44} className="w-9 h-9 lg:w-11 lg:h-11 rounded-full border-[2.5px] border-[#0B1D2E] object-cover" />
-              <Image src="/assets/hero 3.jpg" alt="Student 3" width={44} height={44} className="w-9 h-9 lg:w-11 lg:h-11 rounded-full border-[2.5px] border-[#0B1D2E] object-cover" />
+              <Image src="/assets/hero 1.jpg" alt="Student 1" width={44} height={44} className="w-9 h-9 lg:w-11 lg:h-11 rounded-full border-[2.5px] border-[#111023] object-cover" />
+              <Image src="/assets/hero 2.jpg" alt="Student 2" width={44} height={44} className="w-9 h-9 lg:w-11 lg:h-11 rounded-full border-[2.5px] border-[#111023] object-cover" />
+              <Image src="/assets/hero 3.jpg" alt="Student 3" width={44} height={44} className="w-9 h-9 lg:w-11 lg:h-11 rounded-full border-[2.5px] border-[#111023] object-cover" />
             </div>
             <span className="text-white text-[14px] sm:text-[18px] font-normal leading-[21.6px] tracking-[-0.48px]" style={{ fontFamily: "Inter, sans-serif" }}>
               Personalized for Every Learner
@@ -72,7 +72,7 @@ export default function Hero() {
         {/* Mobile character - shown only on mobile */}
         <div className="flex lg:hidden justify-center mt-4 flex-1 items-end overflow-hidden">
           <Image
-            src="/assets/green-robot-hero.png"
+            src="/assets/new-hero.png"
             alt="Calyx, your Bloom Buddy"
             width={400}
             height={450}

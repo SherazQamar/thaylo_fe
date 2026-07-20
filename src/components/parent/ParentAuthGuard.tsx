@@ -7,21 +7,8 @@ import { getUserToken } from "@/lib/auth-cookies";
 import { logoutParent } from "@/lib/auth-session";
 import { isParentAccessTokenValid } from "@/lib/jwt";
 import { useAuthStore } from "@/stores/auth.store";
-import type { User } from "@/types/api";
 
 type AuthStatus = "loading" | "authenticated";
-
-/** Design-preview escape hatch: set NEXT_PUBLIC_DISABLE_PARENT_AUTH=true in .env.local. */
-const authDisabled = process.env.NEXT_PUBLIC_DISABLE_PARENT_AUTH === "true";
-
-const previewParent: User = {
-  id: 0,
-  email: "preview.parent@thayloglobal.com",
-  name: "Preview Parent",
-  role: "PARENT",
-  isEmailVerified: true,
-  children: [],
-};
 
 export default function ParentAuthGuard({
   children,
@@ -29,16 +16,9 @@ export default function ParentAuthGuard({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const [status, setStatus] = useState<AuthStatus>(
-    authDisabled ? "authenticated" : "loading"
-  );
+  const [status, setStatus] = useState<AuthStatus>("loading");
 
   useEffect(() => {
-    if (authDisabled) {
-      useAuthStore.getState().setUser(previewParent);
-      return;
-    }
-
     const token = getUserToken();
     if (!token) {
       router.replace("/parent-sign-in");

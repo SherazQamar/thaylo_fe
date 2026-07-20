@@ -231,8 +231,8 @@ export default function ChildSignIn() {
       {/* Character Image - right side desktop only */}
       <div className="hidden lg:block absolute right-6 bottom-0 pointer-events-none">
         <Image
-          src="/assets/child login.png"
-          alt="Child character"
+          src="/assets/new-hero.png"
+          alt="Thaylo character"
           width={280}
           height={400}
           className="w-[220px] h-auto object-contain"

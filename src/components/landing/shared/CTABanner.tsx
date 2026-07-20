@@ -32,7 +32,7 @@ export default function CTABanner() {
             </button>
             <div className="w-full max-w-[320px] h-[280px] overflow-hidden flex justify-center">
               <Image
-                src="/assets/character-sitting.png"
+                src="/assets/new-hero.png"
                 alt="Thaylo Character"
                 width={420}
                 height={560}
@@ -55,7 +55,7 @@ export default function CTABanner() {
             {/* Center - Character */}
             <div className="flex justify-center relative">
               <Image
-                src="/assets/character-sitting.png"
+                src="/assets/new-hero.png"
                 alt="Thaylo Character"
                 width={400}
                 height={450}

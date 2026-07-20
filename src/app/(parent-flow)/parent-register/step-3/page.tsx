@@ -73,17 +73,6 @@ function ParentRegisterStep3Content() {
             <ThayloBrandLink size="sm" />
           </div>
 
-          {isAddMode && (
-            <div className="w-full max-w-[420px] lg:max-w-[560px] mx-auto mb-4 flex items-center justify-between">
-              <h2 className="text-white text-base sm:text-lg font-semibold uppercase tracking-[0.12em]" style={inter}>
-                Add Child
-              </h2>
-              <div className="hidden md:block">
-                <ParentUserDropdown />
-              </div>
-            </div>
-          )}
-
           <div className="w-full max-w-[420px] lg:max-w-[560px] mx-auto mb-4">
             <div className="w-full h-[6px] bg-[#313044] rounded-full overflow-hidden mb-3">
               <div className="h-full w-3/4 bg-[#00CED1] rounded-full" />

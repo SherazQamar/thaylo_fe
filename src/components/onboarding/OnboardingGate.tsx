@@ -66,8 +66,6 @@ export default function OnboardingGate({
   }, [onboardingPath, pathname, portal]);
 
   useEffect(() => {
-    if (bypass) return;
-
     let cancelled = false;
 
     void refreshStatus().then(() => {

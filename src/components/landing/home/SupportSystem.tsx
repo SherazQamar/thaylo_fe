@@ -50,7 +50,7 @@ export default function SupportSystem() {
           {/* Center - Character */}
           <div className="hidden lg:flex justify-center items-center order-first lg:order-none">
             <Image
-              src="/assets/character-jumping.png"
+              src="/assets/new-learning-support.png"
               alt="Thaylo Character"
               width={400}
               height={450}
