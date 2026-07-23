@@ -9,9 +9,13 @@ import ProgressRing from "@/components/shared/ProgressRing";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
+/** Message snapshot shows at most 2 badge icons, then +N. */
+export const MESSAGE_BADGE_PREVIEW_MAX = 2;
+export const MESSAGE_BADGE_PREVIEW_SIZE_PX = 28;
+
 function BookIcon() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
       <path
         d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"
         stroke="#00CED1"
@@ -77,7 +81,7 @@ export default function MessageSnapshotCard({
 }: MessageSnapshotCardProps) {
   return (
     <aside
-      className={`rounded-[12px] p-4 w-full min-w-0 ${className}`}
+      className={`rounded-[12px] p-3 w-full min-w-0 overflow-hidden ${className}`}
       style={{ backgroundColor: "#313044", border: "1px solid rgba(255,255,255,0.06)" }}
       aria-label="Participant snapshot"
     >
@@ -109,108 +113,35 @@ function SnapshotBody({ data }: { data: MessageSnapshotData }) {
   const previews = data.badgePreviews ?? [];
 
   return (
-    <div className="flex flex-col xl:flex-row xl:items-center gap-4 xl:gap-5 w-full min-w-0">
-      <div className="flex items-center gap-3 min-w-0 shrink-0">
-        <PortalAvatar
-          name={data.displayName}
-          avatarUrl={data.avatarUrl}
-          size={52}
-          useWordInitials
-        />
-        <div className="min-w-0">
-          <p
-            className="truncate"
-            style={{ ...inter, fontWeight: 700, fontSize: "16px", lineHeight: "22px", color: "#FFFFFF" }}
-          >
-            {data.displayName}
-          </p>
-          <p style={{ ...inter, fontWeight: 500, fontSize: "12px", color: "rgba(255,255,255,0.55)", marginTop: "2px" }}>
-            {data.gradeLabel}
-            {data.metaLine ? ` · ${data.metaLine}` : ""}
-          </p>
-          {data.activeStatus ? (
-            <p style={{ ...inter, fontWeight: 400, fontSize: "11px", color: "rgba(255,255,255,0.4)", marginTop: "2px" }}>
-              {data.activeStatus}
+    <div className="flex flex-col gap-3 w-full min-w-0">
+      <div className="flex items-center justify-between gap-3 min-w-0">
+        <div className="flex items-center gap-3 min-w-0">
+          <PortalAvatar
+            name={data.displayName}
+            avatarUrl={data.avatarUrl}
+            size={44}
+            useWordInitials
+          />
+          <div className="min-w-0">
+            <p
+              className="truncate"
+              style={{ ...inter, fontWeight: 700, fontSize: "15px", lineHeight: "20px", color: "#FFFFFF" }}
+            >
+              {data.displayName}
             </p>
-          ) : null}
+            <p
+              className="truncate"
+              style={{ ...inter, fontWeight: 500, fontSize: "12px", color: "rgba(255,255,255,0.55)", marginTop: "2px" }}
+            >
+              {data.gradeLabel}
+              {data.metaLine ? ` · ${data.metaLine}` : ""}
+            </p>
+          </div>
         </div>
-      </div>
 
-      <div className="hidden xl:block w-px self-stretch bg-white/10 shrink-0" />
-
-      <div className="flex items-center gap-3 min-w-0 shrink-0">
-        <div
-          className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
-          style={{ backgroundColor: "rgba(0,206,209,0.12)" }}
-        >
-          <BookIcon />
-        </div>
-        <div className="min-w-0">
-          <p style={{ ...inter, fontWeight: 500, fontSize: "10px", color: "rgba(255,255,255,0.45)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-            Current Lesson
-          </p>
-          <p
-            className="truncate max-w-[160px]"
-            style={{ ...inter, fontWeight: 600, fontSize: "13px", color: "#FFFFFF", marginTop: "2px" }}
-            title={data.currentLessonTitle ?? undefined}
-          >
-            {data.currentLessonTitle ?? "Not in a lesson"}
-          </p>
-          <p style={{ ...inter, fontWeight: 400, fontSize: "11px", color: "rgba(255,255,255,0.4)", marginTop: "1px" }}>
-            {data.lessonSubtitle ?? "—"}
-          </p>
-        </div>
-      </div>
-
-      <div className="flex items-center gap-2.5 shrink-0">
-        <ProgressRing percent={masteryPct} size={52} strokeWidth={4}>
-          <span style={{ ...inter, fontWeight: 700, fontSize: "12px", color: "#FFFFFF" }}>
-            {masteryPct != null ? `${masteryPct}%` : "—"}
-          </span>
-        </ProgressRing>
-        <div className="min-w-0">
-          <p style={{ ...inter, fontWeight: 500, fontSize: "10px", color: "rgba(255,255,255,0.45)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-            Mastery
-          </p>
-          <p style={{ ...inter, fontWeight: 400, fontSize: "11px", color: "rgba(255,255,255,0.45)", marginTop: "2px" }}>
-            {data.masteryDetail ?? "No attempts yet"}
-          </p>
-        </div>
-      </div>
-
-      <div className="flex items-center gap-2.5 shrink-0">
-        <ProgressRing percent={progressPct} size={52} strokeWidth={4}>
-          <span style={{ ...inter, fontWeight: 700, fontSize: "11px", color: "#FFFFFF" }}>
-            {progressCompleted}/{progressTotal || "—"}
-          </span>
-        </ProgressRing>
-        <div className="min-w-0">
-          <p style={{ ...inter, fontWeight: 500, fontSize: "10px", color: "rgba(255,255,255,0.45)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-            Course Progress
-          </p>
-          <p style={{ ...inter, fontWeight: 400, fontSize: "11px", color: "rgba(255,255,255,0.45)", marginTop: "2px" }}>
-            Lessons Completed
-          </p>
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-1.5 min-w-0 shrink-0">
-        <p style={{ ...inter, fontWeight: 500, fontSize: "10px", color: "rgba(255,255,255,0.45)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-          Badges Earned
-        </p>
-        {previews.length > 0 ? (
-          <BadgePreviewStrip previews={previews} className="!justify-start" />
-        ) : (
-          <p style={{ ...inter, fontWeight: 500, fontSize: "12px", color: "rgba(255,255,255,0.4)" }}>
-            0 badges yet
-          </p>
-        )}
-      </div>
-
-      <div className="xl:ml-auto shrink-0">
         <Link
           href={data.profileHref}
-          className="inline-flex items-center gap-2 rounded-lg px-3.5 py-2 transition-opacity hover:opacity-90"
+          className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-2 transition-opacity hover:opacity-90 shrink-0"
           style={{
             ...inter,
             fontWeight: 600,
@@ -220,8 +151,118 @@ function SnapshotBody({ data }: { data: MessageSnapshotData }) {
           }}
         >
           <UserIcon />
-          {data.profileLabel ?? "View Profile"}
+          <span className="hidden sm:inline">{data.profileLabel ?? "View Profile"}</span>
         </Link>
+      </div>
+
+      {/* Compact row for phones / tablets — keeps composer visible */}
+      <div className="flex lg:hidden items-center justify-between gap-3 min-w-0">
+        <div className="min-w-0 flex-1">
+          <p style={{ ...inter, fontWeight: 500, fontSize: "10px", color: "rgba(255,255,255,0.45)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+            Current Lesson
+          </p>
+          <p
+            className="truncate"
+            style={{ ...inter, fontWeight: 600, fontSize: "12px", color: "#FFFFFF", marginTop: "2px" }}
+          >
+            {data.currentLessonTitle ?? "Not in a lesson"}
+          </p>
+        </div>
+        <div className="shrink-0">
+          {previews.length > 0 ? (
+            <BadgePreviewStrip
+              previews={previews}
+              maxVisible={MESSAGE_BADGE_PREVIEW_MAX}
+              size={MESSAGE_BADGE_PREVIEW_SIZE_PX}
+              className="!justify-end !gap-1.5 !flex-nowrap"
+            />
+          ) : (
+            <p style={{ ...inter, fontWeight: 500, fontSize: "11px", color: "rgba(255,255,255,0.4)" }}>
+              0 badges
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Full stats grid — desktop only */}
+      <div className="hidden lg:grid grid-cols-2 xl:grid-cols-4 gap-3 min-w-0">
+        <div className="flex items-center gap-2.5 min-w-0 rounded-lg px-2.5 py-2 bg-white/[0.03]">
+          <div
+            className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+            style={{ backgroundColor: "rgba(0,206,209,0.12)" }}
+          >
+            <BookIcon />
+          </div>
+          <div className="min-w-0">
+            <p style={{ ...inter, fontWeight: 500, fontSize: "10px", color: "rgba(255,255,255,0.45)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+              Current Lesson
+            </p>
+            <p
+              className="truncate"
+              style={{ ...inter, fontWeight: 600, fontSize: "12px", color: "#FFFFFF", marginTop: "2px" }}
+              title={data.currentLessonTitle ?? undefined}
+            >
+              {data.currentLessonTitle ?? "Not in a lesson"}
+            </p>
+            <p className="truncate" style={{ ...inter, fontWeight: 400, fontSize: "11px", color: "rgba(255,255,255,0.4)", marginTop: "1px" }}>
+              {data.lessonSubtitle ?? "—"}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2.5 min-w-0 rounded-lg px-2.5 py-2 bg-white/[0.03]">
+          <ProgressRing percent={masteryPct} size={44} strokeWidth={3.5}>
+            <span style={{ ...inter, fontWeight: 700, fontSize: "11px", color: "#FFFFFF" }}>
+              {masteryPct != null ? `${masteryPct}%` : "—"}
+            </span>
+          </ProgressRing>
+          <div className="min-w-0">
+            <p style={{ ...inter, fontWeight: 500, fontSize: "10px", color: "rgba(255,255,255,0.45)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+              Mastery
+            </p>
+            <p className="truncate" style={{ ...inter, fontWeight: 400, fontSize: "11px", color: "rgba(255,255,255,0.45)", marginTop: "2px" }}>
+              {data.masteryDetail ?? "No attempts yet"}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2.5 min-w-0 rounded-lg px-2.5 py-2 bg-white/[0.03]">
+          <ProgressRing percent={progressPct} size={44} strokeWidth={3.5}>
+            <span style={{ ...inter, fontWeight: 700, fontSize: "10px", color: "#FFFFFF" }}>
+              {progressCompleted}/{progressTotal || "—"}
+            </span>
+          </ProgressRing>
+          <div className="min-w-0">
+            <p style={{ ...inter, fontWeight: 500, fontSize: "10px", color: "rgba(255,255,255,0.45)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+              Course Progress
+            </p>
+            <p style={{ ...inter, fontWeight: 400, fontSize: "11px", color: "rgba(255,255,255,0.45)", marginTop: "2px" }}>
+              Lessons Completed
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2.5 min-w-0 rounded-lg px-2.5 py-2 bg-white/[0.03]">
+          <div className="min-w-0 flex-1">
+            <p style={{ ...inter, fontWeight: 500, fontSize: "10px", color: "rgba(255,255,255,0.45)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+              Badges Earned
+            </p>
+            <div className="mt-1.5">
+              {previews.length > 0 ? (
+                <BadgePreviewStrip
+                  previews={previews}
+                  maxVisible={MESSAGE_BADGE_PREVIEW_MAX}
+                  size={MESSAGE_BADGE_PREVIEW_SIZE_PX}
+                  className="!justify-start !gap-1.5 !flex-nowrap"
+                />
+              ) : (
+                <p style={{ ...inter, fontWeight: 500, fontSize: "12px", color: "rgba(255,255,255,0.4)" }}>
+                  0 badges yet
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

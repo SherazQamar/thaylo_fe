@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: projectRoot,
   },
+  transpilePackages: ["@heygen/liveavatar-web-sdk"],
   images: {
     remotePatterns: [
       {

@@ -70,6 +70,9 @@ export function useBlackboardNarration({
   const [isNarrating, setIsNarrating] = useState(false);
   const runIdRef = useRef(0);
   const onNarrationCompleteRef = useRef(onNarrationComplete);
+  const speakProgressRef = useRef(speakProgress);
+  const onCaptionRef = useRef(onCaption);
+  const onCaptionWordsRef = useRef(onCaptionWords);
 
   const resetReveal = useCallback(() => {
     setReveal(EMPTY_REVEAL);
@@ -78,6 +81,18 @@ export function useBlackboardNarration({
   useEffect(() => {
     onNarrationCompleteRef.current = onNarrationComplete;
   }, [onNarrationComplete]);
+
+  useEffect(() => {
+    speakProgressRef.current = speakProgress;
+  }, [speakProgress]);
+
+  useEffect(() => {
+    onCaptionRef.current = onCaption;
+  }, [onCaption]);
+
+  useEffect(() => {
+    onCaptionWordsRef.current = onCaptionWords;
+  }, [onCaptionWords]);
 
   useEffect(() => {
     if (!enabled || !step) {
@@ -96,13 +111,13 @@ export function useBlackboardNarration({
       onWordProgress: (wordCount: number) => void,
     ) {
       if (voiceEnabled) {
-        await speakProgress(text, {
+        await speakProgressRef.current(text, {
           wordMs,
           isCancelled,
           onWord: (index) => {
             const count = index + 1;
             onWordProgress(count);
-            onCaptionWords?.(count);
+            onCaptionWordsRef.current?.(count);
           },
         });
       } else {
@@ -111,7 +126,7 @@ export function useBlackboardNarration({
           if (isCancelled()) return;
           const count = i + 1;
           onWordProgress(count);
-          onCaptionWords?.(count);
+          onCaptionWordsRef.current?.(count);
           await delay(wordMs);
         }
         await delay(Math.max(0, estimateSpeakDurationMs(text, wordMs) - words.length * wordMs));
@@ -130,8 +145,8 @@ export function useBlackboardNarration({
 
       try {
         if (aiScript) {
-          onCaption(aiScript);
-          onCaptionWords?.(0);
+          onCaptionRef.current(aiScript);
+          onCaptionWordsRef.current?.(0);
           setReveal({
             completedLines: currentStep.lines.length,
             completedBullets: bullets.length,
@@ -157,12 +172,12 @@ export function useBlackboardNarration({
 
         if (!isCompactPracticeStep) {
           const intro = `Let's look at ${currentStep.title}.`;
-          onCaption(intro);
-          onCaptionWords?.(0);
+          onCaptionRef.current(intro);
+          onCaptionWordsRef.current?.(0);
           if (isCancelled()) return;
 
           if (voiceEnabled) {
-            await speakProgress(intro, { wordMs, isCancelled });
+            await speakProgressRef.current(intro, { wordMs, isCancelled });
           } else {
             await delay(estimateSpeakDurationMs(intro, wordMs));
           }
@@ -172,8 +187,8 @@ export function useBlackboardNarration({
 
         for (let i = 0; i < currentStep.lines.length; i += 1) {
           const line = currentStep.lines[i];
-          onCaption(line);
-          onCaptionWords?.(0);
+          onCaptionRef.current(line);
+          onCaptionWordsRef.current?.(0);
           setReveal((prev) => ({
             ...prev,
             activeLineIndex: i,
@@ -196,8 +211,8 @@ export function useBlackboardNarration({
 
         for (let i = 0; i < bullets.length; i += 1) {
           const bullet = bullets[i];
-          onCaption(bullet);
-          onCaptionWords?.(0);
+          onCaptionRef.current(bullet);
+          onCaptionWordsRef.current?.(0);
           setReveal((prev) => ({
             ...prev,
             activeBulletIndex: i,
@@ -229,8 +244,8 @@ export function useBlackboardNarration({
 
         if (currentStep.interaction && bullets.length === 0) {
           const prompt = currentStep.interaction.prompt;
-          onCaption(prompt);
-          onCaptionWords?.(0);
+          onCaptionRef.current(prompt);
+          onCaptionWordsRef.current?.(0);
           setReveal((prev) => ({
             ...prev,
             interactionVisible: true,
@@ -243,10 +258,10 @@ export function useBlackboardNarration({
           if (isCancelled()) return;
         } else if (currentStep.interaction && bullets.length > 0) {
           const prompt = currentStep.interaction.prompt;
-          onCaption(prompt);
-          onCaptionWords?.(0);
+          onCaptionRef.current(prompt);
+          onCaptionWordsRef.current?.(0);
           if (voiceEnabled) {
-            void speakProgress(prompt, { wordMs, isCancelled });
+            void speakProgressRef.current(prompt, { wordMs, isCancelled });
           }
         }
 
@@ -267,17 +282,9 @@ export function useBlackboardNarration({
       runIdRef.current += 1;
       setIsNarrating(false);
     };
-  }, [
-    enabled,
-    step,
-    voiceEnabled,
-    speakProgress,
-    onCaption,
-    onCaptionWords,
-    resetReveal,
-    pauseMs,
-    wordMs,
-  ]);
+    // Intentionally omit onCaption / onCaptionWords / speakProgress / onNarrationComplete —
+    // those are read via refs so unstable parent callbacks cannot restart narration.
+  }, [enabled, step, voiceEnabled, resetReveal, pauseMs, wordMs]);
 
   return { reveal, isNarrating, resetReveal };
 }

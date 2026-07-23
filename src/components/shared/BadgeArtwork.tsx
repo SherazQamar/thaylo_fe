@@ -1,6 +1,8 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import type { BadgeIconStyle } from "@/lib/badge-api";
+import { badgeImageCandidates } from "@/lib/badge-image-fallback";
 
 const stroke = "currentColor";
 
@@ -95,6 +97,10 @@ export function BadgeShield({
   alt?: string;
 }) {
   const iconSize = Math.round(size * 0.48);
+  const candidates = useMemo(() => badgeImageCandidates(imageUrl), [imageUrl]);
+  const [imageIndex, setImageIndex] = useState(0);
+  const imageSrc = candidates[imageIndex];
+
   return (
     <div
       className="flex items-center justify-center flex-shrink-0 overflow-hidden"
@@ -111,15 +117,20 @@ export function BadgeShield({
       }}
       aria-hidden={!alt}
     >
-      {imageUrl ? (
+      {imageSrc ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={imageUrl}
+          src={imageSrc}
           alt={alt ?? ""}
           width={size}
           height={size}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-contain"
           style={{ opacity: earned ? 1 : 0.45 }}
+          onError={() => {
+            setImageIndex((current) =>
+              current + 1 < candidates.length ? current + 1 : current,
+            );
+          }}
         />
       ) : (
         <BadgeArtwork iconStyle={iconStyle} size={iconSize} />

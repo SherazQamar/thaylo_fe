@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import ThayloBrandLink from "@/components/shared/ThayloBrandLink";
+import PasswordInput from "@/components/shared/PasswordInput";
 import { forgotPassword, getApiErrorMessage, loginParent } from "@/lib/auth-api";
 import { clearResendCooldown } from "@/lib/pending-verification";
 import { logoutParent, setParentSession } from "@/lib/auth-session";
@@ -219,13 +220,13 @@ export default function ParentSignIn() {
                   >
                     Password
                   </label>
-                  <input
-                    type="password"
+                  <PasswordInput
                     id="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
                     required
+                    autoComplete="current-password"
                     className="w-full px-4 py-3 sm:py-3.5 rounded-full bg-[#313044] text-white text-sm outline-none border border-transparent focus:border-[#00CED1]/40 transition-colors placeholder:text-white/30"
                     style={{ fontFamily: "Inter, sans-serif" }}
                   />
