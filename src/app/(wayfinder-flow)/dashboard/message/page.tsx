@@ -11,6 +11,7 @@ import ChatSidebar, {
 } from "@/components/shared/chat/ChatSidebar";
 import ChatMessageList from "@/components/shared/chat/ChatMessageList";
 import ChatComposer from "@/components/shared/chat/ChatComposer";
+import MessageWorkspace from "@/components/shared/chat/MessageWorkspace";
 import {
   clearRoomUnreadInCache,
   filterContacts,
@@ -57,6 +58,7 @@ export default function MessagePage() {
   const [activeStudentId, setActiveStudentId] = useState<number | null>(null);
   const [activeContactId, setActiveContactId] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<ChatContactCategory>("parent");
+  const [mobileShowChat, setMobileShowChat] = useState(false);
 
   const studentsQuery = useQuery({
     queryKey: ["wayfinder-students-chat"],
@@ -313,6 +315,7 @@ export default function MessagePage() {
 
     setActiveCategory(contactType);
     setActiveContactId(contactId);
+    setMobileShowChat(true);
     openRoomMutation.mutate(contact);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allContacts, activeStudentId, deepLinkStudentId, deepLinkContact]);
@@ -346,6 +349,7 @@ export default function MessagePage() {
   function handleSelectContact(contact: ChatSidebarContact) {
     const wayfinderContact = contact as WayfinderContact;
     setActiveContactId(wayfinderContact.id);
+    setMobileShowChat(true);
     openRoomMutation.mutate(wayfinderContact);
   }
 
@@ -355,21 +359,31 @@ export default function MessagePage() {
     setActiveStudentId(nextId);
     setActiveContactId(null);
     setActiveRoomId(null);
+    setMobileShowChat(false);
   }
 
   function handleCategorySelect(category: ChatContactCategory) {
-    if (category === activeCategory) return;
     setActiveCategory(category);
-    setActiveContactId(null);
-    setActiveRoomId(null);
+    const contact = allContacts.find((c) => c.category === category) as
+      | WayfinderContact
+      | undefined;
+    if (!contact) {
+      setActiveContactId(null);
+      setActiveRoomId(null);
+      setMobileShowChat(false);
+      return;
+    }
+    setActiveContactId(contact.id);
+    setMobileShowChat(true);
+    openRoomMutation.mutate(contact);
   }
 
   const activeGroupParticipants = activeRoom?.groupParticipants ?? undefined;
   const personOnline = isRecentlyActive(snapshotQuery.data?.lastActiveAt);
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex flex-col gap-1 px-4 md:px-6 lg:px-10 py-4 md:py-5 flex-shrink-0">
+    <div className="flex flex-col flex-1 min-h-0 h-full overflow-hidden">
+      <div className="flex flex-col gap-1 px-4 md:px-6 lg:px-10 py-3 md:py-5 flex-shrink-0">
         <div className="flex items-center justify-between">
           <h1 className="uppercase" style={{ ...inter, fontWeight: 700, fontSize: "24px", lineHeight: "25px", letterSpacing: "0.8px", color: "#DCE6EC" }}>
             Message
@@ -387,68 +401,70 @@ export default function MessagePage() {
         />
       </div>
 
-      <div
-        className="flex-1 flex flex-col md:flex-row mx-4 md:mx-6 lg:mx-10 mb-4 md:mb-6 rounded-[12px] overflow-hidden"
-        style={{ backgroundColor: "#1a1930" }}
-      >
-        <ChatSidebar
-          portal="wayfinder"
-          layout="focus"
-          className="md:w-[300px] lg:w-[320px] md:border-r border-b md:border-b-0"
-          backLink={{ href: "/dashboard/students", label: "Back to Students" }}
-          people={people}
-          peopleLabel="Students"
-          activePersonId={activeStudentId != null ? String(activeStudentId) : null}
-          onSelectPerson={handleSelectPerson}
-          personStatus={
-            selectedStudent
-              ? {
-                  label: personOnline ? "Active" : "Away",
-                  online: personOnline,
-                }
-              : null
-          }
-          contacts={visibleContacts}
-          activeContactId={activeContactId}
-          selectedFilters={[activeCategory]}
-          onFilterToggle={handleCategorySelect}
-          activeCategory={activeCategory}
-          onCategorySelect={handleCategorySelect}
-          categoryCounts={categoryCounts}
-          categoryAvatars={categoryAvatars}
-          onSelectContact={handleSelectContact}
-        />
-
-        <div className="flex-1 flex flex-col min-h-0">
-          <div className="px-3 md:px-4 py-3 border-b border-white/10">
-            <WayfinderStudentSnapshotCard childId={activeStudentId} />
-          </div>
-
-          <ChatMessageList
-            messages={activeMessages}
-            isLoading={messagesLoading}
-            self={{ type: "USER", id: user?.id }}
-            selfDisplayName={user?.name ?? "You"}
-            selfAvatarUrl={user?.avatarUrl}
-            activeRoom={activeRoom}
-            groupParticipants={activeGroupParticipants}
-            othersTyping={othersTyping}
-            scrollRef={scrollRef}
-            onScroll={onScroll}
-            onRetry={retry}
-            emptyLabel="No messages yet."
+      <MessageWorkspace
+        mobileShowChat={mobileShowChat}
+        onBackToList={() => setMobileShowChat(false)}
+        sidebar={
+          <ChatSidebar
+            portal="wayfinder"
+            layout="focus"
+            className="flex-1 min-h-0"
+            backLink={{ href: "/dashboard/students", label: "Back to Students" }}
+            people={people}
+            peopleLabel="Students"
+            activePersonId={activeStudentId != null ? String(activeStudentId) : null}
+            onSelectPerson={handleSelectPerson}
+            personStatus={
+              selectedStudent
+                ? {
+                    label: personOnline ? "Active" : "Away",
+                    online: personOnline,
+                  }
+                : null
+            }
+            contacts={visibleContacts}
+            activeContactId={activeContactId}
+            selectedFilters={[activeCategory]}
+            onFilterToggle={handleCategorySelect}
+            activeCategory={activeCategory}
+            onCategorySelect={handleCategorySelect}
+            categoryCounts={categoryCounts}
+            categoryAvatars={categoryAvatars}
+            onSelectContact={handleSelectContact}
           />
+        }
+        chat={
+          <>
+            <div className="px-3 md:px-4 py-2 md:py-3 border-b border-white/10 shrink-0">
+              <WayfinderStudentSnapshotCard childId={activeStudentId} />
+            </div>
 
-          <ChatComposer
-            value={message}
-            onChange={setMessage}
-            onSend={handleSend}
-            onTyping={notifyTyping}
-            disabled={!activeRoomId}
-            placeholder={activeRoomId ? "Type a message..." : "Select a chat"}
-          />
-        </div>
-      </div>
+            <ChatMessageList
+              messages={activeMessages}
+              isLoading={messagesLoading}
+              self={{ type: "USER", id: user?.id }}
+              selfDisplayName={user?.name ?? "You"}
+              selfAvatarUrl={user?.avatarUrl}
+              activeRoom={activeRoom}
+              groupParticipants={activeGroupParticipants}
+              othersTyping={othersTyping}
+              scrollRef={scrollRef}
+              onScroll={onScroll}
+              onRetry={retry}
+              emptyLabel="No messages yet."
+            />
+
+            <ChatComposer
+              value={message}
+              onChange={setMessage}
+              onSend={handleSend}
+              onTyping={notifyTyping}
+              disabled={!activeRoomId}
+              placeholder={activeRoomId ? "Type a message..." : "Select a chat"}
+            />
+          </>
+        }
+      />
     </div>
   );
 }

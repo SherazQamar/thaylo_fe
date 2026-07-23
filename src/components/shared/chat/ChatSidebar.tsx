@@ -295,7 +295,7 @@ export default function ChatSidebar({
 
   if (isFocus) {
     return (
-      <div className={`flex flex-col border-white/10 min-h-0 ${className}`}>
+      <div className={`flex flex-col border-white/10 min-h-0 h-full ${className}`}>
         {backLink ? (
           <div className="px-4 pt-4 pb-2">
             <Link
@@ -360,7 +360,7 @@ export default function ChatSidebar({
             </div>
 
             {(people?.length ?? 0) > 1 ? (
-              <div className="mt-2 max-h-[120px] overflow-y-auto space-y-0.5">
+              <div className="mt-2 max-h-[72px] sm:max-h-[100px] lg:max-h-[120px] overflow-y-auto space-y-0.5">
                 {people!
                   .filter((p) => p.id !== activePersonId)
                   .map((person) => (

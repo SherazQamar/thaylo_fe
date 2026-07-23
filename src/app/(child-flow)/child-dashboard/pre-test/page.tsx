@@ -61,6 +61,8 @@ export default function ChildPretestPage() {
   const pretestQuery = useQuery({
     queryKey: ["child", "pretest"],
     queryFn: () => fetchChildPretest(),
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
   const questions = pretestQuery.data?.questions ?? [];

@@ -11,14 +11,14 @@ import ClassLessonHeader from "@/components/child/class/ClassLessonHeader";
 import ClassMediaControls from "@/components/child/class/ClassMediaControls";
 import ClassMediaSetupGate from "@/components/child/class/ClassMediaSetupGate";
 import ClassScoreSummary from "@/components/child/class/ClassScoreSummary";
-import ClassInstructorCaption from "@/components/child/class/ClassInstructorCaption";
 import ClassTextChat from "@/components/child/class/ClassTextChat";
 import { useBlackboardNarration } from "@/hooks/use-blackboard-narration";
 import { useClassSessionClock } from "@/hooks/use-class-session-clock";
 import { useAiSettings } from "@/hooks/use-ai-settings";
 import { useClassChat } from "@/hooks/use-class-chat";
 import { useClassMedia } from "@/hooks/use-class-media";
-import { useSpeechSynthesis } from "@/hooks/use-speech-synthesis";
+import { useInstructorSpeech } from "@/hooks/use-instructor-speech";
+import ClassLiveAvatar from "@/components/child/class/ClassLiveAvatar";
 import {
   phaseForStepIndex,
   type ClassPhase,
@@ -37,6 +37,7 @@ import { computeTeachUntilMinute } from "@/lib/class-duration";
 import { FACE_MONITOR_DEFAULTS, type FaceMonitorStatus } from "@/lib/face-monitor/types";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
+const NOOP_CAPTION = () => undefined;
 
 type ClassLiveRoomProps = {
   session: ChildClassSession | null;
@@ -48,7 +49,6 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
   const router = useRouter();
   const [classJoined, setClassJoined] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
-  const [caption, setCaption] = useState<{ text: string; visibleWords: number } | null>(null);
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
   const [answeredCorrectly, setAnsweredCorrectly] = useState<boolean | null>(null);
   const [answerLocked, setAnswerLocked] = useState(false);
@@ -135,19 +135,37 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
     teachUntilMinute,
   });
 
-  const { speak, speakProgress, stop: stopSpeaking } = useSpeechSynthesis(aiSettings.voice, "child");
+  const avatarRequested = Boolean(
+    aiSettings.avatar?.provider !== "none" && aiSettings.avatar?.enabled,
+  );
+  const liveAvatarConfig = useMemo(() => {
+    if (!classJoined || !avatarRequested) return null;
+    return {
+      enabled: true,
+      provider: aiSettings.avatar?.provider ?? "none",
+      heygenAvatarId: aiSettings.avatar?.heygenAvatarId ?? "",
+      heygenVoiceId: aiSettings.avatar?.heygenVoiceId ?? "",
+    };
+  }, [
+    classJoined,
+    avatarRequested,
+    aiSettings.avatar?.provider,
+    aiSettings.avatar?.heygenAvatarId,
+    aiSettings.avatar?.heygenVoiceId,
+  ]);
 
-  const handleCaption = useCallback((text: string) => {
-    setCaption({ text, visibleWords: 0 });
-  }, []);
+  const {
+    speak,
+    speakProgress,
+    stop: stopSpeaking,
+    avatar: liveAvatar,
+  } = useInstructorSpeech(aiSettings.voice, liveAvatarConfig, "child");
 
-  const handleCaptionWords = useCallback((visibleWords: number) => {
-    setCaption((prev) => (prev ? { ...prev, visibleWords } : prev));
-  }, []);
+  const avatarReady =
+    !avatarRequested || !liveAvatar || liveAvatar.isReady || Boolean(liveAvatar.errorMessage);
 
   const handleCalyxSpeak = useCallback(
     (text: string) => {
-      setCaption({ text, visibleWords: 0 });
       void speak(text);
     },
     [speak],
@@ -229,11 +247,10 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
 
   const { reveal, isNarrating } = useBlackboardNarration({
     step: currentStep,
-    enabled: classJoined && !!session && greetingDone,
+    enabled: classJoined && !!session && greetingDone && avatarReady,
     voiceEnabled: true,
     speakProgress,
-    onCaption: handleCaption,
-    onCaptionWords: handleCaptionWords,
+    onCaption: NOOP_CAPTION,
     onNarrationComplete: handleNarrationComplete,
     pacing: aiSettings.pacing,
   });
@@ -250,6 +267,7 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
 
   useEffect(() => {
     if (!classJoined || !session || greetingStartedRef.current) return;
+    if (avatarRequested && liveAvatar && !liveAvatar.isReady && !liveAvatar.errorMessage) return;
     greetingStartedRef.current = true;
 
     async function runGreeting() {
@@ -258,11 +276,13 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
       const greeting = session.isRetake
         ? buildRetakeClassGreeting(studentName, lessonTitle, session.calyxIntro)
         : buildClassGreeting(studentName, lessonTitle, instructorName);
-      setCaption({ text: greeting, visibleWords: 0 });
-      await speakProgress(greeting, {
-        wordMs: aiSettings.pacing.wordMs,
-        onWord: (index) => handleCaptionWords(index + 1),
-      });
+      try {
+        await speakProgress(greeting, {
+          wordMs: aiSettings.pacing.wordMs,
+        });
+      } catch {
+        // Greeting speak failed — still continue into the lesson.
+      }
       if (!chatInitialized) {
         pushCalyxMessage(greeting, { speak: false });
         setChatInitialized(true);
@@ -272,17 +292,13 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
     }
 
     void runGreeting();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- run once when class is ready for greeting
   }, [
-    aiSettings.pacing.wordMs,
-    chatInitialized,
     classJoined,
-    lessonTitle,
-    instructorName,
-    pushCalyxMessage,
-    session,
-    speakProgress,
-    studentName,
-    handleCaptionWords,
+    session?.sessionId,
+    avatarRequested,
+    liveAvatar?.isReady,
+    liveAvatar?.errorMessage,
   ]);
 
   useEffect(() => {
@@ -295,15 +311,24 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
   };
 
   const handleEndCall = () => {
-    stopSpeaking();
-    stopStream();
+    greetingStartedRef.current = false;
+    // Never block hang-up on avatar/TTS teardown.
+    try {
+      stopSpeaking();
+    } catch {
+      // ignore
+    }
+    try {
+      stopStream();
+    } catch {
+      // ignore
+    }
     void navigateAfterChildClass(router);
   };
 
   const advanceAfterFeedback = useCallback(
     async (feedback: string, answeredStepIndex: number) => {
       pushCalyxMessage(feedback, { speak: false });
-      setCaption({ text: feedback, visibleWords: 0 });
       await speak(feedback);
       await delay(600);
 
@@ -484,6 +509,17 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
                   onSelectOption={handleBlackboardSelect}
                   onSubmitWordLadder={handleWordLadderSubmit}
                 />
+                {liveAvatar?.enabled ? (
+                  <ClassLiveAvatar
+                    instructorName={instructorName}
+                    status={liveAvatar.status}
+                    speaking={liveAvatar.speaking}
+                    errorMessage={liveAvatar.errorMessage}
+                    videoRef={liveAvatar.videoRef}
+                    variant="stage"
+                    compact={interactionActive}
+                  />
+                ) : null}
                 <ClassChildVideo
                   stream={stream}
                   cameraEnabled={cameraEnabled}
@@ -491,12 +527,13 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
                   onEnableMedia={() => void startMedia()}
                   faceMonitorEnabled={classJoined && cameraEnabled}
                   onFaceStatusChange={setFaceStatus}
+                  variant={liveAvatar?.enabled ? "pip" : "tile"}
                   dock={interactionActive ? "top" : "bottom"}
                 />
 
                 {showStayInViewNudge && (
                   <div
-                    className="absolute top-3 left-3 right-[150px] z-30 rounded-[10px] px-3 py-2 border border-[#FF7B7B]/40"
+                    className="absolute top-3 left-3 right-[42%] z-30 rounded-[10px] px-3 py-2 border border-[#FF7B7B]/40"
                     style={{ backgroundColor: "rgba(255,123,123,0.15)" }}
                   >
                     <p className="text-xs font-medium text-[#FF7B7B]" style={inter}>
@@ -507,7 +544,7 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
 
                 {!showStayInViewNudge && showLookAtScreenNudge && (
                   <div
-                    className="absolute top-3 left-3 right-[150px] z-30 rounded-[10px] px-3 py-2 border border-[#FBBF24]/30"
+                    className="absolute top-3 left-3 right-[42%] z-30 rounded-[10px] px-3 py-2 border border-[#FBBF24]/30"
                     style={{ backgroundColor: "rgba(251,191,36,0.12)" }}
                   >
                     <p className="text-xs font-medium text-[#FBBF24]" style={inter}>
@@ -518,14 +555,6 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
               </div>
             )}
 
-            {caption && (
-              <ClassInstructorCaption
-                text={caption.text}
-                visibleWords={caption.visibleWords}
-                instructorName={instructorName}
-                isSpeaking={isNarrating || isGreeting}
-              />
-            )}
           </div>
 
           <div className="flex items-center justify-between gap-3 flex-wrap">

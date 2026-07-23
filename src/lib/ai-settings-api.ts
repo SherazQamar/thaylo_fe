@@ -1,3 +1,4 @@
+import { isAxiosError } from "axios";
 import { api } from "@/lib/api";
 import type { ApiResponse } from "@/types/api";
 
@@ -29,6 +30,12 @@ export interface PublicAiSettings {
     pauseMs: number;
     wordMs: number;
     classDurationMinutes: number;
+  };
+  avatar?: {
+    provider: "none" | "heygen";
+    enabled: boolean;
+    heygenAvatarId: string;
+    heygenVoiceId: string;
   };
 }
 
@@ -63,7 +70,40 @@ function normalizePublicAiSettings(raw: PublicAiSettings & { persona?: AiPersona
     },
     voice: raw.voice,
     pacing: raw.pacing,
+    avatar: {
+      provider: raw.avatar?.provider === "heygen" ? "heygen" : "none",
+      enabled: Boolean(raw.avatar?.enabled && raw.avatar?.provider === "heygen"),
+      heygenAvatarId: raw.avatar?.heygenAvatarId ?? "",
+      heygenVoiceId: raw.avatar?.heygenVoiceId ?? "",
+    },
   };
+}
+
+export async function createHeygenSessionToken() {
+  const path = "/child/ai/avatar/heygen-token";
+  try {
+    const { data } = await api.post<ApiResponse<{ token: string }>>(path, {}, {
+      authMode: "child",
+    });
+    const token = data.data?.token ?? "";
+    if (!token) {
+      throw new Error(data.message || "HeyGen session token is empty");
+    }
+    return token;
+  } catch (error) {
+    if (isAxiosError(error)) {
+      const payload = error.response?.data as
+        | { message?: string | string[] }
+        | undefined;
+      const message = Array.isArray(payload?.message)
+        ? payload.message.join(", ")
+        : payload?.message;
+      if (typeof message === "string" && message.trim()) {
+        throw new Error(message.trim());
+      }
+    }
+    throw error;
+  }
 }
 
 export async function synthesizeAiSpeech(text: string, authMode: SpeechAuthMode) {

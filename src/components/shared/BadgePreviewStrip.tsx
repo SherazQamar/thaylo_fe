@@ -1,6 +1,7 @@
 "use client";
 
-import Image from "next/image";
+import { useMemo, useState } from "react";
+import { badgeImageCandidates } from "@/lib/badge-image-fallback";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
@@ -51,13 +52,10 @@ export default function BadgePreviewStrip({
             className="flex items-center justify-center transition-transform group-hover:scale-105"
             style={{ width: size, height: size }}
           >
-            <Image
+            <PreviewBadgeImage
               src={badge.imageUrl}
               alt={badge.name}
-              width={size}
-              height={size}
-              className="w-full h-full object-contain"
-              unoptimized
+              size={size}
             />
           </div>
           <span
@@ -100,5 +98,42 @@ export default function BadgePreviewStrip({
         </div>
       )}
     </div>
+  );
+}
+
+function PreviewBadgeImage({
+  src,
+  alt,
+  size,
+}: {
+  src: string;
+  alt: string;
+  size: number;
+}) {
+  const candidates = useMemo(
+    () => badgeImageCandidates(src, { preferSmall: true }),
+    [src],
+  );
+  const [imageIndex, setImageIndex] = useState(0);
+  const imageSrc = candidates[imageIndex];
+
+  if (!imageSrc) {
+    return null;
+  }
+
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={imageSrc}
+      alt={alt}
+      width={size}
+      height={size}
+      className="w-full h-full object-contain"
+      onError={() => {
+        setImageIndex((current) =>
+          current + 1 < candidates.length ? current + 1 : current,
+        );
+      }}
+    />
   );
 }

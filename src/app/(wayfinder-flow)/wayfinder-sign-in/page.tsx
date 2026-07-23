@@ -10,6 +10,7 @@ import {
   loginUser,
 } from "@/lib/auth-api";
 import ThayloBrandLink from "@/components/shared/ThayloBrandLink";
+import PasswordInput from "@/components/shared/PasswordInput";
 import { logoutUser, setWayfinderSession } from "@/lib/auth-session";
 
 type ModalState = "none" | "reset" | "verification";
@@ -189,13 +190,13 @@ export default function WayfinderSignIn() {
                 >
                   Password
                 </label>
-                <input
-                  type="password"
+                <PasswordInput
                   id="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
+                  autoComplete="current-password"
                   className="w-full px-4 py-3 sm:py-3.5 rounded-full bg-[#313044] text-white text-sm outline-none border border-transparent focus:border-[#00CED1]/40 transition-colors placeholder:text-white/30"
                   style={{ fontFamily: "Inter, sans-serif" }}
                 />
