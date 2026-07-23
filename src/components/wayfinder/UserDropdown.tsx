@@ -37,7 +37,7 @@ export default function UserDropdown() {
         onClick={() => setOpen(!open)}
         className="flex items-center gap-3 cursor-pointer hover:opacity-90 transition-opacity"
       >
-        <PortalAvatar name={displayName} />
+        <PortalAvatar name={displayName} avatarUrl={user?.avatarUrl} />
         <div className="hidden sm:block text-left">
           <p style={{ ...inter, fontWeight: 600, fontSize: "16px", lineHeight: "22px", color: "#FFFFFF" }}>{displayName}</p>
           <p style={{ ...inter, fontWeight: 400, fontSize: "12px", lineHeight: "16px", color: "rgba(255,255,255,0.5)" }}>Wayfinder</p>

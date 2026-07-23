@@ -45,6 +45,7 @@ export default function ChildMessageSnapshotCard({
       metaLine: badges.plantStatus,
       profileHref: "/child-dashboard/profile",
       profileLabel: "My Profile",
+      avatarUrl: child.avatarUrl,
       currentLessonTitle: null,
       lessonSubtitle: `${badges.masteredCount} of ${badges.totalLessons} mastered`,
       masteryPercent,
@@ -55,11 +56,11 @@ export default function ChildMessageSnapshotCard({
       progressCompleted: badges.masteredCount,
       progressTotal: badges.totalLessons,
       badgePreviews: badges.badges
-        .filter((b) => b.count > 0 && b.imageUrl)
+        .filter((b) => b.count > 0 && (b.imageUrlSmall || b.imageUrl))
         .map((b) => ({
           kind: b.kind,
           name: b.name,
-          imageUrl: b.imageUrl!,
+          imageUrl: b.imageUrlSmall || b.imageUrl!,
           count: b.count,
         })),
     };

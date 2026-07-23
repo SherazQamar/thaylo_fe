@@ -34,6 +34,10 @@ export interface User {
   timeZone?: string | null;
   /** Hiring / coverage region (Wayfinders). Sets operational timezone. */
   region?: string | null;
+  /** Selected preset avatar R2 key. */
+  avatarKey?: string | null;
+  /** Public URL for the selected preset avatar. */
+  avatarUrl?: string | null;
   guardianType?: GuardianRelationType | null;
   secondaryGuardianName?: string | null;
   secondaryGuardianType?: GuardianRelationType | null;
@@ -49,6 +53,10 @@ export interface Child {
   secondName?: string | null;
   userName: string;
   grade: string | null;
+  /** Selected preset avatar R2 key. */
+  avatarKey?: string | null;
+  /** Public URL for the selected preset avatar. */
+  avatarUrl?: string | null;
   interestAreas?: string[];
   /** Note the child writes for their parent to read. */
   notesForParent?: string | null;

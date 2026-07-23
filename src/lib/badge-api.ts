@@ -27,7 +27,10 @@ export interface BadgeItem {
   count: number;
   maxCount: number | null;
   iconStyle: BadgeIconStyle;
+  /** Full badge artwork (Badges/*.png). */
   imageUrl?: string;
+  /** Compact badge artwork (badge-small/*-small.png). */
+  imageUrlSmall?: string;
 }
 
 export interface NextBadgeUnlock {

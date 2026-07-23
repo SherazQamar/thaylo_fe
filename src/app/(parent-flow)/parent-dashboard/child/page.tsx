@@ -16,6 +16,7 @@ import {
 } from "@/lib/parent-api";
 import { fetchParentChildBadges } from "@/lib/badge-api";
 import { BadgeShield } from "@/components/shared/BadgeArtwork";
+import PasswordInput from "@/components/shared/PasswordInput";
 import { getApiErrorMessage } from "@/lib/auth-api";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
@@ -563,6 +564,7 @@ function ChildDetailContent() {
           <StudentProgressOverview
             displayName={displayName}
             gradeLabel={formatChildGrade(child.grade)}
+            avatarSrc={child.avatarUrl || undefined}
             messagesHref="/parent-dashboard/message"
             progressLabel={badgesQuery.data?.plantStatus}
             gardenStage={badgesQuery.data?.plantStage}
@@ -574,11 +576,11 @@ function ChildDetailContent() {
             badgeCount={badgesQuery.data?.badgesEarned}
             badgePreviews={
               badgesQuery.data?.badges
-                .filter((b) => b.count > 0 && b.imageUrl)
+                .filter((b) => b.count > 0 && (b.imageUrlSmall || b.imageUrl))
                 .map((b) => ({
                   kind: b.kind,
                   name: b.name,
-                  imageUrl: b.imageUrl!,
+                  imageUrl: b.imageUrlSmall || b.imageUrl!,
                   count: b.count,
                 })) ?? []
             }
@@ -761,8 +763,7 @@ function ChildDetailContent() {
               Set a new 6-digit PIN for {displayName} to use at child sign-in.
             </p>
             <div className="space-y-3 mt-4">
-              <input
-                type="password"
+              <PasswordInput
                 inputMode="numeric"
                 maxLength={6}
                 value={newPin}
@@ -770,10 +771,10 @@ function ChildDetailContent() {
                   setNewPin(e.target.value.replace(/\D/g, "").slice(0, 6))
                 }
                 placeholder="New PIN"
+                autoComplete="new-password"
                 className="w-full rounded-full px-5 py-3 bg-[#111023] border border-white/10 text-white text-sm outline-none focus:border-[#00CED1]/40"
               />
-              <input
-                type="password"
+              <PasswordInput
                 inputMode="numeric"
                 maxLength={6}
                 value={confirmPin}
@@ -781,6 +782,8 @@ function ChildDetailContent() {
                   setConfirmPin(e.target.value.replace(/\D/g, "").slice(0, 6))
                 }
                 placeholder="Confirm PIN"
+                autoComplete="new-password"
+                toggleLabel="Toggle confirm PIN visibility"
                 className="w-full rounded-full px-5 py-3 bg-[#111023] border border-white/10 text-white text-sm outline-none focus:border-[#00CED1]/40"
               />
             </div>

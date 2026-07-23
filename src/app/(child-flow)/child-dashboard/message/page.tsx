@@ -5,9 +5,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import ChildUserDropdown from "@/components/child/ChildUserDropdown";
 import ChildMessageSnapshotCard from "@/components/child/ChildMessageSnapshotCard";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
-import ChatSidebar from "@/components/shared/chat/ChatSidebar";
+import ChatSidebar, {
+  type CategoryAvatarItem,
+} from "@/components/shared/chat/ChatSidebar";
 import ChatMessageList from "@/components/shared/chat/ChatMessageList";
 import ChatComposer from "@/components/shared/chat/ChatComposer";
+import MessageWorkspace from "@/components/shared/chat/MessageWorkspace";
 import {
   clearRoomUnreadInCache,
   filterContacts,
@@ -48,6 +51,7 @@ export default function ChildMessagePage() {
   const [activeRoomId, setActiveRoomId] = useState<number | null>(null);
   const [activeContactId, setActiveContactId] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<ChatContactCategory>("group");
+  const [mobileShowChat, setMobileShowChat] = useState(false);
   const [groupName, setGroupName] = useState("Family Group");
   const [groupParticipants, setGroupParticipants] = useState<ChatParticipant[]>([]);
 
@@ -136,6 +140,7 @@ export default function ChildMessagePage() {
         unreadCount: groupMeta.unreadCount,
         lastMessage: groupMeta.lastMessage,
         lastMessageAt: groupMeta.lastMessageAt,
+        avatarUrl: child?.avatarUrl,
       },
     ];
 
@@ -158,6 +163,7 @@ export default function ChildMessagePage() {
         unreadCount: parentMeta.unreadCount,
         lastMessage: parentMeta.lastMessage,
         lastMessageAt: parentMeta.lastMessageAt,
+        avatarUrl: parentParticipant.avatarUrl,
       });
     }
 
@@ -180,11 +186,12 @@ export default function ChildMessagePage() {
         unreadCount: wayfinderMeta.unreadCount,
         lastMessage: wayfinderMeta.lastMessage,
         lastMessageAt: wayfinderMeta.lastMessageAt,
+        avatarUrl: wayfinderParticipant.avatarUrl,
       });
     }
 
     return contacts;
-  }, [groupName, parentParticipant, wayfinderParticipant, roomsQuery.data]);
+  }, [child?.avatarUrl, groupName, parentParticipant, wayfinderParticipant, roomsQuery.data]);
 
   const categoryCounts = useMemo(() => {
     const counts: Record<ChatContactCategory, number> = {
@@ -211,11 +218,37 @@ export default function ChildMessagePage() {
               id: String(child.id),
               label: child.userName,
               subtitle: formatChildGrade(child.grade),
+              avatarUrl: child.avatarUrl,
             },
           ]
         : [],
     [child],
   );
+
+  const categoryAvatars = useMemo(() => {
+    const wayfinder: CategoryAvatarItem | undefined = wayfinderParticipant
+      ? {
+          name: wayfinderParticipant.name ?? "Wayfinder",
+          avatarUrl: wayfinderParticipant.avatarUrl,
+        }
+      : undefined;
+    const parent: CategoryAvatarItem | undefined = parentParticipant
+      ? {
+          name: parentParticipant.name ?? "Parent",
+          avatarUrl: parentParticipant.avatarUrl,
+        }
+      : undefined;
+    const self: CategoryAvatarItem | undefined = child
+      ? { name: child.userName, avatarUrl: child.avatarUrl }
+      : undefined;
+    return {
+      child: wayfinder,
+      parent,
+      group: [self, parent, wayfinder].filter(
+        (item): item is CategoryAvatarItem => Boolean(item),
+      ),
+    };
+  }, [child, parentParticipant, wayfinderParticipant]);
 
   const hasAutoOpenedRef = useRef(false);
 
@@ -261,19 +294,29 @@ export default function ChildMessagePage() {
   function handleSelectContact(contact: ChatSidebarContact) {
     const childContact = contact as ChildContact;
     setActiveContactId(childContact.id);
+    setMobileShowChat(true);
     openRoomMutation.mutate(childContact);
   }
 
   function handleCategorySelect(category: ChatContactCategory) {
-    if (category === activeCategory) return;
     setActiveCategory(category);
-    setActiveContactId(null);
-    setActiveRoomId(null);
+    const contact = allContacts.find((c) => c.category === category) as
+      | ChildContact
+      | undefined;
+    if (!contact) {
+      setActiveContactId(null);
+      setActiveRoomId(null);
+      setMobileShowChat(false);
+      return;
+    }
+    setActiveContactId(contact.id);
+    setMobileShowChat(true);
+    openRoomMutation.mutate(contact);
   }
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex flex-col gap-1 px-4 md:px-6 pt-4 pb-2 flex-shrink-0">
+    <div className="flex flex-col flex-1 min-h-0 h-full overflow-hidden">
+      <div className="flex flex-col gap-1 px-4 md:px-6 pt-3 pb-2 flex-shrink-0">
         <div className="flex items-center justify-between">
           <h1 className="uppercase" style={{ ...inter, fontWeight: 700, fontSize: "22px", letterSpacing: "0.8px", color: "#DCE6EC" }}>
             Message
@@ -291,57 +334,61 @@ export default function ChildMessagePage() {
         />
       </div>
 
-      <div
-        className="flex-1 flex flex-col md:flex-row min-h-0 mx-4 md:mx-6 mb-4 rounded-[16px] overflow-hidden"
-        style={{ backgroundColor: "#1a1930" }}
-      >
-        <ChatSidebar
-          portal="child"
-          layout="focus"
-          className="md:w-[300px] lg:w-[320px] md:border-r border-b md:border-b-0"
-          backLink={{ href: "/child-dashboard", label: "Back to Dashboard" }}
-          people={people}
-          activePersonId={child ? String(child.id) : null}
-          personStatus={{ label: "Online", online: true }}
-          contacts={visibleContacts}
-          activeContactId={activeContactId}
-          selectedFilters={[activeCategory]}
-          onFilterToggle={handleCategorySelect}
-          activeCategory={activeCategory}
-          onCategorySelect={handleCategorySelect}
-          categoryCounts={categoryCounts}
-          onSelectContact={handleSelectContact}
-        />
-
-        <div className="flex-1 flex flex-col min-h-0">
-          <div className="px-3 md:px-4 py-3 border-b border-white/10">
-            <ChildMessageSnapshotCard />
-          </div>
-
-          <ChatMessageList
-            messages={activeMessages}
-            isLoading={messagesLoading}
-            self={{ type: "CHILD", id: child?.id }}
-            selfDisplayName={child?.userName ?? "You"}
-            activeRoom={activeRoom}
-            groupParticipants={resolvedParticipants}
-            othersTyping={othersTyping}
-            scrollRef={scrollRef}
-            onScroll={onScroll}
-            onRetry={retry}
-            emptyLabel="No messages yet. Start by sending hello."
+      <MessageWorkspace
+        mobileShowChat={mobileShowChat}
+        onBackToList={() => setMobileShowChat(false)}
+        sidebar={
+          <ChatSidebar
+            portal="child"
+            layout="focus"
+            className="flex-1 min-h-0"
+            backLink={{ href: "/child-dashboard", label: "Back to Dashboard" }}
+            people={people}
+            activePersonId={child ? String(child.id) : null}
+            personStatus={{ label: "Online", online: true }}
+            contacts={visibleContacts}
+            activeContactId={activeContactId}
+            selectedFilters={[activeCategory]}
+            onFilterToggle={handleCategorySelect}
+            activeCategory={activeCategory}
+            onCategorySelect={handleCategorySelect}
+            categoryCounts={categoryCounts}
+            categoryAvatars={categoryAvatars}
+            onSelectContact={handleSelectContact}
           />
+        }
+        chat={
+          <>
+            <div className="px-3 md:px-4 py-2 md:py-3 border-b border-white/10 shrink-0">
+              <ChildMessageSnapshotCard />
+            </div>
 
-          <ChatComposer
-            value={message}
-            onChange={setMessage}
-            onSend={handleSend}
-            onTyping={notifyTyping}
-            disabled={!activeRoomId}
-            placeholder={activeRoomId ? "Type a message..." : "Select a chat"}
-          />
-        </div>
-      </div>
+            <ChatMessageList
+              messages={activeMessages}
+              isLoading={messagesLoading}
+              self={{ type: "CHILD", id: child?.id }}
+              selfDisplayName={child?.userName ?? "You"}
+              selfAvatarUrl={child?.avatarUrl}
+              activeRoom={activeRoom}
+              groupParticipants={resolvedParticipants}
+              othersTyping={othersTyping}
+              scrollRef={scrollRef}
+              onScroll={onScroll}
+              onRetry={retry}
+              emptyLabel="No messages yet. Start by sending hello."
+            />
+
+            <ChatComposer
+              value={message}
+              onChange={setMessage}
+              onSend={handleSend}
+              onTyping={notifyTyping}
+              disabled={!activeRoomId}
+              placeholder={activeRoomId ? "Type a message..." : "Select a chat"}
+            />
+          </>
+        }
+      />
     </div>
   );
 }

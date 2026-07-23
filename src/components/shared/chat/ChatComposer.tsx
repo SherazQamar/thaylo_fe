@@ -84,7 +84,7 @@ export default function ChatComposer({
 
   return (
     <form
-      className="relative flex items-center gap-3 px-4 md:px-5 py-4 border-t border-white/10 flex-shrink-0"
+      className="relative flex items-center gap-2 sm:gap-3 px-3 sm:px-4 md:px-5 py-3 sm:py-4 border-t border-white/10 flex-shrink-0 min-w-0"
       onSubmit={(event) => {
         event.preventDefault();
         if (!canSend) return;
@@ -133,7 +133,7 @@ export default function ChatComposer({
         }}
         placeholder={placeholder}
         disabled={disabled}
-        className="flex-1 rounded-full bg-white px-5 py-3 text-sm text-[#111023] placeholder:text-[#757575] outline-none disabled:opacity-50"
+        className="flex-1 min-w-[120px] w-full rounded-full bg-white px-4 sm:px-5 py-2.5 sm:py-3 text-sm text-[#111023] placeholder:text-[#757575] outline-none disabled:opacity-50"
         style={inter}
       />
 

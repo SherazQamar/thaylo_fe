@@ -17,6 +17,7 @@ import {
 } from "@/lib/child-api";
 import { fetchChildBadges } from "@/lib/badge-api";
 import { useChildAuthStore } from "@/stores/child-auth.store";
+import AvatarPicker from "@/components/shared/AvatarPicker";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
@@ -35,6 +36,7 @@ function formatJoinedDate(createdAt: string | undefined): string {
 
 export default function ChildProfilePage() {
   const child = useChildAuthStore((state) => state.child);
+  const setChild = useChildAuthStore((state) => state.setChild);
   const displayName = child?.userName?.trim() || "Student";
 
   const badgesQuery = useQuery({
@@ -196,12 +198,16 @@ export default function ChildProfilePage() {
             </span>
           </div>
           <div className="flex justify-center">
-            <div
-              className="w-[100px] h-[100px] rounded-full flex items-center justify-center text-4xl"
-              style={{ border: "2px dashed #00CED1" }}
-            >
-              🧒
-            </div>
+            <AvatarPicker
+              mode="child"
+              displayName={displayName}
+              currentAvatarUrl={child?.avatarUrl}
+              size={100}
+              onAvatarSaved={(avatarUrl, avatarKey) => {
+                if (!child) return;
+                setChild({ ...child, avatarUrl, avatarKey });
+              }}
+            />
           </div>
         </div>
 

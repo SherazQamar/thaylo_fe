@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import ParentUserDropdown from "@/components/parent/ParentUserDropdown";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import BadgePreviewStrip from "@/components/shared/BadgePreviewStrip";
+import PortalAvatar from "@/components/shared/PortalAvatar";
 import { fetchParentChildren } from "@/lib/parent-api";
 import { withAddChildWizardMode } from "@/lib/parent-registration";
 import { useRegisterWizardStore } from "@/stores/register-wizard.store";
@@ -140,6 +141,14 @@ export default function ChildrenPage() {
               >
                 {child.userName}
               </p>
+              <div className="mb-3">
+                <PortalAvatar
+                  name={child.userName}
+                  avatarUrl={child.avatarUrl}
+                  size={56}
+                  useWordInitials
+                />
+              </div>
               <div className="w-[100px] h-[100px] rounded-full border-4 border-[#525162] flex items-center justify-center mb-4 relative">
                 <div
                   className="w-[80px] h-[80px] rounded-full flex items-center justify-center"

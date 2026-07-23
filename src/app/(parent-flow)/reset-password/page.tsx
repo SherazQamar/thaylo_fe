@@ -12,6 +12,7 @@ import {
 } from "@/lib/auth-api";
 import { getSignInPathForRole } from "@/lib/portal-auth";
 import ThayloBrandLink from "@/components/shared/ThayloBrandLink";
+import PasswordInput from "@/components/shared/PasswordInput";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
@@ -200,14 +201,14 @@ function ResetPasswordContent() {
                     >
                       New password
                     </label>
-                    <input
-                      type="password"
+                    <PasswordInput
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       placeholder="••••••••••••••"
                       required
                       minLength={6}
                       disabled={isBusy}
+                      autoComplete="new-password"
                       className="w-full px-4 py-3 sm:py-3.5 rounded-full bg-[#313044] text-white text-sm outline-none border border-transparent focus:border-[#00CED1]/40 transition-colors placeholder:text-white/30 disabled:opacity-60"
                       style={inter}
                     />
@@ -220,14 +221,15 @@ function ResetPasswordContent() {
                     >
                       Confirm new password
                     </label>
-                    <input
-                      type="password"
+                    <PasswordInput
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="••••••••••••••"
                       required
                       minLength={6}
                       disabled={isBusy}
+                      autoComplete="new-password"
+                      toggleLabel="Toggle confirm password visibility"
                       className="w-full px-4 py-3 sm:py-3.5 rounded-full bg-[#313044] text-white text-sm outline-none border border-transparent focus:border-[#00CED1]/40 transition-colors placeholder:text-white/30 disabled:opacity-60"
                       style={inter}
                     />

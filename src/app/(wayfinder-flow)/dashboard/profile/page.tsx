@@ -12,6 +12,7 @@ import {
 } from "@/lib/auth-api";
 import UserDropdown from "@/components/wayfinder/UserDropdown";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
+import AvatarPicker from "@/components/shared/AvatarPicker";
 import {
   formatPhoneDisplay,
   formatPhoneInput,
@@ -29,11 +30,6 @@ function formatDisplayValue(value: string | null | undefined): string {
   return trimmed ? trimmed : "—";
 }
 
-function getInitials(name: string | null | undefined): string {
-  if (!name?.trim()) return "?";
-  return name.trim().charAt(0).toUpperCase();
-}
-
 interface EditFormState {
   name: string;
   phone: string;
@@ -42,6 +38,7 @@ interface EditFormState {
 
 export default function ProfilePage() {
   const user = useAuthStore((state) => state.user);
+  const setUser = useAuthStore((state) => state.setUser);
   const [showEdit, setShowEdit] = useState(false);
   const [form, setForm] = useState<EditFormState>({
     name: "",
@@ -202,21 +199,16 @@ export default function ProfilePage() {
         </p>
 
         <div className="flex flex-col sm:flex-row items-center sm:items-center gap-4 mb-6">
-          <div
-            className="w-14 h-14 rounded-[12px] flex items-center justify-center flex-shrink-0"
-            style={{ backgroundColor: "#525162" }}
-          >
-            <span
-              style={{
-                ...inter,
-                fontWeight: 700,
-                fontSize: "24px",
-                color: "#00CED1",
-              }}
-            >
-              {getInitials(user?.name)}
-            </span>
-          </div>
+          <AvatarPicker
+            mode="user"
+            displayName={user?.name ?? "Wayfinder"}
+            currentAvatarUrl={user?.avatarUrl}
+            size={56}
+            onAvatarSaved={(avatarUrl, avatarKey) => {
+              if (!user) return;
+              setUser({ ...user, avatarUrl, avatarKey });
+            }}
+          />
           <div className="text-center sm:text-left">
             <p
               style={{

@@ -8,6 +8,8 @@ import OnboardingGate from "@/components/onboarding/OnboardingGate";
 export default function ChildDashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isLessonRoute = pathname.startsWith("/child-dashboard/lesson");
+  const isMessageRoute = pathname.startsWith("/child-dashboard/message");
+  const isImmersiveRoute = isLessonRoute || isMessageRoute;
 
   return (
     <ChildAuthGuard>
@@ -16,8 +18,10 @@ export default function ChildDashboardLayout({ children }: { children: React.Rea
           {!isLessonRoute && <ChildSidebar />}
           <main
             className={
-              "flex-1 overflow-hidden " +
-              (isLessonRoute ? "" : "overflow-y-auto pt-[56px] pb-[72px] md:pt-0 md:pb-0")
+              isImmersiveRoute
+                ? "flex-1 min-h-0 overflow-hidden flex flex-col" +
+                  (isMessageRoute ? " pt-[56px] pb-[72px] md:pt-0 md:pb-0" : "")
+                : "flex-1 overflow-hidden overflow-y-auto pt-[56px] pb-[72px] md:pt-0 md:pb-0"
             }
           >
             {children}

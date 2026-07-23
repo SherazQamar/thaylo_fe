@@ -11,6 +11,7 @@ import {
 import { fetchParentChildren } from "@/lib/parent-api";
 import ParentUserDropdown from "@/components/parent/ParentUserDropdown";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
+import AvatarPicker from "@/components/shared/AvatarPicker";
 import {
   formatPhoneDisplay,
   formatPhoneInput,
@@ -41,11 +42,6 @@ function formatChildGrade(grade: string | null | undefined): string {
   return `Grade ${grade.trim()}`;
 }
 
-function getInitials(name: string | null | undefined): string {
-  if (!name?.trim()) return "?";
-  return name.trim().charAt(0).toUpperCase();
-}
-
 interface EditFormState {
   name: string;
   phone: string;
@@ -56,6 +52,7 @@ interface EditFormState {
 export default function ParentProfilePage() {
   const queryClient = useQueryClient();
   const user = useAuthStore((state) => state.user);
+  const setUser = useAuthStore((state) => state.setUser);
   const [showEdit, setShowEdit] = useState(false);
   const [form, setForm] = useState<EditFormState>({
     name: "",
@@ -233,18 +230,16 @@ export default function ParentProfilePage() {
         </div>
 
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-[50px] h-[50px] rounded-full bg-[#525162] flex items-center justify-center flex-shrink-0">
-            <span
-              style={{
-                ...inter,
-                fontWeight: 600,
-                fontSize: "22px",
-                color: "#FFFFFF",
-              }}
-            >
-              {getInitials(user?.name)}
-            </span>
-          </div>
+          <AvatarPicker
+            mode="user"
+            displayName={user?.name ?? "Parent"}
+            currentAvatarUrl={user?.avatarUrl}
+            size={50}
+            onAvatarSaved={(avatarUrl, avatarKey) => {
+              if (!user) return;
+              setUser({ ...user, avatarUrl, avatarKey });
+            }}
+          />
           <div>
             <p
               style={{

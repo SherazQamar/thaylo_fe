@@ -9,6 +9,28 @@ import type { ChatParticipant, ChatRoomListItem, ChatTargetType } from "@/lib/ch
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
+function resolveSenderAvatarUrl(
+  message: ChatDisplayMessage,
+  mine: boolean,
+  selfAvatarUrl: string | null | undefined,
+  activeRoom?: ChatRoomListItem | null,
+  groupParticipants?: ChatParticipant[],
+): string | null {
+  if (mine) return selfAvatarUrl ?? null;
+
+  if (activeRoom?.type === "DIRECT" && activeRoom.otherParticipant) {
+    const other = activeRoom.otherParticipant;
+    if (other.type === message.sender.type && other.id === message.sender.id) {
+      return other.avatarUrl ?? null;
+    }
+  }
+
+  const fromGroup = (groupParticipants ?? activeRoom?.groupParticipants ?? []).find(
+    (p) => p.type === message.sender.type && p.id === message.sender.id,
+  );
+  return fromGroup?.avatarUrl ?? null;
+}
+
 type ChatMessageListProps = {
   messages: ChatDisplayMessage[];
   isLoading: boolean;
@@ -42,7 +64,7 @@ export default function ChatMessageList({
     <div
       ref={scrollRef}
       onScroll={onScroll}
-      className="flex-1 overflow-y-auto px-4 md:px-5 py-4 flex flex-col gap-5"
+      className="flex-1 min-h-0 overflow-y-auto px-4 md:px-5 py-4 flex flex-col gap-5"
     >
       {isLoading ? (
         <p className="text-white/50 text-sm" style={inter}>
@@ -61,6 +83,13 @@ export default function ChatMessageList({
             activeRoom,
             groupParticipants,
           });
+          const avatarUrl = resolveSenderAvatarUrl(
+            message,
+            mine,
+            selfAvatarUrl,
+            activeRoom,
+            groupParticipants,
+          );
 
           return (
             <ChatMessageRow
@@ -68,7 +97,7 @@ export default function ChatMessageList({
               content={message.content}
               attachment={message.attachment}
               senderName={senderName}
-              avatarUrl={mine ? selfAvatarUrl : null}
+              avatarUrl={avatarUrl}
               isMine={mine}
               status={message.status}
               onRetry={() => onRetry(message)}

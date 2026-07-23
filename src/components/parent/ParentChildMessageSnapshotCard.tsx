@@ -73,6 +73,7 @@ export default function ParentChildMessageSnapshotCard({
       gradeLabel: formatChildGrade(child.grade),
       metaLine: badges.plantStatus,
       profileHref: `/parent-dashboard/child?id=${childId}`,
+      avatarUrl: child.avatarUrl,
       currentLessonTitle: null,
       lessonSubtitle: `${badges.masteredCount} of ${badges.totalLessons} mastered`,
       masteryPercent,
@@ -83,11 +84,11 @@ export default function ParentChildMessageSnapshotCard({
       progressCompleted: badges.masteredCount,
       progressTotal: badges.totalLessons,
       badgePreviews: badges.badges
-        .filter((b) => b.count > 0 && b.imageUrl)
+        .filter((b) => b.count > 0 && (b.imageUrlSmall || b.imageUrl))
         .map((b) => ({
           kind: b.kind,
           name: b.name,
-          imageUrl: b.imageUrl!,
+          imageUrl: b.imageUrlSmall || b.imageUrl!,
           count: b.count,
         })),
     };

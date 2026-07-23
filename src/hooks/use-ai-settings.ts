@@ -38,6 +38,12 @@ const DEFAULT_SETTINGS: PublicAiSettings = {
     wordMs: 55,
     classDurationMinutes: 15,
   },
+  avatar: {
+    provider: "none",
+    enabled: false,
+    heygenAvatarId: "",
+    heygenVoiceId: "",
+  },
 };
 
 export function useAiSettings(authMode: SpeechAuthMode) {

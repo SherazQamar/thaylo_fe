@@ -66,6 +66,7 @@ export interface ParentChildListItem {
   badgesEarned: number;
   badgePreviews?: ParentChildBadgePreview[];
   interestAreas?: string[];
+  avatarUrl?: string | null;
 }
 
 export async function fetchParentChildren() {
@@ -173,6 +174,7 @@ export interface ParentChildDetail {
   secondName?: string | null;
   userName: string;
   grade?: string | null;
+  avatarUrl?: string | null;
   interestAreas: string[];
   /** Note written by the child for the parent (read-only on parent side). */
   notesForParent: string | null;
