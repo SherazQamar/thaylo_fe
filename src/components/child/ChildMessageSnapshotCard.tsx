@@ -63,6 +63,7 @@ export default function ChildMessageSnapshotCard({
           imageUrl: b.imageUrlSmall || b.imageUrl!,
           count: b.count,
         })),
+      badgesEarned: badges.badgesEarned,
     };
   }, [badgesQuery.data, child]);
 

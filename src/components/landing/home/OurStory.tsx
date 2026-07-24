@@ -1,16 +1,20 @@
 import React from "react";
 import Image from "next/image";
 import SectionLabel from "@/components/ui/SectionLabel";
-import Button from "@/components/ui/Button";
 
 export default function OurStory() {
   return (
     <section id="about" className="pt-16 lg:pt-24 pb-6 lg:pb-8 px-4 sm:px-6 lg:px-12 bg-white flex flex-col justify-center">
       <div className="max-w-7xl mx-auto">
         <SectionLabel text="OUR STORY" />
-        <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-[56px] font-normal text-center mt-4 mb-8 max-w-[1170px] mx-auto leading-[1.2] lg:leading-[67.2px] tracking-[-0.64px] text-[#0C211D]">
-          <span className="lg:hidden">Global AI School for Real World Brilliance</span>
-          <span className="hidden lg:inline">
+        <h2
+          className="text-center mt-4 mb-8 max-w-[1170px] mx-auto text-[#0C211D] tracking-[-0.64px]"
+          style={{ fontFamily: "Instrument Sans, var(--font-instrument-sans), sans-serif" }}
+        >
+          <span className="lg:hidden block text-[24px] leading-[32px] font-medium">
+            Global AI School for Real World Brilliance
+          </span>
+          <span className="hidden lg:inline text-[56px] leading-[67.2px] font-normal">
             Mastery-based learning powered by AI, guided by human pedagogy--so students move forward only when they truly understand
           </span>
         </h2>
@@ -32,15 +36,15 @@ export default function OurStory() {
                 fill
                 className="object-cover"
               />
-              <div className="absolute bottom-0 left-0 right-0 p-3 flex flex-nowrap gap-1.5">
-                <span className="px-[15px] py-[10px] text-white text-[10px] font-normal" style={{ borderRadius: "35px", backgroundColor: "rgba(12, 33, 29, 0.4)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)" }}>
-                  TRENDS
+              <div className="absolute bottom-0 left-0 right-0 p-3 flex flex-nowrap gap-1.5 overflow-hidden">
+                <span className="px-[15px] py-[10px] text-white text-[10px] font-normal whitespace-nowrap" style={{ borderRadius: "35px", backgroundColor: "rgba(12, 33, 29, 0.4)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)" }}>
+                  Digital Minds
                 </span>
-                <span className="px-[15px] py-[10px] text-white text-[10px] font-normal" style={{ borderRadius: "35px", backgroundColor: "rgba(12, 33, 29, 0.4)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)" }}>
-                  TECH EDUCATION
+                <span className="px-[15px] py-[10px] text-white text-[10px] font-normal whitespace-nowrap" style={{ borderRadius: "35px", backgroundColor: "rgba(12, 33, 29, 0.4)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)" }}>
+                  Tech Education
                 </span>
-                <span className="px-[15px] py-[10px] text-white text-[10px] font-normal" style={{ borderRadius: "35px", backgroundColor: "rgba(12, 33, 29, 0.4)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)" }}>
-                  SMART LEARNING
+                <span className="px-[15px] py-[10px] text-white text-[10px] font-normal whitespace-nowrap" style={{ borderRadius: "35px", backgroundColor: "rgba(12, 33, 29, 0.4)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)" }}>
+                  Smart Learning
                 </span>
               </div>
             </div>

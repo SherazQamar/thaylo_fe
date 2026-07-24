@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import UserDropdown from "@/components/wayfinder/UserDropdown";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
+import InfoTooltip from "@/components/shared/InfoTooltip";
+import PortalAvatar from "@/components/shared/PortalAvatar";
 import { getApiErrorMessage } from "@/lib/auth-api";
 import {
   fetchWayfinderDashboard,
@@ -13,6 +14,7 @@ import {
   type WayfinderPriorityStudent,
   wayfinderQueryKeys,
 } from "@/lib/wayfinder-api";
+import { WAYFINDER_DASHBOARD_HINTS } from "@/lib/portal-help-text";
 import {
   formatStudentGrade,
   formatWayfinderStudentName,
@@ -119,15 +121,7 @@ function DashboardStudentRow({ student }: { student: WayfinderDashboardStudent }
       style={{ backgroundColor: "#313044" }}
     >
       <div className="flex items-center gap-2.5 w-full">
-        <div className="w-9 h-9 rounded-full bg-[#525162] overflow-hidden flex-shrink-0">
-          <Image
-            src="/assets/wayfinder Em.png"
-            alt={displayName}
-            width={36}
-            height={36}
-            className="w-full h-full object-cover"
-          />
-        </div>
+        <PortalAvatar name={displayName} avatarUrl={student.avatarUrl} size={36} />
         <div className="min-w-0">
           <p style={{ ...inter, fontWeight: 600, fontSize: "15px", lineHeight: "20px", color: "#FFFFFF" }}>
             {displayName}
@@ -160,14 +154,24 @@ function DashboardStudentRow({ student }: { student: WayfinderDashboardStudent }
       </div>
 
       <div className="rounded-[20px] w-full mt-2 md:mt-0" style={{ backgroundColor: "#525162", padding: "8px 16px" }}>
-        <p style={{ ...inter, fontWeight: 500, fontSize: "11px", color: "rgba(255,255,255,0.5)" }}>
+        <p
+          className="flex items-center gap-1.5"
+          style={{ ...inter, fontWeight: 500, fontSize: "11px", color: "rgba(255,255,255,0.5)" }}
+        >
           Focus
+          <InfoTooltip content={WAYFINDER_DASHBOARD_HINTS.focus} align="left" />
         </p>
         <p style={{ ...inter, fontWeight: 600, fontSize: "14px", lineHeight: "20px", color: "#FFFFFF", marginTop: "2px" }}>
           {student.focusArea}
         </p>
         <div className="flex items-center gap-2 mt-1">
-          <span style={{ ...inter, fontWeight: 400, fontSize: "12px", color: "#FFFFFF" }}>Confidence</span>
+          <span
+            className="flex items-center gap-1.5"
+            style={{ ...inter, fontWeight: 400, fontSize: "12px", color: "#FFFFFF" }}
+          >
+            Confidence
+            <InfoTooltip content={WAYFINDER_DASHBOARD_HINTS.confidence} align="left" />
+          </span>
           <span
             className="px-2 py-0.5 rounded-full"
             style={{
@@ -247,29 +251,44 @@ export default function DashboardPage() {
       {!dashboardQuery.isLoading && !dashboardQuery.isError && (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 mb-8 md:mb-10">
-            {stats.map((stat) => (
-              <div
-                key={stat.key}
-                className="flex items-center gap-4 rounded-[24px] px-5 md:px-6 py-[10px] h-[72px]"
-                style={{ backgroundColor: "#525162" }}
-                title={stat.hint}
-              >
-                <div className="w-10 h-10 rounded-full bg-[#00CED1]/20 flex items-center justify-center flex-shrink-0">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00CED1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M22 2L11 13" />
-                    <path d="M22 2L15 22L11 13L2 9L22 2Z" />
-                  </svg>
+            {stats.map((stat) => {
+              const fallbackHint =
+                stat.key === "masteryTrend"
+                  ? WAYFINDER_DASHBOARD_HINTS.masteryTrend
+                  : stat.key === "timeThisWeek"
+                    ? WAYFINDER_DASHBOARD_HINTS.timeThisWeek
+                    : stat.key === "selSummary"
+                      ? WAYFINDER_DASHBOARD_HINTS.selSummary
+                      : undefined;
+              const hint = stat.hint?.trim() || fallbackHint;
+
+              return (
+                <div
+                  key={stat.key}
+                  className="flex items-center gap-4 rounded-[24px] px-5 md:px-6 py-[10px] h-[72px]"
+                  style={{ backgroundColor: "#525162" }}
+                >
+                  <div className="w-10 h-10 rounded-full bg-[#00CED1]/20 flex items-center justify-center flex-shrink-0">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00CED1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M22 2L11 13" />
+                      <path d="M22 2L15 22L11 13L2 9L22 2Z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p
+                      className="flex items-center gap-1.5"
+                      style={{ ...inter, fontWeight: 500, fontSize: "11px", lineHeight: "16px", color: "rgba(255,255,255,0.5)" }}
+                    >
+                      {stat.label}
+                      {hint ? <InfoTooltip content={hint} align="left" /> : null}
+                    </p>
+                    <p style={{ ...inter, fontWeight: 600, fontSize: "20px", lineHeight: "28px", color: "#FFFFFF" }}>
+                      {stat.value}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p style={{ ...inter, fontWeight: 500, fontSize: "11px", lineHeight: "16px", color: "rgba(255,255,255,0.5)" }}>
-                    {stat.label}
-                  </p>
-                  <p style={{ ...inter, fontWeight: 600, fontSize: "20px", lineHeight: "28px", color: "#FFFFFF" }}>
-                    {stat.value}
-                  </p>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="rounded-[12px] p-4 md:p-6" style={{ backgroundColor: "rgba(255, 255, 255, 0.05)" }}>
@@ -283,26 +302,29 @@ export default function DashboardPage() {
                 </p>
               </div>
               <div className="flex items-center gap-3 self-start sm:self-auto">
-                <button
-                  type="button"
-                  onClick={() => setPrioritiesOpen(true)}
-                  className="relative uppercase rounded-full px-4 py-2 hover:opacity-90 transition-opacity"
-                  style={{
-                    ...inter,
-                    fontWeight: 700,
-                    fontSize: "13px",
-                    letterSpacing: "0.6px",
-                    color: "#111023",
-                    backgroundColor: priorities.length > 0 ? "#FF6F6F" : "#00CED1",
-                  }}
-                >
-                  Priorities
-                  {priorities.length > 0 && (
-                    <span className="ml-2 inline-flex min-w-[18px] h-[18px] items-center justify-center rounded-full bg-[#111023] text-[#FF6F6F] text-[10px]">
-                      {priorities.length}
-                    </span>
-                  )}
-                </button>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setPrioritiesOpen(true)}
+                    className="relative uppercase rounded-full px-4 py-2 hover:opacity-90 transition-opacity"
+                    style={{
+                      ...inter,
+                      fontWeight: 700,
+                      fontSize: "13px",
+                      letterSpacing: "0.6px",
+                      color: "#111023",
+                      backgroundColor: priorities.length > 0 ? "#FF6F6F" : "#00CED1",
+                    }}
+                  >
+                    Priorities
+                    {priorities.length > 0 && (
+                      <span className="ml-2 inline-flex min-w-[18px] h-[18px] items-center justify-center rounded-full bg-[#111023] text-[#FF6F6F] text-[10px]">
+                        {priorities.length}
+                      </span>
+                    )}
+                  </button>
+                  <InfoTooltip content={WAYFINDER_DASHBOARD_HINTS.priorities} align="right" />
+                </div>
                 {totalStudents > 0 && (
                   <Link
                     href="/dashboard/students"

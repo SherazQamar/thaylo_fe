@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import ChildUserDropdown from "@/components/child/ChildUserDropdown";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
+import { BadgeShield } from "@/components/shared/BadgeArtwork";
 import {
   CHILD_INTEREST_SUGGESTIONS,
   isInappropriateInterest,
@@ -44,6 +45,13 @@ export default function ChildProfilePage() {
     queryFn: fetchChildBadges,
   });
   const badgesEarned = badgesQuery.data?.badgesEarned ?? 0;
+  const lessonsCompleted = badgesQuery.data?.masteredCount ?? 0;
+  const allBadges = badgesQuery.data?.badges ?? [];
+  const previewBadges = useMemo(() => {
+    const earned = allBadges.filter((b) => b.count > 0);
+    const locked = allBadges.filter((b) => b.count <= 0);
+    return [...earned, ...locked].slice(0, 4);
+  }, [allBadges]);
 
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [customInterest, setCustomInterest] = useState("");
@@ -514,93 +522,77 @@ export default function ChildProfilePage() {
         <h3
           style={{
             ...inter,
-            fontWeight: 700,
-            fontSize: "20px",
+            fontWeight: 600,
+            fontSize: "26px",
+            lineHeight: "32px",
             color: "#FFFFFF",
-            marginBottom: "12px",
+            marginBottom: "28px",
           }}
         >
           Statistics
         </h3>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="flex flex-col md:flex-row gap-6">
           <div
-            className="rounded-[12px] py-3 flex items-center justify-center gap-2"
-            style={{ border: "1px solid #525162" }}
+            className="flex-1 rounded-[21px] py-6 px-8 flex items-center justify-center gap-2.5"
+            style={{ backgroundColor: "#111023", border: "2px solid #858C94" }}
           >
             <svg
-              width="16"
-              height="16"
+              width="24"
+              height="24"
               viewBox="0 0 24 24"
-              fill="none"
-              stroke="#00CED1"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+              fill="#00CED1"
+              aria-hidden
             >
-              <path d="M12 22V8" />
-              <path d="M5 12H2a10 10 0 0020 0h-3" />
+              <path d="M12 23c-1.5-1.2-5.5-4.7-7.2-8.2C3.2 11.3 4.1 7.8 7 6.4c1.6-.8 3.4-.4 4.5.8C12.6 6 14.4 5.6 16 6.4c2.9 1.4 3.8 4.9 2.2 8.4C16.5 18.3 13.5 21.8 12 23z" />
+              <path
+                d="M12 12.5c.8-1.6 2.7-2.2 4-1.2"
+                fill="none"
+                stroke="#111023"
+                strokeWidth="1.4"
+                strokeLinecap="round"
+              />
             </svg>
-            <span
-              style={{
-                ...inter,
-                fontWeight: 700,
-                fontSize: "16px",
-                color: "#FFFFFF",
-              }}
-            >
-              0 Lessons
-            </span>
+            <p style={{ ...inter, fontWeight: 600, fontSize: "23px", color: "#FFFFFF" }}>
+              <span className="tabular-nums">{lessonsCompleted}</span>{" "}
+              Lessons
+            </p>
           </div>
           <div
-            className="rounded-[12px] py-3 flex items-center justify-center gap-2"
-            style={{ border: "1px solid #525162" }}
+            className="flex-1 rounded-[21px] py-6 px-8 flex items-center justify-center gap-2.5"
+            style={{ backgroundColor: "#111023", border: "2px solid #858C94" }}
           >
             <svg
-              width="16"
-              height="16"
+              width="24"
+              height="24"
               viewBox="0 0 24 24"
-              fill="none"
-              stroke="#00CED1"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+              fill="#00CED1"
+              aria-hidden
             >
-              <path d="M12 15l-2 5-3-1 1.5-4M12 15l2 5 3-1-1.5-4M6 9a6 6 0 1012 0 6 6 0 00-12 0z" />
+              <path d="M12 23c-1.5-1.2-5.5-4.7-7.2-8.2C3.2 11.3 4.1 7.8 7 6.4c1.6-.8 3.4-.4 4.5.8C12.6 6 14.4 5.6 16 6.4c2.9 1.4 3.8 4.9 2.2 8.4C16.5 18.3 13.5 21.8 12 23z" />
+              <path
+                d="M12 12.5c.8-1.6 2.7-2.2 4-1.2"
+                fill="none"
+                stroke="#111023"
+                strokeWidth="1.4"
+                strokeLinecap="round"
+              />
             </svg>
-            <span
-              style={{
-                ...inter,
-                fontWeight: 700,
-                fontSize: "16px",
-                color: "#FFFFFF",
-              }}
-            >
-              {badgesEarned} Badge{badgesEarned === 1 ? "" : "s"}
-            </span>
+            <p style={{ ...inter, fontWeight: 600, fontSize: "23px", color: "#FFFFFF" }}>
+              <span className="tabular-nums">{badgesEarned}</span>{" "}
+              Badges
+            </p>
           </div>
         </div>
-        <p
-          style={{
-            ...inter,
-            fontWeight: 400,
-            fontSize: "12px",
-            color: "rgba(255,255,255,0.4)",
-            marginTop: "10px",
-          }}
-        >
-          {badgesQuery.data
-            ? `${badgesQuery.data.plantStatus} · ${badgesQuery.data.masteredCount} of ${badgesQuery.data.totalLessons} lessons mastered`
-            : "Lesson and badge counts update as you complete activities."}
-        </p>
       </div>
 
       <div>
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-4">
           <h3
             style={{
               ...inter,
-              fontWeight: 700,
-              fontSize: "20px",
+              fontWeight: 600,
+              fontSize: "26px",
+              lineHeight: "32px",
               color: "#FFFFFF",
             }}
           >
@@ -611,7 +603,7 @@ export default function ChildProfilePage() {
             style={{
               ...inter,
               fontWeight: 600,
-              fontSize: "13px",
+              fontSize: "16px",
               color: "#00CED1",
               cursor: "pointer",
             }}
@@ -619,21 +611,128 @@ export default function ChildProfilePage() {
             See all
           </Link>
         </div>
-        <div
-          className="rounded-[12px] px-4 py-8 text-center"
-          style={{ backgroundColor: "#313044" }}
-        >
-          <p
-            style={{
-              ...inter,
-              fontWeight: 400,
-              fontSize: "14px",
-              color: "rgba(255,255,255,0.5)",
-            }}
+
+        {badgesQuery.isLoading && (
+          <div
+            className="rounded-[12px] px-4 py-8 text-center"
+            style={{ backgroundColor: "#313044" }}
           >
-            No badges earned yet. Keep learning to unlock your first badge!
-          </p>
-        </div>
+            <p style={{ ...inter, fontSize: "14px", color: "rgba(255,255,255,0.5)" }}>
+              Loading badges…
+            </p>
+          </div>
+        )}
+
+        {badgesQuery.isError && (
+          <div
+            className="rounded-[12px] px-4 py-8 text-center"
+            style={{ backgroundColor: "#313044" }}
+          >
+            <p style={{ ...inter, fontSize: "14px", color: "#F87171" }}>
+              Could not load badges. Please try again.
+            </p>
+          </div>
+        )}
+
+        {!badgesQuery.isLoading && !badgesQuery.isError && previewBadges.length === 0 && (
+          <div
+            className="rounded-[12px] px-4 py-8 text-center"
+            style={{ backgroundColor: "#313044" }}
+          >
+            <p
+              style={{
+                ...inter,
+                fontWeight: 400,
+                fontSize: "14px",
+                color: "rgba(255,255,255,0.5)",
+              }}
+            >
+              No badges earned yet. Keep learning to unlock your first badge!
+            </p>
+          </div>
+        )}
+
+        {!badgesQuery.isLoading && !badgesQuery.isError && previewBadges.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {previewBadges.map((badge) => {
+              const earned = badge.count > 0;
+              return (
+                <div
+                  key={badge.kind}
+                  className="rounded-[12px] px-4 py-4 flex items-center gap-4"
+                  style={{ backgroundColor: "#313044" }}
+                >
+                  <div
+                    className="size-[43px] rounded-[10px] flex items-center justify-center flex-shrink-0"
+                    style={{
+                      backgroundColor: earned
+                        ? "rgba(0,206,209,0.18)"
+                        : "rgba(255,255,255,0.06)",
+                    }}
+                  >
+                    <BadgeShield
+                      iconStyle={badge.iconStyle}
+                      earned={earned}
+                      imageUrl={badge.imageUrlSmall ?? badge.imageUrl}
+                      alt={badge.name}
+                      size={28}
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2 mb-1">
+                      <span
+                        className="truncate"
+                        style={{
+                          ...inter,
+                          fontWeight: 600,
+                          fontSize: "14px",
+                          color: "#FFFFFF",
+                        }}
+                      >
+                        {badge.name}
+                      </span>
+                      <span
+                        style={{
+                          ...inter,
+                          fontWeight: 700,
+                          fontSize: "13px",
+                          color: earned ? "#00CED1" : "rgba(255,255,255,0.45)",
+                        }}
+                      >
+                        {badge.count}
+                        {badge.maxCount != null ? ` / ${badge.maxCount}` : ""}
+                      </span>
+                    </div>
+                    {badge.maxCount != null && (
+                      <div className="w-full h-3 bg-[#525162] rounded-full overflow-hidden mb-1.5">
+                        <div
+                          className="h-full bg-[#00CED1] rounded-full"
+                          style={{
+                            width: `${Math.min(
+                              100,
+                              (badge.count / Math.max(1, badge.maxCount)) * 100,
+                            )}%`,
+                          }}
+                        />
+                      </div>
+                    )}
+                    <p
+                      className="truncate"
+                      style={{
+                        ...inter,
+                        fontWeight: 400,
+                        fontSize: "12px",
+                        color: "rgba(255,255,255,0.45)",
+                      }}
+                    >
+                      {badge.description}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

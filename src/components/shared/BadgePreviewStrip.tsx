@@ -19,6 +19,8 @@ export const BADGE_PREVIEW_SIZE_PX = 35;
 
 type BadgePreviewStripProps = {
   previews: BadgePreviewItem[];
+  /** Total badge awards earned. When set, +N is remaining toward this total (not remaining kinds). */
+  totalEarned?: number;
   size?: number;
   maxVisible?: number;
   className?: string;
@@ -26,17 +28,23 @@ type BadgePreviewStripProps = {
 
 /**
  * Shows up to `maxVisible` unique badge images (object-contain, no crop),
- * then a +N circle for any remaining kinds. Hover reveals the badge name.
+ * then a +N circle for remaining awards (or remaining kinds if totalEarned omitted).
+ * Hover reveals the badge name.
  */
 export default function BadgePreviewStrip({
   previews,
+  totalEarned,
   size = BADGE_PREVIEW_SIZE_PX,
   maxVisible = BADGE_PREVIEW_MAX_VISIBLE,
   className,
 }: BadgePreviewStripProps) {
   const unique = previews.filter((p) => (p.count ?? 1) > 0);
   const visible = unique.slice(0, maxVisible);
-  const remaining = Math.max(0, unique.length - maxVisible);
+  const remainingKinds = Math.max(0, unique.length - maxVisible);
+  const remaining =
+    totalEarned != null
+      ? Math.max(0, totalEarned - visible.length)
+      : remainingKinds;
 
   if (unique.length === 0) {
     return null;
@@ -72,6 +80,7 @@ export default function BadgePreviewStrip({
             role="tooltip"
           >
             {badge.name}
+            {(badge.count ?? 1) > 1 ? ` ×${badge.count}` : ""}
           </span>
         </div>
       ))}

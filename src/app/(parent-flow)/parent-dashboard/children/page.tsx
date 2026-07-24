@@ -44,6 +44,13 @@ export default function ChildrenPage() {
   });
 
   const greetingName = user?.name?.trim() || "Parent";
+  const childCount = children.length;
+  const subtitle =
+    childCount === 0
+      ? "Add a child to get started."
+      : childCount === 1
+        ? `Here is how ${children[0]?.userName ?? "your child"} is doing today.`
+        : "Here is how your children are doing today.";
 
   function handleAddChild() {
     resetWizard();
@@ -51,8 +58,8 @@ export default function ChildrenPage() {
   }
 
   return (
-    <div className="p-4 md:p-6 lg:p-10">
-      <div className="flex items-center justify-between mb-2 md:mb-3">
+    <div className="px-6 py-4 md:p-6 lg:p-10">
+      <div className="hidden md:flex items-center justify-between mb-3">
         <h1
           className="uppercase"
           style={{
@@ -66,9 +73,7 @@ export default function ChildrenPage() {
         >
           Children
         </h1>
-        <div className="hidden md:block">
-          <ParentUserDropdown />
-        </div>
+        <ParentUserDropdown />
       </div>
 
       <Breadcrumbs
@@ -79,22 +84,34 @@ export default function ChildrenPage() {
         ]}
       />
 
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-        <h2
-          style={{
-            ...inter,
-            fontWeight: 700,
-            fontSize: "22px",
-            lineHeight: "30px",
-            color: "#FFFFFF",
-          }}
-        >
-          Hello, {greetingName}
-        </h2>
+      {/* Figma mobile: Hello + subtitle + full-width Add Child */}
+      <div className="mb-6 md:mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="min-w-0">
+          <h2
+            className="text-[32px] leading-10 md:text-[22px] md:leading-[30px]"
+            style={{
+              ...inter,
+              fontWeight: 700,
+              color: "#FFFFFF",
+            }}
+          >
+            Hello, {greetingName}
+          </h2>
+          <p
+            className="mt-1.5 md:mt-1 text-[14px] leading-6"
+            style={{
+              ...inter,
+              fontWeight: 400,
+              color: "rgba(255,255,255,0.5)",
+            }}
+          >
+            {subtitle}
+          </p>
+        </div>
         <button
           type="button"
           onClick={handleAddChild}
-          className="rounded-full px-6 py-2.5 cursor-pointer hover:opacity-90 transition-opacity self-start sm:self-auto"
+          className="w-full md:w-auto rounded-full h-12 md:h-auto px-6 py-2.5 cursor-pointer hover:opacity-90 transition-opacity"
           style={{
             backgroundColor: "#00CED1",
             ...inter,
@@ -121,22 +138,21 @@ export default function ChildrenPage() {
           No children registered yet. Add a child to get started.
         </p>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-5">
           {children.map((child) => (
             <Link
               key={child.id}
               href={`/parent-dashboard/child?id=${child.id}`}
-              className="rounded-[12px] p-6 flex flex-col items-center hover:bg-[#3a3954] transition-colors"
+              className="rounded-[12px] px-5 py-7 md:p-6 flex flex-col items-center hover:bg-[#3a3954] transition-colors"
               style={{ backgroundColor: "#313044" }}
             >
               <p
+                className="text-[14px] leading-[19px] md:text-[16px] md:leading-6"
                 style={{
                   ...inter,
                   fontWeight: 600,
-                  fontSize: "16px",
-                  lineHeight: "24px",
                   color: "#FFFFFF",
-                  marginBottom: "16px",
+                  marginBottom: "12px",
                 }}
               >
                 {child.userName}
@@ -149,9 +165,10 @@ export default function ChildrenPage() {
                   useWordInitials
                 />
               </div>
-              <div className="w-[100px] h-[100px] rounded-full border-4 border-[#525162] flex items-center justify-center mb-4 relative">
+              {/* Figma mobile plant ring ≈ 120px */}
+              <div className="w-[120px] h-[120px] md:w-[100px] md:h-[100px] rounded-full border-4 border-[#525162] flex items-center justify-center mb-4 relative">
                 <div
-                  className="w-[80px] h-[80px] rounded-full flex items-center justify-center"
+                  className="w-[96px] h-[96px] md:w-[80px] md:h-[80px] rounded-full flex items-center justify-center"
                   style={{
                     border: "3px solid #00CED1",
                     borderTopColor: "transparent",
@@ -161,33 +178,48 @@ export default function ChildrenPage() {
                 </div>
               </div>
               <p
+                className="text-[24px] leading-[29px] md:text-[20px] md:leading-7"
                 style={{
                   ...inter,
                   fontWeight: 700,
-                  fontSize: "20px",
-                  lineHeight: "28px",
                   color: "#FFFFFF",
                 }}
               >
                 {formatChildGrade(child.grade)}
               </p>
               <p
+                className="text-[14px] leading-[19px] md:text-[13px] md:leading-5 text-center"
                 style={{
                   ...inter,
                   fontWeight: 500,
-                  fontSize: "13px",
-                  lineHeight: "20px",
                   color:
                     child.plantStatus === "Not started yet"
                       ? "#858C94"
                       : "#00CED1",
-                  marginTop: "4px",
+                  marginTop: "8px",
                 }}
               >
                 {child.plantStatus}
               </p>
-              <div className="w-full h-px bg-white/10 my-4" />
-              <BadgePreviewStrip previews={child.badgePreviews ?? []} />
+              <div className="w-full h-px bg-white/10 my-5 md:my-4" />
+              <div className="flex flex-col items-center gap-2.5">
+                <BadgePreviewStrip
+                  previews={child.badgePreviews ?? []}
+                  totalEarned={child.badgesEarned}
+                />
+                <p
+                  style={{
+                    ...inter,
+                    fontWeight: 500,
+                    fontSize: "12px",
+                    lineHeight: "17px",
+                    color: "rgba(255,255,255,0.55)",
+                  }}
+                >
+                  {child.badgesEarned} Badge
+                  {child.badgesEarned === 1 ? "" : "s"} Earned
+                </p>
+              </div>
             </Link>
           ))}
         </div>

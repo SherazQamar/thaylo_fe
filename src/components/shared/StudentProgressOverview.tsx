@@ -5,6 +5,9 @@ import Link from "next/link";
 import BadgePreviewStrip, {
   type BadgePreviewItem,
 } from "@/components/shared/BadgePreviewStrip";
+import InfoTooltip from "@/components/shared/InfoTooltip";
+import PortalAvatar from "@/components/shared/PortalAvatar";
+import { SHARED_PROGRESS_HINTS } from "@/lib/portal-help-text";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
@@ -43,6 +46,8 @@ const wellbeing = [
 export interface StudentProgressOverviewProps {
   displayName: string;
   gradeLabel: string;
+  /** Prefer `avatarUrl`; `avatarSrc` kept for older call sites. */
+  avatarUrl?: string | null;
   avatarSrc?: string;
   messagesHref: string;
   showRiskBadge?: boolean;
@@ -57,31 +62,32 @@ export interface StudentProgressOverviewProps {
 export default function StudentProgressOverview({
   displayName,
   gradeLabel,
-  avatarSrc = "/assets/wayfinder Em.png",
+  avatarUrl,
+  avatarSrc,
   messagesHref,
   showRiskBadge = false,
   progressLabel = "Growing well",
   confidenceLabel = "Medium",
   gardenStage = 3,
   gardenMessage,
+  badgeCount,
   badgePreviews = [],
 }: StudentProgressOverviewProps) {
   const gardenText = gardenMessage ?? `${displayName}'s plant is thriving`;
+  const resolvedAvatarUrl = avatarUrl ?? avatarSrc ?? null;
 
   return (
     <>
       <div className="rounded-[12px] p-4 md:p-6 mb-6" style={{ backgroundColor: "#313044" }}>
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex flex-col sm:flex-row items-center sm:items-center gap-4 md:gap-5">
-            <div className="w-[80px] h-[80px] md:w-[90px] md:h-[90px] rounded-full overflow-hidden border-2 border-[#525162] flex-shrink-0">
-              <Image
-                src={avatarSrc}
-                alt={displayName}
-                width={90}
-                height={90}
-                className="w-full h-full object-cover"
-              />
-            </div>
+            <PortalAvatar
+              name={displayName}
+              avatarUrl={resolvedAvatarUrl}
+              size={90}
+              useWordInitials
+              className="border-2 border-[#525162]"
+            />
             <div className="text-center sm:text-left">
               <div className="flex items-center gap-3 mb-3 justify-center sm:justify-start">
                 <p style={{ ...inter, fontWeight: 600, fontSize: "20px", lineHeight: "30px", color: "#FFFFFF" }}>
@@ -94,7 +100,7 @@ export default function StudentProgressOverview({
               </div>
               <div className="flex flex-wrap items-center gap-2 md:gap-3 justify-center sm:justify-start">
                 <span
-                  className="rounded-[30px]"
+                  className="rounded-[30px] inline-flex items-center gap-1.5"
                   style={{
                     ...inter,
                     fontWeight: 500,
@@ -106,9 +112,10 @@ export default function StudentProgressOverview({
                   }}
                 >
                   Progress: {progressLabel}
+                  <InfoTooltip content={SHARED_PROGRESS_HINTS.progress} align="left" />
                 </span>
                 <span
-                  className="rounded-[30px]"
+                  className="rounded-[30px] inline-flex items-center gap-1.5"
                   style={{
                     ...inter,
                     fontWeight: 500,
@@ -120,6 +127,7 @@ export default function StudentProgressOverview({
                   }}
                 >
                   Confidence: {confidenceLabel}
+                  <InfoTooltip content={SHARED_PROGRESS_HINTS.confidence} align="left" />
                 </span>
                 <button
                   type="button"
@@ -146,7 +154,7 @@ export default function StudentProgressOverview({
           </div>
           {showRiskBadge && (
             <span
-              className="rounded-[30px] border border-[#F59E0B] flex-shrink-0 self-center md:self-auto"
+              className="rounded-[30px] border border-[#F59E0B] flex-shrink-0 self-center md:self-auto inline-flex items-center gap-1.5"
               style={{
                 ...inter,
                 fontWeight: 500,
@@ -157,6 +165,7 @@ export default function StudentProgressOverview({
               }}
             >
               Risk: Amber
+              <InfoTooltip content={SHARED_PROGRESS_HINTS.risk} align="right" />
             </span>
           )}
         </div>
@@ -249,15 +258,26 @@ export default function StudentProgressOverview({
             <h3 style={{ ...inter, fontWeight: 600, fontSize: "18px", lineHeight: "28px", color: "#FFFFFF", marginBottom: "12px" }}>
               Wellbeing Snapshot
             </h3>
-            <div className="grid grid-cols-3 gap-3">
+            {/* Figma mobile Children: mood tiles stack full-width; desktop keeps 3-up row */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               {wellbeing.map((item) => (
-                <div key={item.label} className="rounded-[12px] p-3 flex items-center gap-2" style={{ backgroundColor: "rgba(255,255,255,0.05)" }}>
-                  <span className="text-xl">{item.emoji}</span>
-                  <div>
-                    <p style={{ ...inter, fontWeight: 500, fontSize: "12px", lineHeight: "18px", color: "rgba(255,255,255,0.7)" }}>
+                <div
+                  key={item.label}
+                  className="rounded-[12px] px-3 py-3 flex items-center gap-3 min-h-[68px] md:min-h-0 md:gap-2 md:p-3"
+                  style={{ backgroundColor: "rgba(255,255,255,0.05)" }}
+                >
+                  <span className="text-[28px] md:text-xl leading-none shrink-0">{item.emoji}</span>
+                  <div className="min-w-0">
+                    <p
+                      className="text-[14px] leading-5 md:text-[12px] md:leading-[18px]"
+                      style={{ ...inter, fontWeight: 500, color: "rgba(255,255,255,0.7)" }}
+                    >
                       {item.label}
                     </p>
-                    <p style={{ ...inter, fontWeight: 600, fontSize: "16px", lineHeight: "22px", color: "#FFFFFF" }}>
+                    <p
+                      className="text-[18px] leading-6 md:text-[16px] md:leading-[22px]"
+                      style={{ ...inter, fontWeight: 600, color: "#FFFFFF" }}
+                    >
                       {item.count}
                     </p>
                   </div>
@@ -269,8 +289,12 @@ export default function StudentProgressOverview({
 
         <div className="flex flex-col gap-4">
           <div className="rounded-[12px] p-5 flex flex-col items-center justify-center" style={{ backgroundColor: "#313044" }}>
-            <h3 style={{ ...inter, fontWeight: 600, fontSize: "18px", lineHeight: "28px", color: "#FFFFFF", marginBottom: "12px" }}>
+            <h3
+              className="flex items-center gap-2"
+              style={{ ...inter, fontWeight: 600, fontSize: "18px", lineHeight: "28px", color: "#FFFFFF", marginBottom: "12px" }}
+            >
               Growth Garden
+              <InfoTooltip content={SHARED_PROGRESS_HINTS.growthGarden} align="left" />
             </h3>
             <div className="w-[100px] h-[100px] rounded-full border-4 border-[#525162] flex items-center justify-center mb-3 relative">
               <div
@@ -287,7 +311,10 @@ export default function StudentProgressOverview({
               {gardenText}
             </p>
             <div className="mt-3">
-              <BadgePreviewStrip previews={badgePreviews} />
+              <BadgePreviewStrip
+                previews={badgePreviews}
+                totalEarned={badgeCount}
+              />
             </div>
           </div>
 

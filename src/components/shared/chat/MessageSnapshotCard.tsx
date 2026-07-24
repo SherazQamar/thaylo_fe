@@ -4,8 +4,10 @@ import Link from "next/link";
 import BadgePreviewStrip, {
   type BadgePreviewItem,
 } from "@/components/shared/BadgePreviewStrip";
+import InfoTooltip from "@/components/shared/InfoTooltip";
 import PortalAvatar from "@/components/shared/PortalAvatar";
 import ProgressRing from "@/components/shared/ProgressRing";
+import { SHARED_PROGRESS_HINTS } from "@/lib/portal-help-text";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
@@ -64,6 +66,7 @@ export type MessageSnapshotData = {
   progressCompleted?: number;
   progressTotal?: number;
   badgePreviews?: BadgePreviewItem[];
+  badgesEarned?: number;
 };
 
 type MessageSnapshotCardProps = {
@@ -111,6 +114,9 @@ function SnapshotBody({ data }: { data: MessageSnapshotData }) {
       ? Math.round((progressCompleted / progressTotal) * 100)
       : null;
   const previews = data.badgePreviews ?? [];
+  const badgesEarned =
+    data.badgesEarned ??
+    previews.reduce((sum, badge) => sum + (badge.count ?? 1), 0);
 
   return (
     <div className="flex flex-col gap-3 w-full min-w-0">
@@ -172,6 +178,7 @@ function SnapshotBody({ data }: { data: MessageSnapshotData }) {
           {previews.length > 0 ? (
             <BadgePreviewStrip
               previews={previews}
+              totalEarned={badgesEarned}
               maxVisible={MESSAGE_BADGE_PREVIEW_MAX}
               size={MESSAGE_BADGE_PREVIEW_SIZE_PX}
               className="!justify-end !gap-1.5 !flex-nowrap"
@@ -217,8 +224,12 @@ function SnapshotBody({ data }: { data: MessageSnapshotData }) {
             </span>
           </ProgressRing>
           <div className="min-w-0">
-            <p style={{ ...inter, fontWeight: 500, fontSize: "10px", color: "rgba(255,255,255,0.45)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+            <p
+              className="flex items-center gap-1"
+              style={{ ...inter, fontWeight: 500, fontSize: "10px", color: "rgba(255,255,255,0.45)", textTransform: "uppercase", letterSpacing: "0.04em" }}
+            >
               Mastery
+              <InfoTooltip content={SHARED_PROGRESS_HINTS.mastery} align="left" />
             </p>
             <p className="truncate" style={{ ...inter, fontWeight: 400, fontSize: "11px", color: "rgba(255,255,255,0.45)", marginTop: "2px" }}>
               {data.masteryDetail ?? "No attempts yet"}
@@ -233,8 +244,12 @@ function SnapshotBody({ data }: { data: MessageSnapshotData }) {
             </span>
           </ProgressRing>
           <div className="min-w-0">
-            <p style={{ ...inter, fontWeight: 500, fontSize: "10px", color: "rgba(255,255,255,0.45)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+            <p
+              className="flex items-center gap-1"
+              style={{ ...inter, fontWeight: 500, fontSize: "10px", color: "rgba(255,255,255,0.45)", textTransform: "uppercase", letterSpacing: "0.04em" }}
+            >
               Course Progress
+              <InfoTooltip content={SHARED_PROGRESS_HINTS.courseProgress} align="left" />
             </p>
             <p style={{ ...inter, fontWeight: 400, fontSize: "11px", color: "rgba(255,255,255,0.45)", marginTop: "2px" }}>
               Lessons Completed
@@ -244,13 +259,18 @@ function SnapshotBody({ data }: { data: MessageSnapshotData }) {
 
         <div className="flex items-center gap-2.5 min-w-0 rounded-lg px-2.5 py-2 bg-white/[0.03]">
           <div className="min-w-0 flex-1">
-            <p style={{ ...inter, fontWeight: 500, fontSize: "10px", color: "rgba(255,255,255,0.45)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+            <p
+              className="flex items-center gap-1"
+              style={{ ...inter, fontWeight: 500, fontSize: "10px", color: "rgba(255,255,255,0.45)", textTransform: "uppercase", letterSpacing: "0.04em" }}
+            >
               Badges Earned
+              <InfoTooltip content={SHARED_PROGRESS_HINTS.badgesEarned} align="left" />
             </p>
             <div className="mt-1.5">
               {previews.length > 0 ? (
                 <BadgePreviewStrip
                   previews={previews}
+                  totalEarned={badgesEarned}
                   maxVisible={MESSAGE_BADGE_PREVIEW_MAX}
                   size={MESSAGE_BADGE_PREVIEW_SIZE_PX}
                   className="!justify-start !gap-1.5 !flex-nowrap"
