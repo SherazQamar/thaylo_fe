@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
@@ -17,19 +18,21 @@ import { useChildAuthStore } from "@/stores/child-auth.store";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
-/* Learning path nodes */
-const pathNodes = [
-  { type: "start", label: "START", active: true },
-  { type: "lesson", icon: "plant" },
-  { type: "skip", icon: "forward" },
-  { type: "lesson", icon: "leaves" },
-  { type: "skip", icon: "forward" },
+/** Figma Child Flow Home — zig-zag path (mobile + desktop) */
+const PATH_NODES = [
+  { id: "start", type: "start" as const, align: "center" as const },
+  { id: "plant-1", type: "chest" as const, icon: "/assets/child-path/plant-chest.svg", align: "left" as const },
+  { id: "fwd-1", type: "forward" as const, icon: "/assets/child-path/forward.svg", align: "right" as const },
+  { id: "plant-2", type: "chest" as const, icon: "/assets/child-path/plant-leaves.svg", align: "left" as const },
+  { id: "fwd-2", type: "forward" as const, icon: "/assets/child-path/forward.svg", align: "right" as const },
 ];
 
-const pathNodes2 = [
-  { type: "skip", icon: "forward" },
-  { type: "lesson", icon: "plant" },
-];
+const alignClass = {
+  left: "self-start ml-[6%] md:ml-[14%]",
+  right: "self-end mr-[6%] md:mr-[14%]",
+  /** Figma places START slightly right of true center */
+  center: "self-center translate-x-[18%] md:translate-x-[12%]",
+} as const;
 
 export default function ChildPathwayPage() {
   const router = useRouter();
@@ -95,8 +98,8 @@ export default function ChildPathwayPage() {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header - full width */}
-      <div className="flex flex-col gap-1 px-4 md:px-5 lg:px-6 pt-4 md:pt-5 lg:pt-6 pb-3 flex-shrink-0">
+      {/* Header - desktop only (mobile uses shared logo + menu) */}
+      <div className="hidden md:flex flex-col gap-1 px-4 md:px-5 lg:px-6 pt-4 md:pt-5 lg:pt-6 pb-3 flex-shrink-0">
         <div className="flex items-center justify-between">
           <h1 style={{ ...inter, fontWeight: 600, fontSize: "22px", color: "#DCE6EC" }}>Pathway</h1>
           <div className="hidden md:block">
@@ -112,39 +115,52 @@ export default function ChildPathwayPage() {
       {/* Two column layout */}
       <div className="flex flex-col lg:flex-row lg:flex-1 lg:min-h-0">
       {/* Main Content */}
-      <div className="flex-1 min-w-0 px-4 md:px-5 lg:px-6 pb-6 overflow-y-auto overflow-x-hidden scrollbar-hide">
-        {/* Welcome Banner */}
+      <div className="flex-1 min-w-0 px-6 md:px-5 lg:px-6 pt-2 md:pt-0 pb-6 overflow-y-auto overflow-x-hidden scrollbar-hide">
+        {/* Welcome Banner — Figma Child Flow Home */}
         <div
-          className="rounded-[16px] px-6 md:px-8 py-5 mb-8 flex items-center justify-between"
-          style={{ background: "linear-gradient(135deg, #064e3b 0%, #047857 40%, #059669 70%, #34d399 100%)" }}
+          className="rounded-[6px] md:rounded-[16px] px-2 py-2 md:px-8 md:py-5 mb-3 md:mb-4 flex items-center justify-between gap-2"
+          style={{ background: "linear-gradient(90deg, #60D624 0%, #00696B 100%)" }}
         >
-          <div>
-            <p style={{ ...inter, fontWeight: 400, fontSize: "14px", color: "rgba(255,255,255,0.8)" }}>
+          <div className="min-w-0 flex-1">
+            <p
+              className="text-[10px] md:text-sm leading-[14px] md:leading-normal opacity-70 md:opacity-80"
+              style={{ ...inter, fontWeight: 400, color: "#FFFFFF" }}
+            >
               Welcome back, {greetingName}
             </p>
-            <p style={{ ...inter, fontWeight: 700, fontSize: "20px", color: "#FFFFFF", marginTop: "4px" }}>
-              {hasAssignedClass && primaryClass
-                ? primaryClass.needsRetake
-                  ? `Retake: ${primaryClass.nextLessonTitle ?? primaryClass.title}`
-                  : primaryClass.nextLessonTitle ?? primaryClass.title
-                : "Here's your Learning Path"}
+            <p
+              className="text-[11px] md:text-xl leading-4 md:leading-normal font-medium md:font-bold mt-0.5 md:mt-1"
+              style={{ ...inter, color: "#FFFFFF" }}
+            >
+              Here&apos;s your learning path today
             </p>
             {hasAssignedClass && primaryClass && (
-              <p style={{ ...inter, fontWeight: 400, fontSize: "12px", color: "rgba(255,255,255,0.65)", marginTop: "6px" }}>
+              <p
+                className="hidden md:block"
+                style={{ ...inter, fontWeight: 400, fontSize: "12px", color: "rgba(255,255,255,0.65)", marginTop: "6px" }}
+              >
                 {primaryClass.needsRetake
-                  ? "Score below 85% — please retake this lesson before moving on"
+                  ? `Retake: ${primaryClass.nextLessonTitle ?? primaryClass.title}`
                   : `${primaryClass.subject} · ${primaryClass.gradeLevel}`}
               </p>
             )}
           </div>
           <button
-            className="rounded-[14px] px-6 py-3 cursor-pointer hover:opacity-90 transition-opacity flex-shrink-0 ml-4 disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ backgroundColor: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.25)", backdropFilter: "blur(4px)", ...inter, fontWeight: 700, fontSize: "14px", color: "#FFFFFF" }}
+            className="rounded-[7px] md:rounded-[14px] px-[7px] py-[3px] md:px-6 md:py-3 cursor-pointer hover:opacity-90 transition-opacity flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed shadow-[0px_1px_0px_0px_rgba(0,0,0,0.2)] md:shadow-none"
+            style={{
+              backgroundColor: "transparent",
+              border: "0.5px solid rgba(0,0,0,0.2)",
+              ...inter,
+              fontWeight: 400,
+              fontSize: "11px",
+              lineHeight: "18px",
+              color: "#FFFFFF",
+            }}
             disabled={isStarting || !canStartClass}
             onClick={handleStartClass}
             title={!canStartClass ? "No published class for your grade yet" : undefined}
           >
-            {isStarting ? "Starting…" : classesLoading ? "Loading…" : "Start NOW"}
+            {isStarting ? "Starting…" : classesLoading ? "Loading…" : "Start Now"}
           </button>
         </div>
 
@@ -160,106 +176,116 @@ export default function ChildPathwayPage() {
           </div>
         )}
 
-        {/* Learning Path */}
-        <div className="flex flex-col items-center pb-8">
-          {/* Module 1 nodes */}
-          {pathNodes.map((node, i) => (
-            <div key={i} className="flex flex-col items-center">
-              {node.type === "start" ? (
-                <>
-                  <span
-                    className="rounded-full px-4 py-1 mb-2"
-                    style={{
-                      backgroundColor: canStartClass ? "#00CED1" : "#525162",
-                      ...inter,
-                      fontWeight: 700,
-                      fontSize: "11px",
-                      color: canStartClass ? "#111023" : "rgba(255,255,255,0.5)",
-                      letterSpacing: "1px",
-                    }}
-                  >
-                    START
-                  </span>
+        {/* Learning Path — Figma zig-zag (tight spacing, mobile + large) */}
+        <div className="flex flex-col items-stretch w-full max-w-[240px] md:max-w-[280px] mx-auto pb-8 pt-1 gap-2.5 md:gap-3">
+          {PATH_NODES.map((node) => {
+            if (node.type === "start") {
+              return (
+                <div key={node.id} className={`${alignClass[node.align]} relative flex flex-col items-center`}>
+                  {/* START speech bubble */}
+                  <div className="relative mb-0.5 z-10">
+                    <div
+                      className="rounded-[8px] px-3 py-1.5 border border-[#37464F]"
+                      style={{ backgroundColor: "#313044" }}
+                    >
+                      <span
+                        style={{
+                          ...inter,
+                          fontWeight: 700,
+                          fontSize: "12px",
+                          letterSpacing: "0.4px",
+                          color: canStartClass ? "#00CED1" : "rgba(255,255,255,0.45)",
+                        }}
+                      >
+                        START
+                      </span>
+                    </div>
+                    <div
+                      className="absolute left-1/2 -translate-x-1/2 -bottom-[5px] w-2.5 h-2.5 rotate-45 border-r border-b border-[#37464F]"
+                      style={{ backgroundColor: "#313044" }}
+                    />
+                  </div>
+
+                  {/* Outer ring + button */}
                   <div
-                    className={
-                      "w-[56px] h-[56px] rounded-full flex items-center justify-center shadow-lg transition-opacity " +
-                      (canStartClass
-                        ? "bg-[#00CED1] cursor-pointer hover:opacity-90"
-                        : "bg-[#525162] cursor-not-allowed opacity-60")
-                    }
-                    style={canStartClass ? { boxShadow: "0 0 20px rgba(0,206,209,0.3)" } : undefined}
-                    onClick={canStartClass ? handleStartClass : undefined}
-                    role="button"
-                    tabIndex={canStartClass ? 0 : -1}
-                    aria-disabled={!canStartClass}
-                    onKeyDown={(event) => {
-                      if (!canStartClass) return;
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        void handleStartClass();
-                      }
-                    }}
-                    aria-label={canStartClass ? "Start class" : "No class available yet"}
+                    className={`relative mt-0.5 flex items-center justify-center rounded-full p-[9px] ${
+                      canStartClass ? "bg-[#313044]/40" : "bg-[#313044]/20 opacity-70"
+                    }`}
+                    style={{ width: 72, height: 68 }}
                   >
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="12" cy="12" r="3" />
-                      <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
-                    </svg>
+                    <div
+                      role="button"
+                      tabIndex={canStartClass ? 0 : -1}
+                      aria-disabled={!canStartClass}
+                      aria-label={canStartClass ? "Start class" : "No class available yet"}
+                      onClick={canStartClass ? handleStartClass : undefined}
+                      onKeyDown={(event) => {
+                        if (!canStartClass) return;
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          void handleStartClass();
+                        }
+                      }}
+                      className={`relative w-[52px] h-[42px] rounded-full flex items-center justify-center transition-opacity ${
+                        canStartClass
+                          ? "bg-[#00CED1] cursor-pointer hover:opacity-90"
+                          : "bg-[#525162] cursor-not-allowed"
+                      }`}
+                      style={
+                        canStartClass
+                          ? { boxShadow: "0px 5px 0px 0px #01A8AB" }
+                          : { boxShadow: "0px 5px 0px 0px #424056" }
+                      }
+                    >
+                      <Image
+                        src="/assets/child-path/start-hand.svg"
+                        alt=""
+                        width={24}
+                        height={24}
+                        className="object-contain"
+                        unoptimized
+                      />
+                    </div>
                   </div>
-                  <div className="w-px h-8 bg-[#525162]" />
-                </>
-              ) : node.type === "lesson" ? (
-                <>
-                  <div className="w-[48px] h-[48px] rounded-full bg-[#313044] border-2 border-[#525162] flex items-center justify-center">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#525162" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      {node.icon === "plant" ? (
-                        <><path d="M12 22V8" /><path d="M5 12H2a10 10 0 0020 0h-3" /><path d="M8 5.2C9.2 3.6 10.5 3 12 3c1.5 0 2.8.6 4 2.2" /></>
-                      ) : (
-                        <><path d="M12 22V8" /><path d="M5 12H2a10 10 0 0020 0h-3" /><path d="M8 5.2C9.2 3.6 10.5 3 12 3c1.5 0 2.8.6 4 2.2" /></>
-                      )}
-                    </svg>
-                  </div>
-                  <div className="w-px h-8 bg-[#525162]" />
-                </>
-              ) : (
-                <>
-                  <div className="w-[48px] h-[48px] rounded-full bg-[#313044] border-2 border-[#525162] flex items-center justify-center">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#525162" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <polygon points="5 4 15 12 5 20 5 4" />
-                      <polygon points="13 4 23 12 13 20 13 4" />
-                    </svg>
-                  </div>
-                  <div className="w-px h-8 bg-[#525162]" />
-                </>
-              )}
-            </div>
-          ))}
+                </div>
+              );
+            }
 
-          {/* Module 2 Divider */}
-          <div className="flex items-center gap-4 my-4 w-full max-w-[300px]">
-            <div className="flex-1 h-px bg-[#525162]" />
-            <span style={{ ...inter, fontWeight: 600, fontSize: "12px", color: "rgba(255,255,255,0.3)", letterSpacing: "1px" }}>MODULE 2</span>
-            <div className="flex-1 h-px bg-[#525162]" />
-          </div>
+            if (node.type === "chest") {
+              return (
+                <div key={node.id} className={`${alignClass[node.align]} opacity-55`}>
+                  <div className="relative w-[56px] h-[64px] md:w-[62px] md:h-[70px]">
+                    <Image
+                      src={node.icon}
+                      alt=""
+                      fill
+                      className="object-contain"
+                      unoptimized
+                    />
+                  </div>
+                </div>
+              );
+            }
 
-          {/* Module 2 nodes */}
-          {pathNodes2.map((node, i) => (
-            <div key={`m2-${i}`} className="flex flex-col items-center">
-              <div className="w-[48px] h-[48px] rounded-full bg-[#313044] border-2 border-[#525162] flex items-center justify-center">
-                {node.type === "skip" ? (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#525162" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polygon points="5 4 15 12 5 20 5 4" />
-                    <polygon points="13 4 23 12 13 20 13 4" />
-                  </svg>
-                ) : (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#525162" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 22V8" /><path d="M5 12H2a10 10 0 0020 0h-3" /><path d="M8 5.2C9.2 3.6 10.5 3 12 3c1.5 0 2.8.6 4 2.2" />
-                  </svg>
-                )}
+            // forward
+            return (
+              <div key={node.id} className={`${alignClass[node.align]} opacity-55`}>
+                <div
+                  className="w-[52px] h-[42px] md:w-[56px] md:h-[46px] rounded-full bg-[#313044] flex items-center justify-center"
+                  style={{ boxShadow: "0px 5px 0px 0px #424056" }}
+                >
+                  <Image
+                    src={node.icon}
+                    alt=""
+                    width={30}
+                    height={24}
+                    className="object-contain opacity-80"
+                    unoptimized
+                  />
+                </div>
               </div>
-              {i < pathNodes2.length - 1 && <div className="w-px h-8 bg-[#525162]" />}
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 

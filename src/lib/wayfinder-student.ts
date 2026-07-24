@@ -21,8 +21,8 @@ function startOfLocalDay(date: Date): Date {
 }
 
 /**
- * Same calendar day → time (e.g. "2:30 PM").
- * Otherwise → day label (Yesterday / weekday / short date).
+ * Relative last-active label for student cards.
+ * e.g. "Just now", "12 minutes ago", "3 hours ago", "1 day ago", "2 days ago".
  */
 export function formatLastActiveAt(lastActiveAt: string | null | undefined): string {
   if (!lastActiveAt) return "Not yet active";
@@ -30,20 +30,25 @@ export function formatLastActiveAt(lastActiveAt: string | null | undefined): str
   const at = new Date(lastActiveAt);
   if (Number.isNaN(at.getTime())) return "Not yet active";
 
-  const now = new Date();
-  const dayMs = 24 * 60 * 60 * 1000;
-  const todayStart = startOfLocalDay(now);
-  const atStart = startOfLocalDay(at);
-  const dayDiff = Math.round((todayStart.getTime() - atStart.getTime()) / dayMs);
+  const diffMs = Math.max(0, Date.now() - at.getTime());
+  const minuteMs = 60 * 1000;
+  const hourMs = 60 * minuteMs;
+  const dayMs = 24 * hourMs;
 
-  if (dayDiff === 0) {
-    return at.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  if (diffMs < minuteMs) return "Just now";
+
+  const minutes = Math.floor(diffMs / minuteMs);
+  if (minutes < 60) {
+    return minutes === 1 ? "1 minute ago" : `${minutes} minutes ago`;
   }
-  if (dayDiff === 1) return "Yesterday";
-  if (dayDiff > 1 && dayDiff < 7) {
-    return at.toLocaleDateString(undefined, { weekday: "long" });
+
+  const hours = Math.floor(diffMs / hourMs);
+  if (hours < 24) {
+    return hours === 1 ? "1 hour ago" : `${hours} hours ago`;
   }
-  return at.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+
+  const days = Math.floor(diffMs / dayMs);
+  return days === 1 ? "1 day ago" : `${days} days ago`;
 }
 
 export function formatLastActiveLabel(lastActiveAt: string | null | undefined): string {

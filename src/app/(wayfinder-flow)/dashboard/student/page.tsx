@@ -1,12 +1,39 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import UserDropdown from "@/components/wayfinder/UserDropdown";
 import StudentProgressOverview from "@/components/shared/StudentProgressOverview";
+import { getApiErrorMessage } from "@/lib/auth-api";
+import {
+  fetchWayfinderStudentSnapshot,
+  wayfinderQueryKeys,
+} from "@/lib/wayfinder-api";
+import {
+  formatStudentGrade,
+  formatWayfinderStudentName,
+} from "@/lib/wayfinder-student";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
 export default function StudentDetailsPage() {
+  const searchParams = useSearchParams();
+  const childIdRaw = searchParams.get("id");
+  const childId = childIdRaw ? Number(childIdRaw) : NaN;
+  const hasValidId = Number.isFinite(childId) && childId > 0;
+
+  const snapshotQuery = useQuery({
+    queryKey: wayfinderQueryKeys.studentSnapshot(childId),
+    queryFn: () => fetchWayfinderStudentSnapshot(childId),
+    enabled: hasValidId,
+  });
+
+  const snapshot = snapshotQuery.data;
+  const displayName = snapshot
+    ? formatWayfinderStudentName(snapshot)
+    : "Student";
+
   return (
     <div className="p-4 md:p-6 lg:p-10 overflow-y-auto">
       <div className="flex items-center justify-between mb-6 md:mb-8">
@@ -28,12 +55,29 @@ export default function StudentDetailsPage() {
         </div>
       </div>
 
-      <StudentProgressOverview
-        displayName="Fatima"
-        gradeLabel="Grade 4"
-        messagesHref="/dashboard/message"
-        showRiskBadge
-      />
+      {!hasValidId ? (
+        <p style={{ ...inter, color: "rgba(255,255,255,0.7)" }}>
+          Select a student from your caseload to view details.
+        </p>
+      ) : snapshotQuery.isLoading ? (
+        <p style={{ ...inter, color: "rgba(255,255,255,0.7)" }}>Loading student…</p>
+      ) : snapshotQuery.isError ? (
+        <p style={{ ...inter, color: "#F87171" }}>
+          {getApiErrorMessage(snapshotQuery.error, "Could not load student details.")}
+        </p>
+      ) : snapshot ? (
+        <StudentProgressOverview
+          displayName={displayName}
+          gradeLabel={formatStudentGrade(snapshot.grade)}
+          avatarUrl={snapshot.avatarUrl}
+          messagesHref={`/dashboard/message?childId=${snapshot.childId}`}
+          showRiskBadge
+          progressLabel={snapshot.progressLabel}
+          gardenMessage={`${displayName}'s plant · ${snapshot.masteryLabel}`}
+          badgeCount={snapshot.badgesEarned}
+          badgePreviews={snapshot.badgePreviews}
+        />
+      ) : null}
     </div>
   );
 }

@@ -34,6 +34,12 @@ export interface User {
   timeZone?: string | null;
   /** Hiring / coverage region (Wayfinders). Sets operational timezone. */
   region?: string | null;
+  /** Wayfinder specialty / sub-role (e.g. Teacher, Math Coach). */
+  specialty?: string | null;
+  /** Grade band the Wayfinder supports (admin-set). */
+  gradeLevel?: string | null;
+  /** Languages the Wayfinder speaks. */
+  languagesSpoken?: string[];
   /** Selected preset avatar R2 key. */
   avatarKey?: string | null;
   /** Public URL for the selected preset avatar. */

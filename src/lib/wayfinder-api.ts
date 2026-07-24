@@ -25,6 +25,8 @@ export interface WayfinderStudent {
   /** Most recent lesson activity ISO timestamp; null if never active in a lesson. */
   lastActiveAt: string | null;
   badgesEarned: number;
+  /** Distinct earned badge kinds for card preview strip (original artwork). */
+  badgePreviews?: WayfinderBadgePreview[];
   plantStatus: string;
   avatarUrl?: string | null;
   parent: WayfinderStudentParent;
@@ -199,6 +201,7 @@ export interface WayfinderDashboardStudent {
   secondName: string | null
   userName: string
   grade: string | null
+  avatarUrl?: string | null
   assignedAt: string | null
   plantStage: string
   masteredLabel: string
@@ -238,6 +241,7 @@ export interface WayfinderLiveSession {
   secondName: string | null
   userName: string
   grade: string | null
+  avatarUrl?: string | null
   plantStage: string
   masteredLabel: string
   masteredCount: number

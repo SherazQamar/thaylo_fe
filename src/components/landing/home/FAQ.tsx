@@ -5,9 +5,9 @@ import SectionLabel from "@/components/ui/SectionLabel";
 
 const faqs = [
   {
-    question: "Do I need prior experience to join the course?",
+    question: "Do I need prior experience to enroll?",
     answer:
-      "No experience is needed. The course starts with the basics and guides you step by step. You will learn through practical exercises and hands-on projects. By the end, you'll be confident using AI tools in real scenarios.",
+      "No prior experience is required. Thaylo’s current pilot is designed for Grade 4 learners and begins with foundational instruction that adapts based on each student’s understanding. As Thaylo expands, the same mastery-based approach will support learners across additional grade levels.",
   },
   {
     question: "How long are daily lessons ?",
@@ -15,7 +15,7 @@ const faqs = [
       "Daily lessons are designed to be completed in approximately 45-60 minutes, with flexibility built in to accommodate different learning paces.",
   },
   {
-    question: "How does the AI tutor work ?",
+    question: "How does the AI Instructor work?",
     answer:
       "The AI Instructor delivers structured lessons using proven instructional strategies, adapting in real time while staying aligned to human-designed curriculum and learning goals.",
   },
@@ -46,29 +46,95 @@ const faqs = [
   },
 ];
 
-export default function FAQ({ maxItems }: { maxItems?: number } = {}) {
+/** Mobile Home Figma shows the first 5 questions only; desktop shows all 8. */
+const MOBILE_FAQ_COUNT = 5;
+
+export type FAQItem = { question: string; answer: string };
+
+/** Contact Us Figma — 4 questions (desktop + mobile). */
+export const contactFaqs: FAQItem[] = [
+  {
+    question: "Do I need prior experience to join the course?",
+    answer:
+      "No experience is needed. The course starts with the basics and guides you step by step. You will learn through practical exercises and hands-on projects. By the end, you’ll be confident using AI tools in real scenarios.",
+  },
+  {
+    question: "How long are daily lessons ?",
+    answer:
+      "Daily lessons are designed to be completed in approximately 45-60 minutes, with flexibility built in to accommodate different learning paces.",
+  },
+  {
+    question: "How does the AI tutor work ?",
+    answer:
+      "The AI Instructor delivers structured lessons using proven instructional strategies, adapting in real time while staying aligned to human-designed curriculum and learning goals.",
+  },
+  {
+    question: "How does Bloom Buddy support emotional wellbeing ?",
+    answer:
+      "Calyx, your Bloom Buddy, supports focus and reflection through simple check-ins that help students notice how they're feeling so they can fully engage with learning.",
+  },
+];
+
+type FAQProps = {
+  items?: FAQItem[];
+  /** Hide items at this index and beyond on small screens. Omit to show all. */
+  mobileCount?: number;
+  /** Figma Home uses FAQS; Contact uses lowercase faqs */
+  label?: string;
+  labelUppercase?: boolean;
+};
+
+export default function FAQ({
+  items,
+  mobileCount,
+  label = "FAQS",
+  labelUppercase = true,
+}: FAQProps = {}) {
   const [openIndex, setOpenIndex] = useState<number>(0);
-  const displayFaqs = maxItems ? faqs.slice(0, maxItems) : faqs;
+  const list = items ?? faqs;
+  const hideAfter = mobileCount ?? (items ? undefined : MOBILE_FAQ_COUNT);
 
   return (
     <section className="py-16 lg:py-24 px-4 sm:px-6 lg:px-12 bg-white flex flex-col justify-center">
       <div className="max-w-[1320px] mx-auto w-full">
         <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-8 lg:gap-20">
-          {/* Left Column */}
           <div className="flex flex-col justify-between">
             <div>
-              <SectionLabel text="FAQS" className="!justify-start" />
-              <h2 className="text-[20px] sm:text-2xl md:text-4xl font-normal text-[#1A2B3D] mt-4 mb-8 leading-[1.2] tracking-[-0.64px]">
+              <SectionLabel
+                text={label}
+                className="!justify-start"
+                uppercase={labelUppercase}
+              />
+              <h2
+                className="text-[20px] sm:text-2xl md:text-4xl font-normal text-[#1A2B3D] mt-4 mb-8 leading-[1.2] tracking-[-0.64px]"
+                style={{ fontFamily: "Instrument Sans, var(--font-instrument-sans), sans-serif" }}
+              >
                 Questions Parents Ask
               </h2>
             </div>
 
-            {/* Contact Card - at bottom of left column */}
-            <div className="mt-auto" style={{ backgroundColor: "#EBEEF2", borderRadius: "15px", padding: "30px" }}>
+            <div
+              className="mt-auto"
+              style={{ backgroundColor: "#EBEEF2", borderRadius: "15px", padding: "30px" }}
+            >
               <div style={{ marginBottom: "30px" }}>
-                <p className="font-normal text-[#606B68]" style={{ fontFamily: "Inter, sans-serif", fontSize: "18px", lineHeight: "27px", letterSpacing: "-0.48px", marginBottom: "4px" }}>24/7 Support</p>
+                <p
+                  className="font-normal text-[#606B68]"
+                  style={{
+                    fontFamily: "Inter, var(--font-inter), sans-serif",
+                    fontSize: "18px",
+                    lineHeight: "27px",
+                    letterSpacing: "-0.48px",
+                    marginBottom: "4px",
+                  }}
+                >
+                  24/7 Support
+                </p>
                 <div className="flex items-center justify-between">
-                  <p className="font-medium text-[#0C211D]" style={{ fontSize: "26px", lineHeight: "31.2px", letterSpacing: "-0.48px" }}>
+                  <p
+                    className="font-medium text-[#0C211D]"
+                    style={{ fontSize: "26px", lineHeight: "31.2px", letterSpacing: "-0.48px" }}
+                  >
                     (252) 769-4545
                   </p>
                   <svg
@@ -88,11 +154,23 @@ export default function FAQ({ maxItems }: { maxItems?: number } = {}) {
                 </div>
               </div>
               <div className="border-t border-gray-200" style={{ paddingTop: "30px" }}>
-                <p className="font-normal text-[#606B68]" style={{ fontFamily: "Inter, sans-serif", fontSize: "18px", lineHeight: "27px", letterSpacing: "-0.48px", marginBottom: "4px" }}>
+                <p
+                  className="font-normal text-[#606B68]"
+                  style={{
+                    fontFamily: "Inter, var(--font-inter), sans-serif",
+                    fontSize: "18px",
+                    lineHeight: "27px",
+                    letterSpacing: "-0.48px",
+                    marginBottom: "4px",
+                  }}
+                >
                   Technical Support
                 </p>
                 <div className="flex items-center justify-between">
-                  <p className="font-medium text-[#0C211D]" style={{ fontSize: "20px", lineHeight: "31.2px", letterSpacing: "-0.48px" }}>
+                  <p
+                    className="font-medium text-[#0C211D]"
+                    style={{ fontSize: "20px", lineHeight: "31.2px", letterSpacing: "-0.48px" }}
+                  >
                     info@thayloglobal.com
                   </p>
                   <svg
@@ -114,28 +192,49 @@ export default function FAQ({ maxItems }: { maxItems?: number } = {}) {
             </div>
           </div>
 
-          {/* Right Column - Accordion */}
           <div className="divide-y divide-gray-200">
-            {displayFaqs.map((faq, index) => (
-              <div key={index} className="py-7">
-                <button
-                  className="w-full flex items-center justify-between text-left cursor-pointer"
-                  onClick={() => setOpenIndex(index)}
+            {list.map((faq, index) => {
+              const mobileHidden =
+                hideAfter !== undefined && index >= hideAfter;
+              return (
+                <div
+                  key={index}
+                  className={`py-7 ${mobileHidden ? "hidden sm:block" : ""}`}
                 >
-                  <span className="text-lg md:text-xl font-semibold text-[#1A2B3D] pr-4" style={{ fontSize: "20px", lineHeight: "28px", letterSpacing: "-0.48px" }}>
-                    {faq.question}
-                  </span>
-                  <span className="flex-shrink-0 flex items-center justify-center text-[#1A2B3D] font-light" style={{ fontSize: "28px", lineHeight: "1", width: "28px", height: "28px" }}>
-                    {openIndex === index ? "−" : "+"}
-                  </span>
-                </button>
-                {openIndex === index && (
-                  <p className="mt-3 text-[#606B68] pr-8 font-normal" style={{ fontFamily: "Inter, sans-serif", fontSize: "16px", lineHeight: "26px", letterSpacing: "-0.32px" }}>
-                    {faq.answer}
-                  </p>
-                )}
-              </div>
-            ))}
+                  <button
+                    className="w-full flex items-center justify-between text-left cursor-pointer"
+                    onClick={() => setOpenIndex(index)}
+                    type="button"
+                  >
+                    <span
+                      className="text-lg md:text-xl font-semibold text-[#1A2B3D] pr-4"
+                      style={{ fontSize: "20px", lineHeight: "28px", letterSpacing: "-0.48px" }}
+                    >
+                      {faq.question}
+                    </span>
+                    <span
+                      className="flex-shrink-0 flex items-center justify-center text-[#1A2B3D] font-light"
+                      style={{ fontSize: "28px", lineHeight: "1", width: "28px", height: "28px" }}
+                    >
+                      {openIndex === index ? "−" : "+"}
+                    </span>
+                  </button>
+                  {openIndex === index && (
+                    <p
+                      className="mt-3 text-[#606B68] pr-8 font-normal"
+                      style={{
+                        fontFamily: "Inter, var(--font-inter), sans-serif",
+                        fontSize: "16px",
+                        lineHeight: "26px",
+                        letterSpacing: "-0.32px",
+                      }}
+                    >
+                      {faq.answer}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>

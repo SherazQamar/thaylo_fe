@@ -2,6 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import BadgePreviewStrip from "@/components/shared/BadgePreviewStrip";
+import PortalAvatar from "@/components/shared/PortalAvatar";
 import type { WayfinderStudent } from "@/lib/wayfinder-api";
 import {
   formatLastActiveAt,
@@ -10,8 +12,6 @@ import {
 } from "@/lib/wayfinder-student";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
-
-const BADGE_ASSETS = ["/assets/s1.png", "/assets/s2.png", "/assets/s3.png"];
 
 function PlantIcon() {
   return (
@@ -34,10 +34,9 @@ interface WayfinderStudentCardProps {
 export default function WayfinderStudentCard({ student }: WayfinderStudentCardProps) {
   const displayName = formatWayfinderStudentName(student);
   const badgesEarned = student.badgesEarned ?? 0;
+  const badgePreviews = student.badgePreviews ?? [];
   const plantStatus = student.plantStatus || "Not started yet";
   const lastActiveLabel = formatLastActiveAt(student.lastActiveAt);
-  const visibleBadges = BADGE_ASSETS.slice(0, Math.min(3, Math.max(badgesEarned, 0)));
-  const extraBadges = Math.max(0, badgesEarned - visibleBadges.length);
 
   return (
     <Link
@@ -78,6 +77,15 @@ export default function WayfinderStudentCard({ student }: WayfinderStudentCardPr
         {displayName}
       </p>
 
+      <div className="mb-3">
+        <PortalAvatar
+          name={displayName}
+          avatarUrl={student.avatarUrl}
+          size={56}
+          useWordInitials
+        />
+      </div>
+
       <div className="w-[100px] h-[100px] rounded-full border-4 border-[#525162] flex items-center justify-center mb-4 relative">
         <div
           className="w-[80px] h-[80px] rounded-full flex items-center justify-center"
@@ -106,32 +114,16 @@ export default function WayfinderStudentCard({ student }: WayfinderStudentCardPr
 
       <div className="w-full h-px bg-white/10 my-4" />
 
-      {badgesEarned > 0 && (
-        <div className="flex items-center gap-2 mb-2">
-          {visibleBadges.map((src) => (
-            <div
-              key={src}
-              className="w-7 h-7 rounded-full flex items-center justify-center"
-              style={{ backgroundColor: "#525162" }}
-            >
-              <Image src={src} alt="badge" width={19} height={19} className="w-[19px] h-[19px] object-contain" unoptimized />
-            </div>
-          ))}
-          {extraBadges > 0 && (
-            <div
-              className="w-7 h-7 rounded-full flex items-center justify-center"
-              style={{ backgroundColor: "#525162" }}
-            >
-              <span style={{ ...inter, fontWeight: 500, fontSize: "12px", lineHeight: "100%", color: "#00CED1" }}>
-                +{extraBadges}
-              </span>
-            </div>
-          )}
-        </div>
+      <BadgePreviewStrip
+        previews={badgePreviews}
+        totalEarned={badgesEarned}
+        className="mb-2"
+      />
+      {badgesEarned === 0 && (
+        <p style={{ ...inter, fontWeight: 500, fontSize: "12px", lineHeight: "16px", color: "rgba(255,255,255,0.5)" }}>
+          0 Badges Earned
+        </p>
       )}
-      <p style={{ ...inter, fontWeight: 500, fontSize: "12px", lineHeight: "16px", color: "rgba(255,255,255,0.5)" }}>
-        {badgesEarned} Badges Earned
-      </p>
     </Link>
   );
 }

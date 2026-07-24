@@ -24,6 +24,9 @@ type AvatarPickerProps = {
   size?: number;
   /** When false, only the clickable avatar is shown (no side label). Default false. */
   showLabel?: boolean;
+  /** Controlled open state for the picker dialog. */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
 function CameraIcon({ size = 22 }: { size?: number }) {
@@ -49,9 +52,18 @@ export default function AvatarPicker({
   className = "",
   size = 50,
   showLabel = false,
+  open: openProp,
+  onOpenChange,
 }: AvatarPickerProps) {
   const queryClient = useQueryClient();
-  const [open, setOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const isControlled = openProp !== undefined;
+  const open = isControlled ? openProp : uncontrolledOpen;
+
+  function setOpen(next: boolean) {
+    if (!isControlled) setUncontrolledOpen(next);
+    onOpenChange?.(next);
+  }
 
   const presetsQuery = useQuery({
     queryKey: ["avatar-presets", mode],

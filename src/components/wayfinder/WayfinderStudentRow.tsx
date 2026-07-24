@@ -1,7 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
+import PortalAvatar from "@/components/shared/PortalAvatar";
 import type { WayfinderStudent } from "@/lib/wayfinder-api";
 import {
   formatAssignedDate,
@@ -26,15 +26,7 @@ export default function WayfinderStudentRow({ student }: WayfinderStudentRowProp
       style={{ backgroundColor: "#313044" }}
     >
       <div className="flex items-center gap-2.5 w-full">
-        <div className="w-9 h-9 rounded-full bg-[#525162] overflow-hidden flex-shrink-0">
-          <Image
-            src="/assets/wayfinder Em.png"
-            alt={displayName}
-            width={36}
-            height={36}
-            className="w-full h-full object-cover"
-          />
-        </div>
+        <PortalAvatar name={displayName} avatarUrl={student.avatarUrl} size={36} />
         <div className="min-w-0">
           <p style={{ ...inter, fontWeight: 600, fontSize: "15px", lineHeight: "20px", color: "#FFFFFF" }}>
             {displayName}

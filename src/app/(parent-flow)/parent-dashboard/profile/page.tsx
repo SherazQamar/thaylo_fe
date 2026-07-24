@@ -12,6 +12,7 @@ import { fetchParentChildren } from "@/lib/parent-api";
 import ParentUserDropdown from "@/components/parent/ParentUserDropdown";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import AvatarPicker from "@/components/shared/AvatarPicker";
+import PortalAvatar from "@/components/shared/PortalAvatar";
 import {
   formatPhoneDisplay,
   formatPhoneInput,
@@ -36,10 +37,36 @@ function formatTimezoneLabel(timeZone: string | null | undefined): string {
   return match ? match.label : timeZone;
 }
 
+function formatPreferredLanguage(languages: string[] | undefined): string {
+  const cleaned = (languages ?? []).map((l) => l.trim()).filter(Boolean);
+  if (cleaned.length === 0) return "—";
+  return cleaned.join(", ");
+}
+
 function formatChildGrade(grade: string | null | undefined): string {
   if (!grade?.trim()) return "—";
   if (/^grade\s/i.test(grade.trim())) return grade.trim();
   return `Grade ${grade.trim()}`;
+}
+
+/** Figma Parent Profile child row status from plantStatus. */
+function childTrackStatus(plantStatus: string | undefined): {
+  label: "Needs attention" | "On track";
+  color: string;
+} {
+  const lower = (plantStatus ?? "").toLowerCase();
+  if (
+    !lower ||
+    lower.includes("not started") ||
+    lower.includes("slow") ||
+    lower.includes("struggl") ||
+    lower.includes("risk") ||
+    lower.includes("wilt") ||
+    lower.includes("attention")
+  ) {
+    return { label: "Needs attention", color: "#F59E0B" };
+  }
+  return { label: "On track", color: "#00CED1" };
 }
 
 interface EditFormState {
@@ -66,6 +93,8 @@ export default function ParentProfilePage() {
     queryKey: ["parent-children"],
     queryFn: fetchParentChildren,
   });
+
+  const preferredLanguage = formatPreferredLanguage(user?.languagesSpoken);
 
   const saveMutation = useMutation({
     mutationFn: () =>
@@ -126,8 +155,15 @@ export default function ParentProfilePage() {
     saveMutation.mutate();
   }
 
+  /** Figma rows first; keep guardian fields so nothing is removed. */
   const profileRows = [
-    { label: "Primary contact type", value: formatGuardianRelationLabel(user?.guardianType) },
+    { label: "Country", value: formatDisplayValue(user?.country) },
+    { label: "Timezone", value: formatTimezoneLabel(user?.timeZone) },
+    { label: "Preferred language", value: preferredLanguage },
+    {
+      label: "Primary contact type",
+      value: formatGuardianRelationLabel(user?.guardianType),
+    },
     ...(user?.secondaryGuardianName?.trim()
       ? [
           {
@@ -140,29 +176,27 @@ export default function ParentProfilePage() {
           },
         ]
       : []),
-    { label: "Country", value: formatDisplayValue(user?.country) },
-    { label: "Timezone", value: formatTimezoneLabel(user?.timeZone) },
   ];
 
   return (
-    <div className="p-4 md:p-6 lg:p-10">
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-2 md:mb-3">
+    <div className="px-6 py-4 md:p-6 lg:p-10">
+      <div className="mb-6 md:mb-8">
+        <div className="flex items-start justify-between gap-4 mb-2 md:mb-3">
           <h1
+            className="text-[32px] leading-[40px] md:text-[36px] md:leading-[54px]"
             style={{
               ...inter,
               fontWeight: 700,
-              fontSize: "28px",
-              lineHeight: "36px",
               color: "#FFFFFF",
             }}
           >
             Parent Profile
           </h1>
-          <div className="hidden md:block">
+          <div className="hidden md:block flex-shrink-0 pt-2">
             <ParentUserDropdown />
           </div>
         </div>
+
         <Breadcrumbs
           showHome={false}
           items={[
@@ -170,12 +204,12 @@ export default function ParentProfilePage() {
             { href: "/parent-dashboard/profile", label: "Profile" },
           ]}
         />
+
         <p
+          className="text-[14px] leading-6 md:text-[15px] md:leading-6 max-w-[475px]"
           style={{
             ...inter,
             fontWeight: 400,
-            fontSize: "15px",
-            lineHeight: "24px",
             color: "rgba(255,255,255,0.5)",
           }}
         >
@@ -183,39 +217,58 @@ export default function ParentProfilePage() {
         </p>
       </div>
 
+      {/* Profile card — Figma 40000474:2471 / 40000563:12368 */}
       <div
-        className="rounded-[12px] p-5 md:p-6 mb-6"
+        className="rounded-[12px] p-5 md:p-7 mb-6"
         style={{ backgroundColor: "#313044" }}
       >
-        <div className="flex items-start justify-between mb-5">
-          <div>
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-5">
+          <div className="min-w-0">
             <h2
+              className="text-[22px] leading-9 md:text-[24px] md:leading-9"
               style={{
                 ...inter,
                 fontWeight: 700,
-                fontSize: "18px",
-                lineHeight: "26px",
                 color: "#FFFFFF",
               }}
             >
               Profile
             </h2>
             <p
+              className="mt-1 text-[13px] leading-5 md:leading-5"
               style={{
                 ...inter,
                 fontWeight: 400,
-                fontSize: "13px",
-                lineHeight: "20px",
                 color: "rgba(255,255,255,0.5)",
               }}
             >
               Basic info shown across your dashboards and reports.
             </p>
           </div>
+
+          {/* Desktop Edit — top right */}
           <button
             type="button"
             onClick={openEdit}
-            className="rounded-[12px] px-6 py-2.5 cursor-pointer hover:opacity-90 transition-opacity flex-shrink-0"
+            className="hidden md:inline-flex items-center justify-center rounded-[12px] h-12 px-10 cursor-pointer hover:opacity-90 transition-opacity flex-shrink-0"
+            style={{
+              backgroundColor: "#00CED1",
+              ...inter,
+              fontWeight: 600,
+              fontSize: "14px",
+              lineHeight: "20px",
+              color: "#FFFFFF",
+              minWidth: "198px",
+            }}
+          >
+            Edit
+          </button>
+
+          {/* Mobile Edit — under header (Figma) */}
+          <button
+            type="button"
+            onClick={openEdit}
+            className="md:hidden w-full rounded-[12px] h-12 cursor-pointer hover:opacity-90 transition-opacity"
             style={{
               backgroundColor: "#00CED1",
               ...inter,
@@ -234,19 +287,19 @@ export default function ParentProfilePage() {
             mode="user"
             displayName={user?.name ?? "Parent"}
             currentAvatarUrl={user?.avatarUrl}
-            size={50}
+            size={70}
             onAvatarSaved={(avatarUrl, avatarKey) => {
               if (!user) return;
               setUser({ ...user, avatarUrl, avatarKey });
             }}
           />
-          <div>
+          <div className="min-w-0">
             <p
               style={{
                 ...inter,
                 fontWeight: 600,
                 fontSize: "16px",
-                lineHeight: "22px",
+                lineHeight: "23px",
                 color: "#FFFFFF",
               }}
             >
@@ -257,7 +310,7 @@ export default function ParentProfilePage() {
                 ...inter,
                 fontWeight: 400,
                 fontSize: "13px",
-                lineHeight: "18px",
+                lineHeight: "19px",
                 color: "rgba(255,255,255,0.5)",
               }}
             >
@@ -268,7 +321,7 @@ export default function ParentProfilePage() {
                 ...inter,
                 fontWeight: 400,
                 fontSize: "13px",
-                lineHeight: "18px",
+                lineHeight: "19px",
                 color: "rgba(255,255,255,0.5)",
               }}
             >
@@ -277,11 +330,11 @@ export default function ParentProfilePage() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-2.5">
+        <div className="flex flex-col gap-3">
           {profileRows.map((item) => (
             <div
               key={item.label}
-              className="flex items-center justify-between rounded-[12px] px-4 py-3"
+              className="flex items-center justify-between gap-4 rounded-[12px] px-4 md:px-5 py-4 min-h-[59px]"
               style={{ backgroundColor: "#525162" }}
             >
               <span
@@ -289,18 +342,19 @@ export default function ParentProfilePage() {
                   ...inter,
                   fontWeight: 500,
                   fontSize: "14px",
-                  lineHeight: "20px",
+                  lineHeight: "23px",
                   color: "rgba(255,255,255,0.7)",
                 }}
               >
                 {item.label}
               </span>
               <span
+                className="text-right"
                 style={{
                   ...inter,
                   fontWeight: 600,
                   fontSize: "14px",
-                  lineHeight: "20px",
+                  lineHeight: "23px",
                   color: "#FFFFFF",
                 }}
               >
@@ -311,16 +365,16 @@ export default function ParentProfilePage() {
         </div>
       </div>
 
+      {/* Children card */}
       <div
-        className="rounded-[12px] p-5 md:p-6"
+        className="rounded-[12px] p-5 md:p-7"
         style={{ backgroundColor: "#313044" }}
       >
         <h2
+          className="text-[22px] leading-9 md:text-[24px] md:leading-9"
           style={{
             ...inter,
             fontWeight: 700,
-            fontSize: "18px",
-            lineHeight: "26px",
             color: "#FFFFFF",
             marginBottom: "4px",
           }}
@@ -328,16 +382,14 @@ export default function ParentProfilePage() {
           Children
         </h2>
         <p
+          className="text-[13px] leading-5 mb-5"
           style={{
             ...inter,
             fontWeight: 400,
-            fontSize: "13px",
-            lineHeight: "20px",
             color: "rgba(255,255,255,0.5)",
-            marginBottom: "16px",
           }}
         >
-          At-a-glance list — click a child to open their profile and interest areas.
+          At-a-glance list (full details live in dashboards/reports).
         </p>
 
         {childrenLoading ? (
@@ -365,64 +417,68 @@ export default function ParentProfilePage() {
             No children registered yet.
           </p>
         ) : (
-          <div className="flex flex-col gap-2.5">
-            {children.map((child) => (
-              <Link
-                key={child.id}
-                href={`/parent-dashboard/child?id=${child.id}&from=profile`}
-                className="flex items-center justify-between rounded-[12px] px-4 py-3 hover:bg-white/10 transition-colors"
-                style={{ backgroundColor: "#525162" }}
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-full bg-[#313044] overflow-hidden flex-shrink-0 flex items-center justify-center text-lg">
-                    🧒
-                  </div>
-                  <div className="min-w-0">
-                    <p
-                      style={{
-                        ...inter,
-                        fontWeight: 600,
-                        fontSize: "14px",
-                        lineHeight: "20px",
-                        color: "#FFFFFF",
-                      }}
-                    >
-                      {child.userName}
-                    </p>
-                    <p
-                      className="truncate"
-                      style={{
-                        ...inter,
-                        fontWeight: 400,
-                        fontSize: "12px",
-                        lineHeight: "16px",
-                        color: "rgba(255,255,255,0.5)",
-                      }}
-                    >
-                      {formatChildGrade(child.grade)}
-                      {(child.interestAreas?.length ?? 0) > 0
-                        ? ` · ${child.interestAreas!.slice(0, 3).join(", ")}${
-                            child.interestAreas!.length > 3 ? "…" : ""
-                          }`
-                        : ""}
-                    </p>
-                  </div>
-                </div>
-                <span
-                  className="uppercase shrink-0 ml-3"
-                  style={{
-                    ...inter,
-                    fontWeight: 700,
-                    fontSize: "12px",
-                    lineHeight: "16px",
-                    letterSpacing: "0.5px",
-                    color: "#00CED1",
-                  }}
+          <div className="flex flex-col gap-3">
+            {children.map((child) => {
+              const track = childTrackStatus(child.plantStatus);
+              return (
+                <Link
+                  key={child.id}
+                  href={`/parent-dashboard/child?id=${child.id}&from=profile`}
+                  className="rounded-[12px] px-4 py-3.5 hover:bg-white/10 transition-colors flex flex-col md:flex-row md:items-center md:justify-between gap-2"
+                  style={{ backgroundColor: "#525162" }}
                 >
-                  View
-                </span>
-              </Link>
-            ))}
+                  <div className="flex items-center gap-3 min-w-0">
+                    <PortalAvatar
+                      name={child.userName}
+                      avatarUrl={child.avatarUrl}
+                      size={40}
+                      useWordInitials
+                    />
+                    <div className="min-w-0">
+                      <p
+                        style={{
+                          ...inter,
+                          fontWeight: 600,
+                          fontSize: "15px",
+                          lineHeight: "28px",
+                          color: "#FFFFFF",
+                        }}
+                      >
+                        {child.userName}
+                      </p>
+                      <p
+                        style={{
+                          ...inter,
+                          fontWeight: 500,
+                          fontSize: "12px",
+                          lineHeight: "20px",
+                          color: "rgba(255,255,255,0.5)",
+                        }}
+                      >
+                        {formatChildGrade(child.grade)}
+                        {(child.interestAreas?.length ?? 0) > 0
+                          ? ` · ${child.interestAreas!.slice(0, 3).join(", ")}${
+                              child.interestAreas!.length > 3 ? "…" : ""
+                            }`
+                          : ""}
+                      </p>
+                    </div>
+                  </div>
+                  <span
+                    className="pl-[52px] md:pl-0 md:shrink-0"
+                    style={{
+                      ...inter,
+                      fontWeight: 500,
+                      fontSize: "13px",
+                      lineHeight: "18px",
+                      color: track.color,
+                    }}
+                  >
+                    {track.label}
+                  </span>
+                </Link>
+              );
+            })}
           </div>
         )}
       </div>
@@ -433,7 +489,7 @@ export default function ParentProfilePage() {
           style={{ backgroundColor: "rgba(0,0,0,0.7)" }}
         >
           <div
-            className="w-full max-w-[680px] rounded-[16px] p-5 md:p-7 relative"
+            className="w-full max-w-[680px] rounded-[16px] p-5 md:p-7 relative max-h-[90vh] overflow-y-auto"
             style={{ backgroundColor: "#313044" }}
           >
             <button
@@ -464,9 +520,10 @@ export default function ParentProfilePage() {
                 ...inter,
                 fontWeight: 700,
                 fontSize: "18px",
-                lineHeight: "26px",
+                lineHeight: "36px",
                 color: "#FFFFFF",
                 marginBottom: "4px",
+                paddingRight: "28px",
               }}
             >
               Account information
@@ -553,12 +610,39 @@ export default function ParentProfilePage() {
                   inputMode="numeric"
                   value={form.phone}
                   onChange={(e) =>
-                    setForm((prev) => ({ ...prev, phone: formatPhoneInput(e.target.value) }))
+                    setForm((prev) => ({
+                      ...prev,
+                      phone: formatPhoneInput(e.target.value),
+                    }))
                   }
                   placeholder={PHONE_INPUT_PLACEHOLDER}
                   maxLength={12}
                   required
                   className="w-full rounded-[12px] px-4 py-2.5 outline-none text-white"
+                  style={{ backgroundColor: "#525162", ...inter, fontSize: "14px" }}
+                />
+              </div>
+
+              <div>
+                <label
+                  style={{
+                    ...inter,
+                    fontWeight: 600,
+                    fontSize: "13px",
+                    lineHeight: "20px",
+                    color: "#FFFFFF",
+                    display: "block",
+                    marginBottom: "4px",
+                  }}
+                >
+                  Preferred language
+                </label>
+                <input
+                  type="text"
+                  value={preferredLanguage === "—" ? "" : preferredLanguage}
+                  readOnly
+                  placeholder="—"
+                  className="w-full rounded-[12px] px-4 py-2.5 outline-none text-white/60 cursor-not-allowed"
                   style={{ backgroundColor: "#525162", ...inter, fontSize: "14px" }}
                 />
               </div>
@@ -642,12 +726,12 @@ export default function ParentProfilePage() {
                   ...inter,
                   fontWeight: 700,
                   fontSize: "16px",
-                  lineHeight: "22px",
+                  lineHeight: "29px",
                   color: "#FFFFFF",
-                  letterSpacing: "1px",
+                  letterSpacing: "0.5px",
                 }}
               >
-                {saveMutation.isPending ? "SAVING…" : "SAVE CHANGES"}
+                {saveMutation.isPending ? "Saving…" : "Save Changes"}
               </button>
             </form>
           </div>

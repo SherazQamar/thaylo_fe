@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import ParentUserDropdown from "@/components/parent/ParentUserDropdown";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
+import InfoTooltip from "@/components/shared/InfoTooltip";
 import {
   getApiErrorMessage,
   isIgnorableRequestError,
@@ -14,6 +15,7 @@ import {
   fetchParentProgressReport,
   type ParentProgressReport,
 } from "@/lib/parent-api";
+import { PARENT_REPORTS_HINTS } from "@/lib/portal-help-text";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
@@ -434,14 +436,17 @@ export default function ParentReportsPage() {
             <StatCard
               label="Mastery of attempted"
               value={`${preview.masteryPercent}%`}
+              hint={PARENT_REPORTS_HINTS.masteryOfAttempted}
             />
             <StatCard
               label="Passed / attempted"
               value={`${preview.lessonsPassed} / ${preview.lessonsAttempted}`}
+              hint={PARENT_REPORTS_HINTS.passedAttempted}
             />
             <StatCard
               label="Time in lessons"
               value={formatMinutes(preview.totalMinutes)}
+              hint={PARENT_REPORTS_HINTS.timeInLessons}
             />
             <StatCard
               label="Avg assessment score"
@@ -450,11 +455,20 @@ export default function ParentReportsPage() {
                   ? `${preview.averageScorePercent}%`
                   : "—"
               }
+              hint={PARENT_REPORTS_HINTS.avgAssessmentScore}
             />
           </div>
 
-          <p style={{ ...inter, fontWeight: 700, fontSize: "15px", marginBottom: "6px" }}>
+          <p
+            className="flex items-center gap-1.5"
+            style={{ ...inter, fontWeight: 700, fontSize: "15px", marginBottom: "6px" }}
+          >
             SEL check-ins
+            <InfoTooltip
+              content={PARENT_REPORTS_HINTS.selCheckIns}
+              align="left"
+              tone="light"
+            />
           </p>
           <p style={{ ...inter, fontSize: "14px", color: "#444", marginBottom: "18px" }}>
             Happy {preview.selHappy} · Uncertain {preview.selConfused} · Low
@@ -523,13 +537,22 @@ export default function ParentReportsPage() {
   );
 }
 
-function StatCard({ label, value }: { label: string; value: string }) {
+function StatCard({
+  label,
+  value,
+  hint,
+}: {
+  label: string;
+  value: string;
+  hint?: string;
+}) {
   return (
     <div
       className="rounded-[12px] px-3 py-3"
       style={{ backgroundColor: "#F4F7F9" }}
     >
       <p
+        className="flex items-center gap-1.5"
         style={{
           ...inter,
           fontSize: "11px",
@@ -538,6 +561,7 @@ function StatCard({ label, value }: { label: string; value: string }) {
         }}
       >
         {label}
+        {hint ? <InfoTooltip content={hint} align="left" tone="light" /> : null}
       </p>
       <p style={{ ...inter, fontWeight: 700, fontSize: "18px", color: "#00334D" }}>
         {value}

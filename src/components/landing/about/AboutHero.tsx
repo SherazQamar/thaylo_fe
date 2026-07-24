@@ -1,37 +1,41 @@
 import Image from "next/image";
 import Navbar from "@/components/landing/shared/Navbar";
-import SectionLabel from "@/components/ui/SectionLabel";
 import aboutBg from "@/app/(landing-flow)/assets/aboutbg.png";
 
 export default function AboutHero() {
   return (
-    <section className="relative bg-[#0B1D2E] overflow-hidden">
+    <section className="relative overflow-hidden min-h-[294px] lg:min-h-[683px] bg-[#050F0A]">
+      {/* Figma Regular BG Pattern — dark green light-ray asset (no blend that tints navy) */}
       <Image
         src={aboutBg}
         alt=""
         fill
-        className="object-cover mix-blend-screen"
+        className="object-cover object-top"
         priority
       />
 
-      {/* Background glow effects */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-[-80px] left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-[#00696B]/8 rounded-full blur-[150px]" />
-        <div className="absolute bottom-[-40px] right-[-80px] w-[400px] h-[400px] bg-[#60D624]/5 rounded-full blur-[120px]" />
-        <div className="absolute top-[40%] left-[-80px] w-[250px] h-[250px] bg-[#14B8A6]/5 rounded-full blur-[100px]" />
-      </div>
-
       <Navbar />
 
-      <div className="relative z-10 max-w-[1400px] mx-auto px-6 sm:px-8 lg:px-12 xl:px-16 pt-28 sm:pt-36 pb-16 sm:pb-20 text-center">
-        <div className="flex items-center justify-center gap-2 mb-6">
-          <span className="w-2.5 h-2.5 rounded-sm bg-[#14B8A6]" />
-          <span className="text-sm font-normal tracking-widest text-[#14B8A6] uppercase">
-            About Us
+      <div className="relative z-10 max-w-[1200px] mx-auto px-5 sm:px-8 lg:px-0 pt-[115px] lg:pt-[237px] pb-10 lg:pb-[140px] text-center">
+        <div className="flex items-center justify-center gap-[10px] mb-3 lg:mb-[19px]">
+          <span
+            className="inline-block size-[10px] bg-[#00CED1]"
+            style={{ borderRadius: "2px" }}
+          />
+          <span
+            className="text-[18px] font-normal leading-[27px] tracking-[-0.48px] text-[#00CED1]"
+            style={{ fontFamily: "Inter, var(--font-inter), sans-serif" }}
+          >
+            About us
           </span>
         </div>
-        <h1 className="text-3xl sm:text-4xl lg:text-[52px] font-normal text-white leading-[1.2] tracking-[-0.64px] max-w-4xl mx-auto">
-          Who built this, and is there real educational thinking and leadership behind it?
+
+        <h1
+          className="text-[24px] leading-[32px] sm:text-[36px] sm:leading-[44px] lg:text-[56px] lg:leading-[65px] font-normal text-white tracking-[-0.64px] max-w-[335px] sm:max-w-[700px] lg:max-w-[954px] mx-auto"
+          style={{ fontFamily: "Instrument Sans, var(--font-instrument-sans), sans-serif" }}
+        >
+          Who built this, and is there real educational thinking and leadership
+          behind it?
         </h1>
       </div>
     </section>

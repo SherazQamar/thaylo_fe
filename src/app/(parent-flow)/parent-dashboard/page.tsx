@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import ParentUserDropdown from "@/components/parent/ParentUserDropdown";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
+import InfoTooltip from "@/components/shared/InfoTooltip";
 import {
   fetchParentDashboardStats,
   type ParentDashboardMasteryBar,
@@ -12,6 +13,7 @@ import {
   type ParentDashboardChildSel,
   type ParentDashboardWeeklyTime,
 } from "@/lib/parent-api";
+import { PARENT_DASHBOARD_HINTS } from "@/lib/portal-help-text";
 import { withAddChildWizardMode } from "@/lib/parent-registration";
 import { useAuthStore } from "@/stores/auth.store";
 
@@ -64,9 +66,16 @@ export default function ParentDashboardPage() {
     router.push(withAddChildWizardMode("/parent-register/step-2"));
   }
 
+  const subtitle =
+    childCount === 0
+      ? "Add a child to see their learning overview."
+      : childCount === 1
+        ? `Here is how ${masteryStudents[0]?.userName ?? "your child"} is doing today.`
+        : "Here is how your children are doing today.";
+
   return (
-    <div className="p-4 md:p-6 lg:p-10">
-      <div className="flex items-center justify-between mb-2 md:mb-3">
+    <div className="px-6 py-4 md:p-6 lg:p-10">
+      <div className="hidden md:flex items-center justify-between mb-3">
         <h1
           className="uppercase"
           style={{
@@ -80,9 +89,7 @@ export default function ParentDashboardPage() {
         >
           Parent Dashboard
         </h1>
-        <div className="hidden md:block">
-          <ParentUserDropdown />
-        </div>
+        <ParentUserDropdown />
       </div>
 
       <Breadcrumbs
@@ -90,39 +97,34 @@ export default function ParentDashboardPage() {
         items={[{ href: "/parent-dashboard", label: "Parent Dashboard" }]}
       />
 
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
+      {/* Figma mobile: Hello + subtitle + full-width Add Child */}
+      <div className="mb-6 md:mb-8 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+        <div className="min-w-0">
           <h2
+            className="text-[32px] leading-10 md:text-[22px] md:leading-[30px]"
             style={{
               ...inter,
               fontWeight: 700,
-              fontSize: "22px",
-              lineHeight: "30px",
               color: "#FFFFFF",
             }}
           >
             Hello, {greetingName}
           </h2>
           <p
+            className="mt-1.5 md:mt-1 text-[14px] leading-6 md:leading-[22px]"
             style={{
               ...inter,
               fontWeight: 400,
-              fontSize: "14px",
-              lineHeight: "22px",
               color: "rgba(255,255,255,0.5)",
             }}
           >
-            {childCount === 0
-              ? "Add a child to see their learning overview."
-              : childCount === 1
-                ? `Here is how ${masteryStudents[0]?.userName ?? "your child"} is doing today.`
-                : "Here is how your children are doing today."}
+            {subtitle}
           </p>
         </div>
         <button
           type="button"
           onClick={handleAddChild}
-          className="shrink-0 rounded-full px-5 py-2.5 cursor-pointer hover:opacity-90 transition-opacity"
+          className="w-full md:w-auto shrink-0 rounded-full h-12 md:h-auto px-5 py-2.5 cursor-pointer hover:opacity-90 transition-opacity"
           style={{
             backgroundColor: "#00CED1",
             ...inter,
@@ -136,22 +138,25 @@ export default function ParentDashboardPage() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 mb-8 md:mb-10">
+      {/* Figma mobile: stacked 327×88 summary rows */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 mb-6 md:mb-10">
         <SummaryCard
           label="Active Today"
           value={
             activeTodayNames.length > 0 ? activeTodayNames.join(", ") : "—"
           }
           compact={activeTodayNames.length > 1}
+          hint={PARENT_DASHBOARD_HINTS.activeToday}
         />
         <WeeklyTimeCard rows={weeklyTimeByChild} />
         <SummaryCard
           label="Mastered Skills"
           value={dashboardStats != null ? String(masteredSkills) : "—"}
+          hint={PARENT_DASHBOARD_HINTS.masteredSkills}
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6 md:mb-8">
         <MasteryOfAttemptedCard bars={progressBars} />
         <SelOverviewCard rows={childrenSel} />
       </div>
@@ -165,19 +170,22 @@ function SummaryCard({
   label,
   value,
   compact,
+  hint,
 }: {
   label: string;
   value: string;
   compact?: boolean;
+  hint?: string;
 }) {
   return (
     <div
-      className="flex items-center gap-4 rounded-[24px] px-5 md:px-6 py-[10px] min-h-[72px]"
+      className="flex items-center gap-4 rounded-[24px] px-5 md:px-6 py-4 md:py-[10px] min-h-[88px] md:min-h-[72px]"
       style={{ backgroundColor: "#525162" }}
     >
       <PaperPlaneIcon />
       <div className="flex-1 min-w-0">
         <p
+          className="flex items-center gap-1.5"
           style={{
             ...inter,
             fontWeight: 500,
@@ -187,6 +195,7 @@ function SummaryCard({
           }}
         >
           {label}
+          {hint ? <InfoTooltip content={hint} align="left" /> : null}
         </p>
         <p
           className="truncate"
@@ -209,12 +218,13 @@ function SummaryCard({
 function WeeklyTimeCard({ rows }: { rows: ParentDashboardWeeklyTime[] }) {
   return (
     <div
-      className="flex items-start gap-4 rounded-[24px] px-5 md:px-6 py-3 min-h-[72px]"
+      className="flex items-start gap-4 rounded-[24px] px-5 md:px-6 py-4 md:py-3 min-h-[88px] md:min-h-[72px]"
       style={{ backgroundColor: "#525162" }}
     >
       <PaperPlaneIcon />
       <div className="flex-1 min-w-0">
         <p
+          className="flex items-center gap-1.5"
           style={{
             ...inter,
             fontWeight: 500,
@@ -224,6 +234,7 @@ function WeeklyTimeCard({ rows }: { rows: ParentDashboardWeeklyTime[] }) {
           }}
         >
           Avg Weekly Time
+          <InfoTooltip content={PARENT_DASHBOARD_HINTS.avgWeeklyTime} align="left" />
         </p>
         {rows.length === 0 ? (
           <p
@@ -263,7 +274,7 @@ function WeeklyTimeCard({ rows }: { rows: ParentDashboardWeeklyTime[] }) {
 
 function PaperPlaneIcon() {
   return (
-    <div className="w-10 h-10 rounded-full bg-[#00CED1]/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+    <div className="w-14 h-14 md:w-10 md:h-10 rounded-full bg-[#00CED1]/20 flex items-center justify-center flex-shrink-0 mt-0.5">
       <svg
         width="18"
         height="18"
@@ -273,6 +284,7 @@ function PaperPlaneIcon() {
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
+        className="md:w-[18px] md:h-[18px] w-5 h-5"
       >
         <path d="M22 2L11 13" />
         <path d="M22 2L15 22L11 13L2 9L22 2Z" />
@@ -310,16 +322,16 @@ function MasteryOfAttemptedCard({
       style={{ backgroundColor: "#313044" }}
     >
       <h3
+        className="flex items-center gap-2 text-[18px] leading-[22px] md:text-[20px] md:leading-7"
         style={{
           ...inter,
           fontWeight: 700,
-          fontSize: "20px",
-          lineHeight: "28px",
           color: "#FFFFFF",
           marginBottom: "20px",
         }}
       >
         Mastery of Attempted
+        <InfoTooltip content={PARENT_DASHBOARD_HINTS.masteryOfAttempted} align="left" />
       </h3>
       <div className="flex flex-col gap-5">
         {bars.length === 0 ? (
@@ -460,16 +472,16 @@ function SelOverviewCard({ rows }: { rows: ParentDashboardChildSel[] }) {
       style={{ backgroundColor: "#313044" }}
     >
       <h3
+        className="flex items-center gap-2 text-[18px] leading-[22px] md:text-[20px] md:leading-7"
         style={{
           ...inter,
           fontWeight: 700,
-          fontSize: "20px",
-          lineHeight: "28px",
           color: "#FFFFFF",
           marginBottom: "20px",
         }}
       >
         SEL Overview
+        <InfoTooltip content={PARENT_DASHBOARD_HINTS.selOverview} align="left" />
       </h3>
       <div className="flex flex-col gap-4">
         {rows.length === 0 ? (
@@ -560,15 +572,15 @@ function MasteryListSection({
     >
       <div className="flex items-center justify-between mb-4 md:mb-5">
         <h2
+          className="flex items-center gap-2 text-[18px] leading-[22px] md:text-[22px] md:leading-[22px]"
           style={{
             ...inter,
             fontWeight: 700,
-            fontSize: "22px",
-            lineHeight: "22px",
             color: "#FFFFFF",
           }}
         >
           Mastery of Attempted
+          <InfoTooltip content={PARENT_DASHBOARD_HINTS.masteryOfAttempted} align="left" />
         </h2>
         <Link
           href="/parent-dashboard/children"
@@ -586,7 +598,7 @@ function MasteryListSection({
         </Link>
       </div>
 
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-3 md:gap-2">
         {students.length === 0 ? (
           <p
             style={{
@@ -603,18 +615,17 @@ function MasteryListSection({
           students.map((student) => (
             <div
               key={student.id}
-              className="md:grid md:grid-cols-[minmax(140px,1fr)_minmax(200px,1.4fr)_minmax(160px,1fr)_auto] items-center rounded-[12px] px-4 md:px-5 py-3 gap-3 md:gap-4 hover:bg-white/10 transition-colors flex flex-col"
+              className="md:grid md:grid-cols-[minmax(140px,1fr)_minmax(200px,1.4fr)_minmax(160px,1fr)_auto] items-center rounded-[12px] px-4 md:px-5 py-4 md:py-3 gap-3 md:gap-4 hover:bg-white/10 transition-colors flex flex-col"
               style={{ backgroundColor: "#313044" }}
             >
               <div className="flex items-center gap-2.5 w-full">
                 <ChildAvatar name={student.userName} />
                 <div>
                   <p
+                    className="text-[16px] leading-7 md:text-[15px] md:leading-5"
                     style={{
                       ...inter,
                       fontWeight: 600,
-                      fontSize: "15px",
-                      lineHeight: "20px",
                       color: "#FFFFFF",
                     }}
                   >
@@ -634,8 +645,8 @@ function MasteryListSection({
                 </div>
               </div>
 
-              <div className="flex items-start gap-2.5 w-full mt-2 md:mt-0">
-                <div className="w-9 h-9 rounded-full bg-[#313044] border border-[#00CED1]/30 flex items-center justify-center flex-shrink-0">
+              <div className="flex items-start gap-2.5 w-full">
+                <div className="w-9 h-9 md:w-9 md:h-9 rounded-full bg-[#313044] border border-[#00CED1]/30 flex items-center justify-center flex-shrink-0">
                   <svg
                     width="16"
                     height="16"
@@ -652,11 +663,10 @@ function MasteryListSection({
                 </div>
                 <div>
                   <p
+                    className="text-[16px] leading-7 md:text-[15px] md:leading-5"
                     style={{
                       ...inter,
                       fontWeight: 600,
-                      fontSize: "15px",
-                      lineHeight: "20px",
                       color: "#FFFFFF",
                     }}
                   >
@@ -688,22 +698,35 @@ function MasteryListSection({
               </div>
 
               <div
-                className="rounded-[20px] w-full mt-2 md:mt-0"
+                className="rounded-[20px] w-full"
                 style={{ backgroundColor: "#525162", padding: "8px 16px" }}
               >
                 <p
+                  className="flex items-center gap-1.5"
+                  style={{
+                    ...inter,
+                    fontWeight: 500,
+                    fontSize: "11px",
+                    color: "rgba(255,255,255,0.5)",
+                  }}
+                >
+                  Focus
+                  <InfoTooltip content={PARENT_DASHBOARD_HINTS.focus} align="left" />
+                </p>
+                <p
+                  className="text-[16px] leading-7 md:text-[15px] md:leading-5"
                   style={{
                     ...inter,
                     fontWeight: 600,
-                    fontSize: "15px",
-                    lineHeight: "20px",
                     color: "#FFFFFF",
+                    marginTop: "2px",
                   }}
                 >
                   {student.focusArea}
                 </p>
                 <div className="flex items-center gap-2 mt-1">
                   <span
+                    className="flex items-center gap-1.5"
                     style={{
                       ...inter,
                       fontWeight: 400,
@@ -713,6 +736,7 @@ function MasteryListSection({
                     }}
                   >
                     Confidence
+                    <InfoTooltip content={PARENT_DASHBOARD_HINTS.confidence} align="left" />
                   </span>
                   <span
                     className={`px-2 py-0.5 rounded-full ${confidenceBadgeColor(student.confidence)}`}
@@ -731,7 +755,7 @@ function MasteryListSection({
 
               <Link
                 href={`/parent-dashboard/message?childId=${student.id}`}
-                className="uppercase flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity whitespace-nowrap mt-2 md:mt-0 self-start md:self-center"
+                className="uppercase flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity whitespace-nowrap self-center md:self-center w-full md:w-auto text-center pt-1 md:pt-0"
                 style={{
                   ...inter,
                   fontWeight: 700,
