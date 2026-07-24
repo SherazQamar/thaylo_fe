@@ -66,7 +66,7 @@ export default function Navbar() {
             </Link>
             <Link href="/parent-register">
               <Button variant="primary" className="!rounded-xl px-4 xl:px-8 py-3 text-[13px] xl:text-sm font-normal whitespace-nowrap shadow-lg shadow-green-500/25">
-                {pathname === "/" ? "Join The Pilot" : "Sign Up"}
+                {pathname === "/" ? "Join the Pilot" : "Sign Up"}
               </Button>
             </Link>
           </div>
@@ -118,7 +118,7 @@ export default function Navbar() {
             </Link>
             <Link href="/parent-register" onClick={() => setMobileOpen(false)}>
               <Button variant="primary" className="mt-2 w-full">
-                {pathname === "/" ? "Join The Pilot" : "Sign Up"}
+                {pathname === "/" ? "Join the Pilot" : "Sign Up"}
               </Button>
             </Link>
           </div>

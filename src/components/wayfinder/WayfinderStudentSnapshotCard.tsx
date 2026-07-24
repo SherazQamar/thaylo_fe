@@ -58,6 +58,7 @@ export default function WayfinderStudentSnapshotCard({
       progressCompleted: snapshot.progressCompleted,
       progressTotal: snapshot.progressTotal,
       badgePreviews: snapshot.badgePreviews ?? [],
+      badgesEarned: snapshot.badgesEarned,
     };
   }
 

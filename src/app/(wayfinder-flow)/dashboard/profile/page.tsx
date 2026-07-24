@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import {
   formatHiringRegionLabel,
@@ -30,10 +30,71 @@ function formatDisplayValue(value: string | null | undefined): string {
   return trimmed ? trimmed : "—";
 }
 
+function formatPreferredLanguage(languages: string[] | undefined): string {
+  const cleaned = (languages ?? []).map((l) => l.trim()).filter(Boolean);
+  if (cleaned.length === 0) return "—";
+  return cleaned.join(", ");
+}
+
+function formatCertifiedLabel(specialty: string | null | undefined): string | null {
+  const trimmed = specialty?.trim();
+  if (!trimmed) return null;
+  if (/^certified\s*:/i.test(trimmed)) return trimmed;
+  return `Certified: ${trimmed}`;
+}
+
 interface EditFormState {
   name: string;
   phone: string;
   country: string;
+}
+
+type CredentialChip = {
+  key: string;
+  label: string;
+  icon: "document" | "star" | "edu";
+};
+
+function ChipIcon({ type }: { type: CredentialChip["icon"] }) {
+  if (type === "star") {
+    return (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
+        <path
+          d="M12 3.5l2.6 5.27 5.82.85-4.21 4.1 1 5.78L12 16.9l-5.21 2.6 1-5.78-4.21-4.1 5.82-.85L12 3.5z"
+          fill="#111023"
+        />
+      </svg>
+    );
+  }
+  if (type === "edu") {
+    return (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
+        <path
+          d="M12 3L2 8l10 5 9-4.5V17h2V8L12 3z"
+          fill="#111023"
+        />
+        <path
+          d="M6 12.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-3.5"
+          stroke="#111023"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  }
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M7 3h7l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"
+        stroke="#111023"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+      <path d="M14 3v5h5" stroke="#111023" strokeWidth="1.8" strokeLinejoin="round" />
+      <path d="M9 13h6M9 17h6" stroke="#111023" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
 }
 
 export default function ProfilePage() {
@@ -52,6 +113,24 @@ export default function ProfilePage() {
     user?.region,
     user?.timeZone,
   );
+  const preferredLanguage = formatPreferredLanguage(user?.languagesSpoken);
+
+  const credentialChips = useMemo((): CredentialChip[] => {
+    const chips: CredentialChip[] = [];
+    const certified = formatCertifiedLabel(user?.specialty);
+    if (certified) {
+      chips.push({ key: "specialty", label: certified, icon: "document" });
+    }
+    // Figma desktop shows a middle “years experience” chip; no BE field yet — omit.
+    if (user?.gradeLevel?.trim()) {
+      chips.push({
+        key: "gradeLevel",
+        label: user.gradeLevel.trim(),
+        icon: "edu",
+      });
+    }
+    return chips;
+  }, [user?.specialty, user?.gradeLevel]);
 
   const saveMutation = useMutation({
     mutationFn: () =>
@@ -107,109 +186,114 @@ export default function ProfilePage() {
     saveMutation.mutate();
   }
 
+  /** Profile rows: Country / Hiring region / Timezone / Preferred language */
   const profileRows = [
     { label: "Country", value: formatDisplayValue(user?.country) },
     { label: "Hiring region", value: hiringRegionLabel },
-    { label: "Timezone", value: hiringTimezoneLabel },
-    { label: "Role", value: "Wayfinder" },
+    { label: "Timezone", value: formatDisplayValue(user?.timeZone) },
+    { label: "Preferred language", value: preferredLanguage },
   ];
 
   return (
     <div className="p-4 md:p-6 lg:p-10">
-      <div className="flex items-center justify-between mb-2">
-        <h1
-          className="uppercase"
-          style={{
-            ...inter,
-            fontWeight: 700,
-            fontSize: "24px",
-            lineHeight: "25px",
-            letterSpacing: "0.8px",
-            color: "#DCE6EC",
-          }}
-        >
-          Wayfinder Profile
-        </h1>
-        <div className="hidden md:block">
-          <UserDropdown />
-        </div>
-      </div>
-
-      <Breadcrumbs
-        showHome={false}
-        items={[
-          { href: "/dashboard", label: "Wayfinder Dashboard" },
-          { href: "/dashboard/profile", label: "Profile" },
-        ]}
-      />
-
-      <p
-        style={{
-          ...inter,
-          fontWeight: 400,
-          fontSize: "14px",
-          lineHeight: "22px",
-          color: "rgba(255,255,255,0.5)",
-          marginBottom: "24px",
-        }}
-      >
-        Update your account details. Hiring region and timezone are set during onboarding.
-      </p>
-
-      <div className="rounded-[12px] p-4 md:p-6" style={{ backgroundColor: "#313044" }}>
-        <div className="flex items-center justify-between mb-2">
-          <h2
+      <div className="mb-6 md:mb-8">
+        <div className="flex items-center justify-between mb-2 md:mb-3">
+          <h1
             style={{
               ...inter,
-              fontWeight: 600,
-              fontSize: "20px",
-              lineHeight: "28px",
+              fontWeight: 700,
+              fontSize: "28px",
+              lineHeight: "36px",
               color: "#FFFFFF",
             }}
           >
-            Profile
-          </h2>
+            WayFinder Profile
+          </h1>
+          <div className="hidden md:block">
+            <UserDropdown />
+          </div>
+        </div>
+
+        <Breadcrumbs
+          showHome={false}
+          items={[
+            { href: "/dashboard", label: "Wayfinder Dashboard" },
+            { href: "/dashboard/profile", label: "Profile" },
+          ]}
+        />
+
+        <p
+          style={{
+            ...inter,
+            fontWeight: 400,
+            fontSize: "15px",
+            lineHeight: "24px",
+            color: "rgba(255,255,255,0.5)",
+          }}
+        >
+          Update your account details, preferences, and family settings.
+        </p>
+      </div>
+
+      <div
+        className="rounded-[12px] p-5 md:p-6"
+        style={{ backgroundColor: "#313044" }}
+      >
+        <div className="flex items-start justify-between gap-4 mb-5">
+          <div className="min-w-0">
+            <h2
+              style={{
+                ...inter,
+                fontWeight: 700,
+                fontSize: "18px",
+                lineHeight: "26px",
+                color: "#FFFFFF",
+              }}
+            >
+              Profile
+            </h2>
+            <p
+              style={{
+                ...inter,
+                fontWeight: 400,
+                fontSize: "13px",
+                lineHeight: "20px",
+                color: "rgba(255,255,255,0.5)",
+              }}
+            >
+              Basic info shown across your dashboards and reports.
+            </p>
+          </div>
           <button
             type="button"
             onClick={openEdit}
-            className="hidden md:block rounded-[8px] px-8 py-2.5 cursor-pointer hover:opacity-90 transition-opacity"
+            className="hidden md:inline-flex items-center justify-center rounded-[12px] px-10 py-3 cursor-pointer hover:opacity-90 transition-opacity flex-shrink-0"
             style={{
               backgroundColor: "#00CED1",
               ...inter,
               fontWeight: 600,
               fontSize: "14px",
               lineHeight: "20px",
-              color: "#111023",
+              color: "#FFFFFF",
+              minWidth: "198px",
             }}
           >
             Edit
           </button>
         </div>
-        <p
-          style={{
-            ...inter,
-            fontWeight: 400,
-            fontSize: "13px",
-            lineHeight: "20px",
-            color: "rgba(255,255,255,0.5)",
-            marginBottom: "24px",
-          }}
-        >
-          Basic info shown across your dashboards and reports.
-        </p>
 
-        <div className="flex flex-col sm:flex-row items-center sm:items-center gap-4 mb-6">
+        <div className="flex items-center gap-3 mb-5 md:mb-6">
           <AvatarPicker
             mode="user"
             displayName={user?.name ?? "Wayfinder"}
             currentAvatarUrl={user?.avatarUrl}
-            size={56}
+            size={70}
             onAvatarSaved={(avatarUrl, avatarKey) => {
               if (!user) return;
               setUser({ ...user, avatarUrl, avatarKey });
             }}
           />
-          <div className="text-center sm:text-left">
+          <div className="min-w-0">
             <p
               style={{
                 ...inter,
@@ -246,50 +330,65 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+        {/* Desktop-only credential chips (Figma WayFinder Profile) */}
+        {credentialChips.length > 0 && (
           <div
-            className="rounded-[12px] px-4 py-3 flex items-center gap-3 sm:col-span-3 md:col-span-1"
-            style={{ backgroundColor: "rgba(0,206,209,0.1)" }}
+            className={`hidden md:grid gap-3 mb-5 ${
+              credentialChips.length >= 3
+                ? "grid-cols-3"
+                : credentialChips.length === 2
+                  ? "grid-cols-2"
+                  : "grid-cols-1 max-w-md"
+            }`}
           >
-            <div
-              className="w-9 h-9 rounded-[8px] flex items-center justify-center flex-shrink-0"
-              style={{ backgroundColor: "#00CED1" }}
-            >
-              <span className="text-lg">🧭</span>
-            </div>
-            <p
-              style={{
-                ...inter,
-                fontWeight: 500,
-                fontSize: "14px",
-                lineHeight: "20px",
-                color: "#FFFFFF",
-              }}
-            >
-              Wayfinder
-            </p>
+            {credentialChips.map((chip) => (
+              <div
+                key={chip.key}
+                className="rounded-[12px] px-3 py-3 flex items-center gap-3 min-h-[72px]"
+                style={{ backgroundColor: "rgba(0,206,209,0.12)" }}
+              >
+                <div
+                  className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+                  style={{ backgroundColor: "#00CED1" }}
+                >
+                  <ChipIcon type={chip.icon} />
+                </div>
+                <p
+                  style={{
+                    ...inter,
+                    fontWeight: 600,
+                    fontSize: "15px",
+                    lineHeight: "22px",
+                    color: "#FFFFFF",
+                  }}
+                >
+                  {chip.label}
+                </p>
+              </div>
+            ))}
           </div>
-        </div>
+        )}
 
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-2.5">
           {profileRows.map((item) => (
             <div
               key={item.label}
-              className="rounded-[12px] px-4 md:px-5 py-3 md:py-3.5 flex items-center justify-between"
-              style={{ backgroundColor: "rgba(255,255,255,0.05)" }}
+              className="flex items-center justify-between gap-4 rounded-[12px] px-4 md:px-5 py-3.5 md:py-4"
+              style={{ backgroundColor: "#525162" }}
             >
-              <p
+              <span
                 style={{
                   ...inter,
                   fontWeight: 500,
                   fontSize: "14px",
                   lineHeight: "20px",
-                  color: "rgba(255,255,255,0.6)",
+                  color: "rgba(255,255,255,0.7)",
                 }}
               >
                 {item.label}
-              </p>
-              <p
+              </span>
+              <span
+                className="text-right"
                 style={{
                   ...inter,
                   fontWeight: 500,
@@ -299,7 +398,7 @@ export default function ProfilePage() {
                 }}
               >
                 {item.value}
-              </p>
+              </span>
             </div>
           ))}
         </div>
@@ -307,14 +406,14 @@ export default function ProfilePage() {
         <button
           type="button"
           onClick={openEdit}
-          className="md:hidden w-full rounded-[8px] py-3 mt-6 cursor-pointer hover:opacity-90 transition-opacity"
+          className="md:hidden w-full rounded-[12px] py-3 mt-6 cursor-pointer hover:opacity-90 transition-opacity"
           style={{
             backgroundColor: "#00CED1",
             ...inter,
             fontWeight: 600,
             fontSize: "14px",
             lineHeight: "20px",
-            color: "#111023",
+            color: "#FFFFFF",
           }}
         >
           Edit
@@ -327,7 +426,7 @@ export default function ProfilePage() {
           style={{ backgroundColor: "rgba(0,0,0,0.7)" }}
         >
           <div
-            className="w-full max-w-[680px] rounded-[16px] p-5 md:p-7 relative"
+            className="w-full max-w-[680px] rounded-[16px] p-5 md:p-7 relative max-h-[90vh] overflow-y-auto"
             style={{ backgroundColor: "#313044" }}
           >
             <button
@@ -455,7 +554,10 @@ export default function ProfilePage() {
                   inputMode="numeric"
                   value={form.phone}
                   onChange={(e) =>
-                    setForm((prev) => ({ ...prev, phone: formatPhoneInput(e.target.value) }))
+                    setForm((prev) => ({
+                      ...prev,
+                      phone: formatPhoneInput(e.target.value),
+                    }))
                   }
                   placeholder={PHONE_INPUT_PLACEHOLDER}
                   maxLength={12}
@@ -497,6 +599,32 @@ export default function ProfilePage() {
                     fontSize: "14px",
                   }}
                 />
+              </div>
+
+              <div>
+                <label
+                  style={{
+                    ...inter,
+                    fontWeight: 600,
+                    fontSize: "13px",
+                    lineHeight: "20px",
+                    color: "#FFFFFF",
+                    display: "block",
+                    marginBottom: "4px",
+                  }}
+                >
+                  Preferred language
+                </label>
+                <p
+                  className="w-full rounded-[12px] px-4 py-2.5 text-white/80"
+                  style={{
+                    backgroundColor: "#3f3e52",
+                    ...inter,
+                    fontSize: "14px",
+                  }}
+                >
+                  {preferredLanguage}
+                </p>
               </div>
 
               <div>
@@ -558,11 +686,7 @@ export default function ProfilePage() {
               </div>
 
               {saveError && (
-                <p
-                  className="text-sm text-red-400 text-center"
-                  role="alert"
-                  style={inter}
-                >
+                <p className="text-sm text-red-400 text-center" role="alert" style={inter}>
                   {saveError}
                 </p>
               )}

@@ -1,17 +1,19 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import UserDropdown from "@/components/wayfinder/UserDropdown";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
+import InfoTooltip from "@/components/shared/InfoTooltip";
+import PortalAvatar from "@/components/shared/PortalAvatar";
 import { getApiErrorMessage } from "@/lib/auth-api";
 import {
   fetchWayfinderLiveSessions,
   type WayfinderLiveSession,
   wayfinderQueryKeys,
 } from "@/lib/wayfinder-api";
+import { WAYFINDER_LIVE_HINTS } from "@/lib/portal-help-text";
 import {
   formatElapsedTimer,
   formatLastActiveLabel,
@@ -41,15 +43,7 @@ function LiveSessionRow({
       style={{ backgroundColor: "#313044" }}
     >
       <div className="flex items-center gap-2.5">
-        <div className="w-9 h-9 rounded-full bg-[#525162] overflow-hidden flex-shrink-0">
-          <Image
-            src="/assets/wayfinder Em.png"
-            alt={displayName}
-            width={36}
-            height={36}
-            className="w-full h-full object-cover"
-          />
-        </div>
+        <PortalAvatar name={displayName} avatarUrl={session.avatarUrl} size={36} />
         <div className="min-w-0">
           <p style={{ ...inter, fontWeight: 600, fontSize: "15px", lineHeight: "20px", color: "#FFFFFF" }}>
             {displayName}
@@ -102,8 +96,12 @@ function LiveSessionRow({
             </div>
           </div>
           <div className="flex items-center gap-2.5 pl-5">
-            <span style={{ ...inter, fontWeight: 400, fontSize: "12px", lineHeight: "16px", color: "rgba(255,255,255,0.5)" }}>
+            <span
+              className="flex items-center gap-1.5"
+              style={{ ...inter, fontWeight: 400, fontSize: "12px", lineHeight: "16px", color: "rgba(255,255,255,0.5)" }}
+            >
               Risk
+              <InfoTooltip content={WAYFINDER_LIVE_HINTS.risk} align="left" />
             </span>
             <span
               className="rounded-full px-2.5 py-0.5"

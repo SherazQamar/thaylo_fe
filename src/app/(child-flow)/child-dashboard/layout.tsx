@@ -20,8 +20,10 @@ export default function ChildDashboardLayout({ children }: { children: React.Rea
             className={
               isImmersiveRoute
                 ? "flex-1 min-h-0 overflow-hidden flex flex-col" +
-                  (isMessageRoute ? " pt-[56px] pb-[72px] md:pt-0 md:pb-0" : "")
-                : "flex-1 overflow-hidden overflow-y-auto pt-[56px] pb-[72px] md:pt-0 md:pb-0"
+                  (isMessageRoute
+                    ? " pt-[calc(env(safe-area-inset-top,0px)+76px)] pb-[calc(env(safe-area-inset-bottom,0px)+72px)] md:pt-0 md:pb-0"
+                    : "")
+                : "flex-1 overflow-hidden overflow-y-auto pt-[calc(env(safe-area-inset-top,0px)+76px)] pb-[calc(env(safe-area-inset-bottom,0px)+72px)] md:pt-0 md:pb-0"
             }
           >
             {children}

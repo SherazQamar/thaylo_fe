@@ -406,42 +406,45 @@ export default function ChildProgressPage() {
         </div>
       </div>
 
-      {/* Status filters */}
-      <div className="flex gap-2 mb-6">
-        {STATUS_FILTERS.map((f) => (
-          <button
-            key={f}
-            type="button"
-            onClick={() => setActiveFilter(f)}
-            className={`rounded-full px-5 py-2 text-sm font-medium cursor-pointer transition-colors ${
-              activeFilter === f
-                ? "bg-[#00CED1] text-[#111023]"
-                : "bg-[#313044] text-white/60 hover:text-white"
-            }`}
-            style={inter}
-          >
-            {f}
-          </button>
-        ))}
+      {/* Status filters — Figma equal-width pills */}
+      <div className="flex gap-2.5 mb-4 md:mb-6">
+        {STATUS_FILTERS.map((f) => {
+          const active = activeFilter === f;
+          return (
+            <button
+              key={f}
+              type="button"
+              onClick={() => setActiveFilter(f)}
+              className={`flex-1 md:flex-none rounded-[12px] md:rounded-full px-2 md:px-5 py-3 md:py-2.5 text-[13px] md:text-sm cursor-pointer transition-colors whitespace-nowrap ${
+                active
+                  ? "bg-[#00CED1] text-white md:text-[#111023] font-medium"
+                  : "bg-[rgba(0,206,209,0.18)] border border-[rgba(0,206,209,0.55)] md:bg-[#313044] md:border-0 text-white md:text-white/60 hover:text-white font-normal"
+              }`}
+              style={inter}
+            >
+              {f}
+            </button>
+          );
+        })}
       </div>
 
-      {/* Completed Modules Grid */}
+      {/* Completed Modules */}
       {showCompleted && subject.completedModules.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 md:gap-4 mb-4 md:mb-6">
           {subject.completedModules.map((mod) => (
             <div
               key={`${subject.id}-${mod.num}`}
-              className="rounded-[16px] p-5"
+              className="rounded-[23px] md:rounded-[16px] p-[22px] md:p-5"
               style={{ backgroundColor: "#313044" }}
             >
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-6 h-6 rounded-full bg-[#00CED1] flex items-center justify-center flex-shrink-0">
+              <div className="flex items-start gap-3 mb-4">
+                <div className="size-8 rounded-2xl bg-[rgba(0,206,209,0.2)] border border-[#00CED1] flex items-center justify-center flex-shrink-0 mt-1">
                   <svg
-                    width="12"
-                    height="12"
+                    width="13"
+                    height="13"
                     viewBox="0 0 24 24"
                     fill="none"
-                    stroke="white"
+                    stroke="#00CED1"
                     strokeWidth="3"
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -449,49 +452,52 @@ export default function ChildProgressPage() {
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                 </div>
-                <span
-                  style={{
-                    ...inter,
-                    fontWeight: 500,
-                    fontSize: "12px",
-                    color: "rgba(255,255,255,0.5)",
-                    letterSpacing: "0.5px",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  Module {mod.num}
-                </span>
+                <div className="min-w-0">
+                  <span
+                    style={{
+                      ...inter,
+                      fontWeight: 400,
+                      fontSize: "16px",
+                      color: "#FFFFFF",
+                      letterSpacing: "0",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    Module {mod.num}
+                  </span>
+                  <h3
+                    style={{
+                      ...inter,
+                      fontWeight: 600,
+                      fontSize: "20px",
+                      lineHeight: "24px",
+                      color: "#FFFFFF",
+                      marginTop: "5px",
+                    }}
+                  >
+                    {mod.title}
+                  </h3>
+                </div>
               </div>
-              <h3
-                style={{
-                  ...inter,
-                  fontWeight: 700,
-                  fontSize: "18px",
-                  color: "#FFFFFF",
-                  marginBottom: "6px",
-                }}
-              >
-                {mod.title}
-              </h3>
               <p
                 style={{
                   ...inter,
                   fontWeight: 400,
-                  fontSize: "13px",
-                  lineHeight: "18px",
-                  color: "rgba(255,255,255,0.5)",
+                  fontSize: "16px",
+                  lineHeight: "28px",
+                  color: "#FFFFFF",
                   marginBottom: "16px",
                 }}
               >
                 {mod.desc}
               </p>
-              <div className="flex items-center gap-1.5 mb-3">
+              <div className="flex items-center gap-2 mb-2.5">
                 <svg
-                  width="14"
-                  height="14"
+                  width="24"
+                  height="24"
                   viewBox="0 0 24 24"
                   fill="none"
-                  stroke="rgba(255,255,255,0.5)"
+                  stroke="#FFFFFF"
                   strokeWidth="2"
                 >
                   <circle cx="12" cy="12" r="10" />
@@ -500,26 +506,26 @@ export default function ChildProgressPage() {
                 <span
                   style={{
                     ...inter,
-                    fontWeight: 500,
-                    fontSize: "13px",
-                    color: "rgba(255,255,255,0.5)",
+                    fontWeight: 600,
+                    fontSize: "16px",
+                    color: "#FFFFFF",
                   }}
                 >
                   {mod.time}
                 </span>
               </div>
-              <div className="w-full h-[4px] bg-[#525162] rounded-full overflow-hidden mb-4">
-                <div className="h-full w-full bg-[#00CED1] rounded-full" />
+              <div className="w-full h-2 bg-[#525162] rounded-[10px] overflow-hidden mb-4">
+                <div className="h-full w-full bg-[#00CED1] rounded-[10px]" />
               </div>
               <button
                 type="button"
-                className="w-full rounded-full py-2.5 cursor-pointer hover:opacity-90 transition-opacity"
+                className="w-full rounded-full h-[46px] cursor-pointer hover:opacity-90 transition-opacity"
                 style={{
-                  backgroundColor: "transparent",
+                  backgroundColor: "#313044",
                   border: "1px solid #00CED1",
                   ...inter,
                   fontWeight: 600,
-                  fontSize: "14px",
+                  fontSize: "19px",
                   color: "#FFFFFF",
                 }}
               >
@@ -548,43 +554,58 @@ export default function ChildProgressPage() {
       {/* Current Module */}
       {showInProgress && (
         <div
-          className="rounded-[16px] p-5 md:p-6 mb-6"
+          className="rounded-[26px] md:rounded-[16px] p-7 md:p-6 mb-4 md:mb-6"
           style={{ backgroundColor: "#313044" }}
         >
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <span
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-3">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2.5 flex-wrap mb-2">
+                <span
+                  style={{
+                    ...inter,
+                    fontWeight: 400,
+                    fontSize: "16px",
+                    color: "#FFFFFF",
+                    letterSpacing: "0",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Current Module
+                </span>
+                <span
+                  className="rounded-[13px] px-2.5 py-1.5"
+                  style={{
+                    backgroundColor: "#FFFAF1",
+                    border: "1px solid #FEC400",
+                    ...inter,
+                    fontWeight: 500,
+                    fontSize: "11px",
+                    color: "#8F6F00",
+                  }}
+                >
+                  IN PROGRESS
+                </span>
+              </div>
+              <h3
                 style={{
                   ...inter,
                   fontWeight: 600,
-                  fontSize: "12px",
-                  color: "rgba(255,255,255,0.5)",
-                  letterSpacing: "0.5px",
-                  textTransform: "uppercase",
+                  fontSize: "20px",
+                  lineHeight: "24px",
+                  color: "#FFFFFF",
                 }}
               >
-                Current Module
-              </span>
-              <span
-                className="rounded-full px-2.5 py-0.5"
-                style={{
-                  backgroundColor: "#F59E0B",
-                  ...inter,
-                  fontWeight: 600,
-                  fontSize: "10px",
-                  color: "#111023",
-                }}
-              >
-                IN PROGRESS
-              </span>
+                Module {subject.currentModule.num}: {subject.currentModule.title}
+              </h3>
             </div>
-            <div className="text-right">
+            <div className="text-left md:text-right flex-shrink-0">
               <p
                 style={{
                   ...inter,
                   fontWeight: 700,
-                  fontSize: "24px",
-                  color: "#00CED1",
+                  fontSize: "26px",
+                  lineHeight: "26px",
+                  color: "#FEC400",
                 }}
               >
                 {subject.currentModule.progress}%
@@ -592,9 +613,10 @@ export default function ChildProgressPage() {
               <p
                 style={{
                   ...inter,
-                  fontWeight: 400,
-                  fontSize: "12px",
-                  color: "rgba(255,255,255,0.5)",
+                  fontWeight: 500,
+                  fontSize: "18px",
+                  color: "#FFFFFF",
+                  marginTop: "6px",
                 }}
               >
                 Completed
@@ -602,24 +624,14 @@ export default function ChildProgressPage() {
             </div>
           </div>
 
-          <h3
-            style={{
-              ...inter,
-              fontWeight: 700,
-              fontSize: "20px",
-              color: "#FFFFFF",
-              marginBottom: "6px",
-            }}
-          >
-            Module {subject.currentModule.num}: {subject.currentModule.title}
-          </h3>
           <p
             style={{
               ...inter,
               fontWeight: 400,
-              fontSize: "14px",
-              color: "rgba(255,255,255,0.5)",
-              marginBottom: "16px",
+              fontSize: "16px",
+              lineHeight: "28px",
+              color: "#FFFFFF",
+              marginBottom: "20px",
             }}
           >
             {subject.currentModule.desc}
@@ -629,32 +641,36 @@ export default function ChildProgressPage() {
             {subject.currentModule.levels.map((lvl) => (
               <div
                 key={lvl.num}
-                className="rounded-[12px] px-4 py-3 flex items-center justify-between"
+                className={`rounded-[16px] px-3.5 py-2.5 ${
+                  lvl.status === "not-mastered"
+                    ? "flex flex-col gap-3"
+                    : "flex items-center"
+                }`}
                 style={{
                   backgroundColor:
                     lvl.status === "completed"
-                      ? "rgba(0,206,209,0.08)"
-                      : "rgba(239,68,68,0.06)",
+                      ? "rgba(0,206,209,0.1)"
+                      : "rgba(239,68,68,0.08)",
                   border:
                     lvl.status === "completed"
-                      ? "1px solid rgba(0,206,209,0.3)"
-                      : "1px solid rgba(239,68,68,0.25)",
+                      ? "1px solid rgba(0,206,209,0.35)"
+                      : "1px solid rgba(239,68,68,0.28)",
                 }}
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 min-w-0">
                   <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                    className="size-[52px] rounded-[14px] flex items-center justify-center flex-shrink-0"
                     style={{
                       backgroundColor:
                         lvl.status === "completed"
                           ? "#00CED1"
-                          : "rgba(239,68,68,0.15)",
+                          : "rgba(239,68,68,0.18)",
                     }}
                   >
                     {lvl.status === "completed" ? (
                       <svg
-                        width="14"
-                        height="14"
+                        width="26"
+                        height="26"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="white"
@@ -666,26 +682,29 @@ export default function ChildProgressPage() {
                       </svg>
                     ) : (
                       <svg
-                        width="14"
-                        height="14"
+                        width="26"
+                        height="26"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="#EF4444"
-                        strokeWidth="2"
+                        strokeWidth="1.8"
                         strokeLinecap="round"
                         strokeLinejoin="round"
                       >
-                        <rect x="3" y="3" width="18" height="18" rx="4" />
+                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                        <line x1="16" y1="13" x2="8" y2="13" />
+                        <line x1="16" y1="17" x2="8" y2="17" />
                       </svg>
                     )}
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2">
+                  <div className="min-w-0">
+                    <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-2">
                       <span
                         style={{
                           ...inter,
-                          fontWeight: 700,
-                          fontSize: "14px",
+                          fontWeight: 600,
+                          fontSize: "16px",
                           color: "#FFFFFF",
                         }}
                       >
@@ -693,12 +712,12 @@ export default function ChildProgressPage() {
                       </span>
                       {lvl.status === "not-mastered" && (
                         <span
-                          className="rounded-full px-2 py-0.5"
+                          className="self-start rounded-[9px] px-2 py-1"
                           style={{
                             backgroundColor: "#EF4444",
                             ...inter,
-                            fontWeight: 600,
-                            fontSize: "9px",
+                            fontWeight: 500,
+                            fontSize: "10px",
                             color: "#FFFFFF",
                           }}
                         >
@@ -710,8 +729,9 @@ export default function ChildProgressPage() {
                       style={{
                         ...inter,
                         fontWeight: 400,
-                        fontSize: "12px",
-                        color: "rgba(255,255,255,0.5)",
+                        fontSize: "14px",
+                        color: "rgba(255,255,255,0.7)",
+                        marginTop: "4px",
                       }}
                     >
                       {lvl.desc}
@@ -721,13 +741,13 @@ export default function ChildProgressPage() {
                 {lvl.status === "not-mastered" && (
                   <button
                     type="button"
-                    className="rounded-[10px] px-5 py-2 cursor-pointer hover:opacity-90 transition-opacity flex-shrink-0 ml-3"
+                    className="w-full md:w-auto md:self-center md:ml-auto rounded-full px-8 h-12 cursor-pointer hover:opacity-90 transition-opacity flex-shrink-0"
                     style={{
                       backgroundColor: "rgba(239,68,68,0.15)",
-                      border: "1px solid rgba(239,68,68,0.3)",
+                      border: "1px solid rgba(239,68,68,0.35)",
                       ...inter,
                       fontWeight: 600,
-                      fontSize: "13px",
+                      fontSize: "16px",
                       color: "#EF4444",
                     }}
                   >
@@ -743,17 +763,17 @@ export default function ChildProgressPage() {
       {/* Locked Module */}
       {showLocked && (
         <div
-          className="rounded-[16px] p-5"
-          style={{ backgroundColor: "#313044", opacity: 0.7 }}
+          className="rounded-[23px] md:rounded-[16px] p-[22px] md:p-5 max-w-none md:max-w-[538px]"
+          style={{ backgroundColor: "#313044", opacity: 0.72 }}
         >
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-6 h-6 rounded-full bg-[#525162] flex items-center justify-center flex-shrink-0">
+          <div className="flex items-start gap-3 mb-4">
+            <div className="size-8 rounded-2xl bg-[#525162]/50 border border-[#525162] flex items-center justify-center flex-shrink-0 mt-1">
               <svg
-                width="12"
-                height="12"
+                width="16"
+                height="16"
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke="rgba(255,255,255,0.4)"
+                stroke="rgba(255,255,255,0.45)"
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -762,37 +782,38 @@ export default function ChildProgressPage() {
                 <path d="M7 11V7a5 5 0 0110 0v4" />
               </svg>
             </div>
-            <span
-              style={{
-                ...inter,
-                fontWeight: 500,
-                fontSize: "12px",
-                color: "rgba(255,255,255,0.4)",
-                letterSpacing: "0.5px",
-                textTransform: "uppercase",
-              }}
-            >
-              Module {subject.lockedModule.num}
-            </span>
+            <div className="min-w-0">
+              <span
+                style={{
+                  ...inter,
+                  fontWeight: 400,
+                  fontSize: "16px",
+                  color: "rgba(255,255,255,0.55)",
+                  textTransform: "uppercase",
+                }}
+              >
+                Module {subject.lockedModule.num}
+              </span>
+              <h3
+                style={{
+                  ...inter,
+                  fontWeight: 600,
+                  fontSize: "20px",
+                  color: "rgba(255,255,255,0.75)",
+                  marginTop: "5px",
+                }}
+              >
+                {subject.lockedModule.title}
+              </h3>
+            </div>
           </div>
-          <h3
-            style={{
-              ...inter,
-              fontWeight: 700,
-              fontSize: "18px",
-              color: "rgba(255,255,255,0.7)",
-              marginBottom: "6px",
-            }}
-          >
-            {subject.lockedModule.title}
-          </h3>
           <p
             style={{
               ...inter,
               fontWeight: 400,
-              fontSize: "13px",
-              lineHeight: "18px",
-              color: "rgba(255,255,255,0.4)",
+              fontSize: "16px",
+              lineHeight: "28px",
+              color: "rgba(255,255,255,0.45)",
             }}
           >
             {subject.lockedModule.desc}
