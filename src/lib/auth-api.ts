@@ -167,7 +167,10 @@ export function isIgnorableRequestError(error: unknown): boolean {
   );
 }
 
-export function getApiErrorMessage(error: unknown): string {
+export function getApiErrorMessage(
+  error: unknown,
+  fallback = "Something went wrong. Please try again.",
+): string {
   if (isIgnorableRequestError(error)) {
     return "";
   }
@@ -179,7 +182,7 @@ export function getApiErrorMessage(error: unknown): string {
     if (typeof message === "string") return message;
     if (Array.isArray(message)) return message.join(", ");
   }
-  return "Something went wrong. Please try again.";
+  return fallback;
 }
 
 export function isEmailAlreadyRegisteredMessage(message: string): boolean {
