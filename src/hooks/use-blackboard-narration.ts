@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { BlackboardStep } from "@/lib/class-lesson-content";
+import { splitNarrationForSpeech } from "@/lib/narration-speech-chunks";
 import { delay, estimateSpeakDurationMs } from "@/lib/tts-word-sync";
 
 export type BlackboardReveal = {
@@ -15,8 +16,7 @@ export type BlackboardReveal = {
   interactionWords: number;
 };
 
-const DEFAULT_PAUSE_MS = 250;
-const SHORT_PAUSE_MS = 120;
+const DEFAULT_PAUSE_MS = 550;
 
 type PacingConfig = {
   pauseMs?: number;
@@ -161,8 +161,16 @@ export function useBlackboardNarration({
           });
           if (isCancelled()) return;
 
-          await narrateSegment(aiScript, () => {});
-          if (isCancelled()) return;
+          // Speak in sentence chunks — smoother LiveAvatar lips vs one long paragraph.
+          const chunks = splitNarrationForSpeech(aiScript);
+          for (let i = 0; i < chunks.length; i += 1) {
+            if (isCancelled()) return;
+            await narrateSegment(chunks[i], () => {});
+            if (isCancelled()) return;
+            if (i < chunks.length - 1) {
+              await delay(Math.min(pauseMs, 500));
+            }
+          }
 
           if (!isCancelled()) {
             onNarrationCompleteRef.current?.();
@@ -182,7 +190,7 @@ export function useBlackboardNarration({
             await delay(estimateSpeakDurationMs(intro, wordMs));
           }
           if (isCancelled()) return;
-          await delay(SHORT_PAUSE_MS);
+          await delay(pauseMs);
         }
 
         for (let i = 0; i < currentStep.lines.length; i += 1) {
@@ -206,7 +214,7 @@ export function useBlackboardNarration({
             activeLineIndex: null,
             activeLineWords: 0,
           }));
-          await delay(SHORT_PAUSE_MS);
+          await delay(pauseMs);
         }
 
         for (let i = 0; i < bullets.length; i += 1) {
@@ -238,7 +246,7 @@ export function useBlackboardNarration({
               interactionWords: currentStep.interaction!.prompt.split(/\s+/).filter(Boolean).length,
             }));
           } else {
-            await delay(SHORT_PAUSE_MS);
+            await delay(pauseMs);
           }
         }
 

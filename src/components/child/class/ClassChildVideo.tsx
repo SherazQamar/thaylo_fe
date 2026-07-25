@@ -17,10 +17,11 @@ type ClassChildVideoProps = {
   faceMonitorEnabled?: boolean;
   onFaceStatusChange?: (status: FaceMonitorStatus) => void;
   /**
-   * `pip` — Phase 1: small picture-in-picture on the stage (bottom-right).
+   * `pip` — floating picture-in-picture on the board.
+   * `avatarDock` — compact camera for the LiveAvatar card footer.
    * `tile` — legacy floating card with name bar.
    */
-  variant?: "pip" | "tile";
+  variant?: "pip" | "tile" | "avatarDock";
   dock?: "top" | "bottom";
 };
 
@@ -53,10 +54,90 @@ export default function ClassChildVideo({
 
   const showVideo = stream && cameraEnabled;
   const isPip = variant === "pip";
+  const isAvatarDock = variant === "avatarDock";
+
+  if (isAvatarDock) {
+    return (
+      <div className="pointer-events-auto w-[72px] md:w-[88px] shrink-0">
+        <div
+          className="overflow-hidden rounded-[12px] shadow-lg"
+          style={{
+            border: `1.5px solid ${micEnabled ? "rgba(0,206,209,0.65)" : "rgba(255,255,255,0.25)"}`,
+            backgroundColor: "#1a1830",
+          }}
+        >
+          <div ref={containerRef} className="relative aspect-[4/3] bg-[#1a1830]">
+            {showVideo ? (
+              <>
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className="h-full w-full object-cover"
+                  style={{ transform: "scaleX(-1)" }}
+                />
+                <FaceTrackingOverlay
+                  videoRef={videoRef}
+                  containerRef={containerRef}
+                  status={faceStatus}
+                  mirrored
+                  strokeWidth={2}
+                />
+              </>
+            ) : (
+              <div className="flex h-full w-full flex-col items-center justify-center gap-1 px-1">
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#525162]">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2">
+                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                </div>
+                {permissionError ? (
+                  <button
+                    type="button"
+                    onClick={onEnableMedia}
+                    className="text-[9px] text-[#00CED1] underline"
+                    style={inter}
+                  >
+                    Enable
+                  </button>
+                ) : (
+                  <span className="text-center text-[9px] text-white/40" style={inter}>
+                    Off
+                  </span>
+                )}
+              </div>
+            )}
+            <div className="absolute left-1 top-1 z-20">
+              <span
+                className={
+                  "h-1.5 w-1.5 rounded-full " +
+                  (micEnabled ? "animate-pulse bg-[#00CED1]" : "bg-[#FF7B7B]")
+                }
+              />
+            </div>
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent px-1 pb-0.5 pt-3">
+              <p className="truncate text-[9px] font-semibold text-white/90" style={inter}>
+                {displayName}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (isPip) {
     return (
-      <div className="absolute z-30 bottom-3 right-3 md:bottom-4 md:right-4 w-[104px] md:w-[124px]">
+      <div
+        className={
+          "absolute z-30 w-[104px] md:w-[124px] " +
+          (dock === "top"
+            ? "top-3 left-3 md:top-4 md:left-4"
+            : "bottom-3 right-3 md:bottom-4 md:right-4")
+        }
+      >
         <div
           className="overflow-hidden rounded-[14px] shadow-xl"
           style={{

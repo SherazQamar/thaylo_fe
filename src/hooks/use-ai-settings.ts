@@ -34,8 +34,8 @@ const DEFAULT_SETTINGS: PublicAiSettings = {
     similarityBoost: 0.75,
   },
   pacing: {
-    pauseMs: 400,
-    wordMs: 55,
+    pauseMs: 800,
+    wordMs: 80,
     classDurationMinutes: 15,
   },
   avatar: {

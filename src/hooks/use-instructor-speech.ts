@@ -6,7 +6,13 @@ import { useHeygenAgent, type HeygenAvatarConfig } from "@/hooks/use-heygen-agen
 import { useSpeechSynthesis } from "@/hooks/use-speech-synthesis";
 import { createHeygenSessionToken, type PublicAiSettings, type SpeechAuthMode } from "@/lib/ai-settings-api";
 import { sanitizeTextForSpeech } from "@/lib/tts-sanitize";
-import { estimateSpeakDurationMs, revealWordsOnSchedule, splitSpeakWords } from "@/lib/tts-word-sync";
+import {
+  delay,
+  estimateSpeakDurationMs,
+  revealWordsAlignedToPromise,
+  revealWordsOnSchedule,
+  splitSpeakWords,
+} from "@/lib/tts-word-sync";
 
 type SpeakProgressOptions = {
   onWord?: (index: number, word: string) => void;
@@ -16,25 +22,26 @@ type SpeakProgressOptions = {
 
 type VoiceConfig = PublicAiSettings["voice"];
 
+/** Board caption pace while LiveAvatar speaks. */
+const AVATAR_WORD_MS = 360;
+
 /**
- * Instructor speech for live class.
- * HeyGen LiveAvatar speaks the lesson text; board words reveal on a paced schedule
- * while the avatar talks (not all-at-once). Falls back to TTS if avatar fails.
+ * Instructor speech for live class — LiveAvatar owns class audio when enabled.
  */
 export function useInstructorSpeech(
   voiceConfig?: VoiceConfig | null,
   avatarConfig?: HeygenAvatarConfig | null,
   authMode: SpeechAuthMode = "child",
 ) {
-  const tts = useSpeechSynthesis(voiceConfig, authMode);
+  const heygenEnabled = Boolean(avatarConfig?.enabled && avatarConfig.provider === "heygen");
+
+  const tts = useSpeechSynthesis(heygenEnabled ? null : voiceConfig, authMode);
   const heygen = useHeygenAgent(avatarConfig, createHeygenSessionToken);
 
   const ttsRef = useRef(tts);
   const heygenRef = useRef(heygen);
   ttsRef.current = tts;
   heygenRef.current = heygen;
-
-  const heygenEnabled = Boolean(avatarConfig?.enabled && avatarConfig.provider === "heygen");
 
   const stop = useCallback(() => {
     heygenRef.current.stop();
@@ -46,31 +53,62 @@ export function useInstructorSpeech(
     if (!spokenText.trim()) return;
 
     const words = splitSpeakWords(spokenText);
-    const wordMs = options?.wordMs;
     const isCancelled = () => options?.isCancelled?.() === true;
+    const onWord = options?.onWord;
 
-    const duration = estimateSpeakDurationMs(spokenText, wordMs);
-    const wordSync = revealWordsOnSchedule(
-      words,
-      (index, word) => options?.onWord?.(index, word),
-      duration,
-      isCancelled,
-    );
+    if (heygenEnabled) {
+      let agent = heygenRef.current;
+      if (!agent.isReady && !agent.errorMessage) {
+        const start = Date.now();
+        while (Date.now() - start < 8_000) {
+          if (isCancelled()) return;
+          agent = heygenRef.current;
+          if (agent.isReady || agent.errorMessage) break;
+          await delay(80);
+        }
+      }
 
-    const activeHeygen = heygenRef.current;
-    const activeTts = ttsRef.current;
+      agent = heygenRef.current;
+      if (agent.isReady) {
+        let started = false;
+        const speakPromise = agent.speak(spokenText, {
+          onStarted: () => {
+            started = true;
+          },
+        });
 
-    if (heygenEnabled && activeHeygen.isReady) {
-      const heygenOk = await activeHeygen.speak(spokenText);
-      await wordSync;
-      if (heygenOk || isCancelled()) return;
-      if (!activeHeygen.errorMessage) return;
+        const boardSync = (async () => {
+          if (!onWord) return;
+          const waitUntil = Date.now() + 700;
+          while (!started && Date.now() < waitUntil) {
+            if (isCancelled()) return;
+            await delay(30);
+          }
+          await revealWordsAlignedToPromise(
+            words,
+            onWord,
+            speakPromise,
+            estimateSpeakDurationMs(spokenText, AVATAR_WORD_MS),
+            isCancelled,
+          );
+        })();
+
+        await Promise.all([speakPromise, boardSync]);
+        return;
+      }
+
+      if (onWord) {
+        await revealWordsOnSchedule(
+          words,
+          onWord,
+          estimateSpeakDurationMs(spokenText, options?.wordMs ?? AVATAR_WORD_MS),
+          isCancelled,
+        );
+      }
+      return;
     }
 
-    if (heygenEnabled && !activeHeygen.errorMessage) return;
-
-    await activeTts.speakProgress(text, options);
-    await wordSync;
+    await ttsRef.current.speakProgress(text, options);
   }, [heygenEnabled]);
 
   const speak = useCallback(
@@ -84,7 +122,7 @@ export function useInstructorSpeech(
     speak,
     speakProgress,
     stop,
-    speaking: tts.speaking || heygen.speaking,
+    speaking: heygenEnabled ? heygen.speaking : tts.speaking,
     avatar: heygenEnabled ? heygen : null,
   };
 }
