@@ -45,6 +45,7 @@ export function useHeygenAgent(
   const connectedRef = useRef(false);
   const speakChainRef = useRef<Promise<boolean>>(Promise.resolve(true));
   const speakResolverRef = useRef<(() => void) | null>(null);
+  const speakStartedResolverRef = useRef<(() => void) | null>(null);
   const [status, setStatus] = useState<HeygenAgentStatus>("disabled");
   const [speaking, setSpeaking] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -116,7 +117,11 @@ export function useHeygenAgent(
         });
 
         session.on(AgentEventsEnum.AVATAR_SPEAK_STARTED, () => {
-          if (!cancelled) setSpeaking(true);
+          if (cancelled) return;
+          setSpeaking(true);
+          const resolveStarted = speakStartedResolverRef.current;
+          speakStartedResolverRef.current = null;
+          resolveStarted?.();
         });
 
         session.on(AgentEventsEnum.AVATAR_SPEAK_ENDED, () => {
@@ -142,6 +147,9 @@ export function useHeygenAgent(
         }
         connectedRef.current = true;
         setStatus("connected");
+
+        // Light keep-alive only — do not speak a warm-up line (adds lag / desync risk).
+        void session.keepAlive().catch(() => undefined);
 
         keepAliveTimer = window.setInterval(() => {
           void session.keepAlive().catch(() => undefined);
@@ -174,38 +182,62 @@ export function useHeygenAgent(
     };
   }, [enabled, avatarId, voiceId, getSessionToken]);
 
-  const speakOnce = useCallback(async (text: string): Promise<boolean> => {
+  const speakOnce = useCallback(async (
+    text: string,
+    handlers?: { onStarted?: () => void },
+  ): Promise<boolean> => {
     const input = text.trim();
-    if (!input) return true;
+    if (!input) {
+      handlers?.onStarted?.();
+      return true;
+    }
     const session = sessionRef.current;
     if (!session || !connectedRef.current) return false;
 
     try {
-      setSpeaking(true);
-      // Keep session warm so the next lesson line starts with less delay.
-      void session.keepAlive().catch(() => undefined);
+      let startedFired = false;
+      const fireStarted = () => {
+        if (startedFired) return;
+        startedFired = true;
+        handlers?.onStarted?.();
+      };
 
       const done = new Promise<void>((resolve) => {
         speakResolverRef.current = resolve;
       });
+      speakStartedResolverRef.current = fireStarted;
 
-      // One realtime speak call: LiveAvatar generates voice + lip motion together.
+      // Speak immediately — do not block waiting for SPEAK_STARTED (felt like a freeze).
       session.repeat(input);
 
-      const timeoutMs = Math.max(estimateSpeakDurationMs(input) * 3.5, 30_000);
-      await Promise.race([done, delay(timeoutMs)]);
+      // Notify board sync when lips start; fall back quickly if event is late.
+      const startFallback = window.setTimeout(fireStarted, 500);
+
+      const timeoutMs = Math.max(estimateSpeakDurationMs(input, 380) * 3.5, 30_000);
+      const timedOut = await Promise.race([
+        done.then(() => false),
+        delay(timeoutMs).then(() => true),
+      ]);
+
+      window.clearTimeout(startFallback);
+      fireStarted();
+      speakStartedResolverRef.current = null;
       speakResolverRef.current = null;
       setSpeaking(false);
-      return true;
+      return !timedOut;
     } catch {
+      speakStartedResolverRef.current = null;
       speakResolverRef.current = null;
       setSpeaking(false);
       return false;
     }
   }, []);
 
-  const speak = useCallback(async (text: string) => {
-    const task = speakChainRef.current.then(() => speakOnce(text));
+  const speak = useCallback(async (
+    text: string,
+    handlers?: { onStarted?: () => void },
+  ) => {
+    const task = speakChainRef.current.then(() => speakOnce(text, handlers));
     speakChainRef.current = task.catch(() => false);
     return task;
   }, [speakOnce]);
@@ -213,6 +245,7 @@ export function useHeygenAgent(
   const stop = useCallback(() => {
     speakChainRef.current = Promise.resolve(true);
     speakResolverRef.current = null;
+    speakStartedResolverRef.current = null;
     setSpeaking(false);
     try {
       sessionRef.current?.interrupt();

@@ -1,21 +1,9 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import ClassLiveRoom from "@/components/child/class/ClassLiveRoom";
 import { fetchChildClassSession, type ChildClassSession } from "@/lib/curriculum-api";
-
-const ClassLiveRoom = dynamic(
-  () => import("@/components/child/class/ClassLiveRoom"),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="flex h-full items-center justify-center text-white/50 text-sm">
-        Loading class…
-      </div>
-    ),
-  },
-);
 
 function LessonPageContent() {
   const searchParams = useSearchParams();
