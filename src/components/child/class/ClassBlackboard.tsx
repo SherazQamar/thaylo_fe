@@ -5,6 +5,10 @@ import type { BlackboardReveal } from "@/hooks/use-blackboard-narration";
 import { KaraokeText } from "@/components/child/class/ClassInstructorCaption";
 import WordLadderDragDrop from "@/components/child/class/WordLadderDragDrop";
 import OptionHintButton from "@/components/child/class/OptionHintButton";
+import {
+  CLASS_BLACKBOARD_BG,
+  CLASS_BLACKBOARD_BORDER,
+} from "@/lib/class-blackboard-theme";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
@@ -19,6 +23,10 @@ type ClassBlackboardProps = {
   answeredCorrectly?: boolean | null;
   onSelectOption?: (optionId: string) => void;
   onSubmitWordLadder?: (orderedIds: string[]) => void;
+  /** Keep board text/questions clear of the LiveAvatar stage. */
+  avatarPresent?: boolean;
+  /** Avatar is shrunk for quiz mode — still reserve a right lane. */
+  avatarCompact?: boolean;
 };
 
 function renderPartialText(text: string, visibleWords: number, keyPrefix: string) {
@@ -48,6 +56,8 @@ export default function ClassBlackboard({
   answeredCorrectly,
   onSelectOption,
   onSubmitWordLadder,
+  avatarPresent = false,
+  avatarCompact = false,
 }: ClassBlackboardProps) {
   const instructorInitial = instructorName.trim().charAt(0).toUpperCase() || "A";
   const completedLines = step.lines.slice(0, reveal.completedLines);
@@ -67,14 +77,19 @@ export default function ClassBlackboard({
   const showOptionHints = step.phase === "quick_check";
   const compact = hasInteraction || (step.bulletPoints?.length ?? 0) > 2;
 
+  // Always keep content left of the avatar — especially quiz options.
+  const contentPadClass = !avatarPresent
+    ? ""
+    : avatarCompact || hasInteraction
+      ? "pr-[min(36%,230px)] md:pr-[min(32%,250px)]"
+      : "pr-[min(48%,380px)] md:pr-[min(44%,420px)]";
+
   return (
-    <div className="relative w-full h-full rounded-[16px] overflow-hidden border border-[#2d4a3e]">
-      <div
-        className="absolute inset-0"
-        style={{
-          background: "linear-gradient(180deg, #1a3d32 0%, #0f2922 45%, #0a1f1a 100%)",
-        }}
-      />
+    <div
+      className="relative w-full h-full rounded-[16px] overflow-hidden border"
+      style={{ borderColor: CLASS_BLACKBOARD_BORDER }}
+    >
+      <div className="absolute inset-0" style={{ background: CLASS_BLACKBOARD_BG }} />
       <div
         className="absolute inset-0 opacity-20 pointer-events-none"
         style={{
@@ -84,9 +99,7 @@ export default function ClassBlackboard({
       />
 
       <div
-        className={`relative z-10 flex h-full flex-col overflow-hidden px-4 py-3 md:px-5 md:py-4 ${
-          hasInteraction ? "pr-3 md:pr-4" : ""
-        }`}
+        className={`relative z-10 flex h-full flex-col overflow-hidden px-4 py-3 md:px-5 md:py-4 ${contentPadClass}`}
       >
         <div className={`flex items-center gap-2.5 shrink-0 ${compact ? "mb-2" : "mb-3"}`}>
           <div
@@ -217,7 +230,7 @@ export default function ClassBlackboard({
 
                 {showChoiceOptions && (
                   <>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-xl">
                       {interaction.options.map((option) => {
                         const isSelected = selectedOptionId === option.id;
                         const showResult = selectedOptionId != null;

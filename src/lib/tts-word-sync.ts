@@ -29,6 +29,70 @@ export async function revealWordsOnSchedule(
   }
 }
 
+/**
+ * Reveal board words paced to a speak promise (e.g. LiveAvatar).
+ * Uses minTotalMs as the target timeline; if speech ends early, remaining
+ * words flush; if speech runs longer, we wait after the last word.
+ */
+export async function revealWordsAlignedToPromise(
+  words: string[],
+  onWord: (index: number, word: string) => void,
+  speakPromise: Promise<unknown>,
+  minTotalMs: number,
+  isCancelled?: () => boolean,
+): Promise<void> {
+  let finished = false;
+  const speakDone = Promise.resolve(speakPromise).finally(() => {
+    finished = true;
+  });
+
+  if (words.length === 0) {
+    await speakDone.catch(() => undefined);
+    return;
+  }
+
+  const flushFrom = (startIndex: number) => {
+    for (let j = startIndex; j < words.length; j += 1) {
+      onWord(j, words[j]);
+    }
+  };
+
+  onWord(0, words[0]);
+  const start = Date.now();
+  const safeTotalMs = Math.max(800, minTotalMs);
+
+  for (let i = 1; i < words.length; i += 1) {
+    if (isCancelled?.()) {
+      await speakDone.catch(() => undefined);
+      return;
+    }
+    if (finished) {
+      flushFrom(i);
+      await speakDone.catch(() => undefined);
+      return;
+    }
+
+    const targetAt = (i / words.length) * safeTotalMs;
+    const waitMs = Math.max(0, targetAt - (Date.now() - start));
+    if (waitMs > 0) {
+      await Promise.race([delay(waitMs), speakDone.then(() => undefined)]);
+    }
+
+    if (isCancelled?.()) {
+      await speakDone.catch(() => undefined);
+      return;
+    }
+    if (finished) {
+      flushFrom(i);
+      await speakDone.catch(() => undefined);
+      return;
+    }
+    onWord(i, words[i]);
+  }
+
+  await speakDone.catch(() => undefined);
+}
+
 type AudioSlot = { current: HTMLAudioElement | null };
 
 export async function playAudioBlobWithWordSync(

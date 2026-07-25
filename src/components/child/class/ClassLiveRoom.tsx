@@ -138,8 +138,9 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
   const avatarRequested = Boolean(
     aiSettings.avatar?.provider !== "none" && aiSettings.avatar?.enabled,
   );
+  // Prefetch LiveAvatar on the camera gate so Join Class is warm (not cold on blackboard).
   const liveAvatarConfig = useMemo(() => {
-    if (!classJoined || !avatarRequested) return null;
+    if (!avatarRequested) return null;
     return {
       enabled: true,
       provider: aiSettings.avatar?.provider ?? "none",
@@ -147,7 +148,6 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
       heygenVoiceId: aiSettings.avatar?.heygenVoiceId ?? "",
     };
   }, [
-    classJoined,
     avatarRequested,
     aiSettings.avatar?.provider,
     aiSettings.avatar?.heygenAvatarId,
@@ -252,7 +252,12 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
     speakProgress,
     onCaption: NOOP_CAPTION,
     onNarrationComplete: handleNarrationComplete,
-    pacing: aiSettings.pacing,
+    // Child lesson pace: breath between lines without making class feel stuck.
+    pacing: {
+      ...aiSettings.pacing,
+      pauseMs: Math.max(aiSettings.pacing?.pauseMs ?? 700, 650),
+      wordMs: Math.max(aiSettings.pacing?.wordMs ?? 80, 75),
+    },
   });
 
   const interactionActive = Boolean(reveal.interactionVisible && currentStep?.interaction);
@@ -432,22 +437,37 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
 
   if (!classJoined) {
     return (
-      <ClassMediaSetupGate
-        stream={stream}
-        isRequesting={isRequesting}
-        permissionError={permissionError}
-        permissionHint={permissionHint}
-        hasActiveMedia={hasActiveMedia}
-        canJoinClass={canJoinClass}
-        hasVideo={hasVideo}
-        hasAudio={hasAudio}
-        instructorName={instructorName}
-        onEnableMedia={() => void startMedia()}
-        onJoinClass={handleJoinClass}
-        onBack={() => router.push("/child-dashboard")}
-        lessonTitle={lessonTitle}
-        isRetake={isRetake}
-      />
+      <>
+        {/* Keep stream attached while warming on the camera gate. */}
+        {avatarRequested && liveAvatar ? (
+          <video
+            ref={liveAvatar.videoRef}
+            autoPlay
+            playsInline
+            muted
+            className="pointer-events-none fixed h-px w-px opacity-0"
+            aria-hidden
+          />
+        ) : null}
+        <ClassMediaSetupGate
+          stream={stream}
+          isRequesting={isRequesting}
+          permissionError={permissionError}
+          permissionHint={permissionHint}
+          hasActiveMedia={hasActiveMedia}
+          canJoinClass={canJoinClass}
+          hasVideo={hasVideo}
+          hasAudio={hasAudio}
+          instructorName={instructorName}
+          avatarStatus={avatarRequested ? liveAvatar?.status ?? "connecting" : null}
+          avatarError={liveAvatar?.errorMessage ?? null}
+          onEnableMedia={() => void startMedia()}
+          onJoinClass={handleJoinClass}
+          onBack={() => router.push("/child-dashboard")}
+          lessonTitle={lessonTitle}
+          isRetake={isRetake}
+        />
+      </>
     );
   }
 
@@ -469,8 +489,8 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row flex-1 min-h-0 px-4 md:px-6 pb-4 gap-3 lg:gap-4">
-        <div className="flex-1 min-w-0 flex flex-col gap-3 min-h-0">
+      <div className="flex flex-col lg:flex-row flex-1 min-h-0 px-3 md:px-5 pb-2 gap-2 lg:gap-3">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2">
           <ClassLessonHeader
             moduleLabel={isLoading ? "Loading…" : moduleLabel}
             lessonTitle={isLoading ? "Starting class…" : lessonTitle}
@@ -490,9 +510,10 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
             }
           />
 
-          <div className="flex-1 min-h-0 relative flex flex-col gap-2 overflow-hidden">
-            {currentStep && (
-              <div className="flex-1 min-h-0 relative overflow-hidden">
+          {/* Blackboard fills all remaining height — no page footer under it. */}
+          <div className="relative min-h-0 flex-1 overflow-hidden rounded-[16px]">
+            {currentStep ? (
+              <div className="absolute inset-0">
                 <ClassBlackboard
                   step={currentStep}
                   reveal={reveal}
@@ -508,6 +529,8 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
                   answeredCorrectly={answeredCorrectly}
                   onSelectOption={handleBlackboardSelect}
                   onSubmitWordLadder={handleWordLadderSubmit}
+                  avatarPresent={Boolean(liveAvatar?.enabled)}
+                  avatarCompact={interactionActive}
                 />
                 {liveAvatar?.enabled ? (
                   <ClassLiveAvatar
@@ -518,22 +541,58 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
                     videoRef={liveAvatar.videoRef}
                     variant="stage"
                     compact={interactionActive}
+                    controls={
+                      <ClassMediaControls
+                        variant="overlay"
+                        micEnabled={micEnabled}
+                        cameraEnabled={cameraEnabled}
+                        cameraLocked={classJoined}
+                        onToggleMic={toggleMic}
+                        onToggleCamera={() => toggleCamera({ lockWhenOn: classJoined })}
+                        onEndCall={handleEndCall}
+                      />
+                    }
+                    childCamera={
+                      <ClassChildVideo
+                        stream={stream}
+                        cameraEnabled={cameraEnabled}
+                        micEnabled={micEnabled}
+                        onEnableMedia={() => void startMedia()}
+                        faceMonitorEnabled={classJoined && cameraEnabled}
+                        onFaceStatusChange={setFaceStatus}
+                        variant="avatarDock"
+                      />
+                    }
                   />
-                ) : null}
-                <ClassChildVideo
-                  stream={stream}
-                  cameraEnabled={cameraEnabled}
-                  micEnabled={micEnabled}
-                  onEnableMedia={() => void startMedia()}
-                  faceMonitorEnabled={classJoined && cameraEnabled}
-                  onFaceStatusChange={setFaceStatus}
-                  variant={liveAvatar?.enabled ? "pip" : "tile"}
-                  dock={interactionActive ? "top" : "bottom"}
-                />
+                ) : (
+                  <>
+                    <div className="absolute bottom-3 left-1/2 z-30 -translate-x-1/2">
+                      <ClassMediaControls
+                        variant="overlay"
+                        micEnabled={micEnabled}
+                        cameraEnabled={cameraEnabled}
+                        cameraLocked={classJoined}
+                        onToggleMic={toggleMic}
+                        onToggleCamera={() => toggleCamera({ lockWhenOn: classJoined })}
+                        onEndCall={handleEndCall}
+                      />
+                    </div>
+                    <ClassChildVideo
+                      stream={stream}
+                      cameraEnabled={cameraEnabled}
+                      micEnabled={micEnabled}
+                      onEnableMedia={() => void startMedia()}
+                      faceMonitorEnabled={classJoined && cameraEnabled}
+                      onFaceStatusChange={setFaceStatus}
+                      variant="pip"
+                      dock="bottom"
+                    />
+                  </>
+                )}
 
                 {showStayInViewNudge && (
                   <div
-                    className="absolute top-3 left-3 right-[42%] z-30 rounded-[10px] px-3 py-2 border border-[#FF7B7B]/40"
+                    className="absolute top-3 left-3 right-[48%] z-30 rounded-[10px] border border-[#FF7B7B]/40 px-3 py-2"
                     style={{ backgroundColor: "rgba(255,123,123,0.15)" }}
                   >
                     <p className="text-xs font-medium text-[#FF7B7B]" style={inter}>
@@ -544,7 +603,7 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
 
                 {!showStayInViewNudge && showLookAtScreenNudge && (
                   <div
-                    className="absolute top-3 left-3 right-[42%] z-30 rounded-[10px] px-3 py-2 border border-[#FBBF24]/30"
+                    className="absolute top-3 left-3 right-[48%] z-30 rounded-[10px] border border-[#FBBF24]/30 px-3 py-2"
                     style={{ backgroundColor: "rgba(251,191,36,0.12)" }}
                   >
                     <p className="text-xs font-medium text-[#FBBF24]" style={inter}>
@@ -553,41 +612,8 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
                   </div>
                 )}
               </div>
-            )}
-
+            ) : null}
           </div>
-
-          <div className="flex items-center justify-between gap-3 flex-wrap">
-            <span className="text-xs text-white/40" style={inter}>
-              {isGreeting
-                ? `${instructorName} is greeting you…`
-                : isNarrating
-                  ? `${instructorName} is teaching…`
-                  : reveal.interactionVisible
-                    ? currentStep?.phase === "quick_check"
-                      ? currentStep?.interaction?.type === "word_ladder"
-                        ? "Drag words into order — tap ⓘ for clues"
-                        : "Tap an answer — use ⓘ for clues if you need help"
-                      : currentStep?.interaction?.type === "word_ladder"
-                        ? "Drag words into order on the board"
-                        : "Tap an answer on the board"
-                    : "Listen and follow along"}
-            </span>
-            {session && (
-              <span className="text-[11px] text-white/35" style={inter}>
-                Session #{session.sessionId}
-              </span>
-            )}
-          </div>
-
-          <ClassMediaControls
-            micEnabled={micEnabled}
-            cameraEnabled={cameraEnabled}
-            cameraLocked={classJoined}
-            onToggleMic={toggleMic}
-            onToggleCamera={() => toggleCamera({ lockWhenOn: classJoined })}
-            onEndCall={handleEndCall}
-          />
         </div>
 
         <ClassTextChat

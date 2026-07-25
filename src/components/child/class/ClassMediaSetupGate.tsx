@@ -6,6 +6,7 @@ import FaceTrackingOverlay from "@/components/child/class/FaceTrackingOverlay";
 import { useClassFaceMonitor } from "@/hooks/use-class-face-monitor";
 import { faceFrameColor } from "@/lib/face-monitor/face-box";
 import type { ClassMediaError } from "@/lib/class-media-request";
+import type { HeygenAgentStatus } from "@/hooks/use-heygen-agent";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
@@ -24,6 +25,9 @@ type ClassMediaSetupGateProps = {
   lessonTitle?: string;
   isRetake?: boolean;
   instructorName?: string;
+  /** LiveAvatar warm-up status while on the camera gate (null = avatar off). */
+  avatarStatus?: HeygenAgentStatus | null;
+  avatarError?: string | null;
 };
 
 function positioningHint(status: ReturnType<typeof useClassFaceMonitor>["status"]): string {
@@ -31,6 +35,24 @@ function positioningHint(status: ReturnType<typeof useClassFaceMonitor>["status"
   if (!status.facePresent) return "Move into view so your face appears in the frame";
   if (status.engagement === "away") return "Look at the screen — center your face in the green box";
   return "Great! You're in position — join when ready";
+}
+
+function avatarWarmHint(
+  status: HeygenAgentStatus | null | undefined,
+  instructorName: string,
+  errorMessage?: string | null,
+): { text: string; tone: "warm" | "ready" | "error" } | null {
+  if (!status || status === "disabled") return null;
+  if (status === "connected") {
+    return { text: `${instructorName} is ready`, tone: "ready" };
+  }
+  if (status === "error" || status === "disconnected") {
+    return {
+      text: errorMessage?.trim() || `${instructorName} unavailable — class can still use voice`,
+      tone: "error",
+    };
+  }
+  return { text: `Warming up ${instructorName}’s voice…`, tone: "warm" };
 }
 
 export default function ClassMediaSetupGate({
@@ -48,6 +70,8 @@ export default function ClassMediaSetupGate({
   lessonTitle = "your class",
   isRetake = false,
   instructorName = "AI Instructor",
+  avatarStatus = null,
+  avatarError = null,
 }: ClassMediaSetupGateProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -72,6 +96,7 @@ export default function ClassMediaSetupGate({
 
   const hint = showPreview && hasVideo ? positioningHint(faceStatus) : null;
   const hintColor = showPreview && hasVideo ? faceFrameColor(faceStatus) : undefined;
+  const avatarHint = avatarWarmHint(avatarStatus, instructorName, avatarError);
 
   return (
     <div className="flex flex-col items-center justify-center h-full px-4 py-8">
@@ -127,6 +152,30 @@ export default function ClassMediaSetupGate({
             ) : (
               <p>{permissionHint}</p>
             )}
+          </div>
+        )}
+
+        {avatarHint && (
+          <div
+            className={
+              "rounded-[10px] px-3 py-2.5 mb-4 text-xs border " +
+              (avatarHint.tone === "error"
+                ? "text-[#FFC542] border-[#FFC542]/30"
+                : avatarHint.tone === "ready"
+                  ? "text-[#60D624] border-[#60D624]/30"
+                  : "text-[#00CED1] border-[#00CED1]/30")
+            }
+            style={{
+              backgroundColor:
+                avatarHint.tone === "error"
+                  ? "rgba(255,197,66,0.12)"
+                  : avatarHint.tone === "ready"
+                    ? "rgba(96,214,36,0.1)"
+                    : "rgba(0,206,209,0.08)",
+              ...inter,
+            }}
+          >
+            {avatarHint.text}
           </div>
         )}
 
