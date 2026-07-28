@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import type { BlackboardInteraction, BlackboardStep } from "@/lib/class-lesson-content";
 import type { BlackboardReveal } from "@/hooks/use-blackboard-narration";
 import { KaraokeText } from "@/components/child/class/ClassInstructorCaption";
@@ -9,6 +10,7 @@ import {
   CLASS_BLACKBOARD_BG,
   CLASS_BLACKBOARD_BORDER,
 } from "@/lib/class-blackboard-theme";
+import { shuffleArray } from "@/lib/shuffle";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
@@ -77,12 +79,26 @@ export default function ClassBlackboard({
   const showOptionHints = step.phase === "quick_check";
   const compact = hasInteraction || (step.bulletPoints?.length ?? 0) > 2;
 
+  // AI/curriculum often lists the correct answer last — shuffle once per question.
+  const choiceOptionsKey =
+    interaction && !isWordLadder
+      ? `${interaction.id}:${interaction.options.map((o) => o.id).join(",")}`
+      : "";
+  const shuffledChoiceOptions = useMemo(() => {
+    if (!interaction || isWordLadder) return [];
+    return shuffleArray(interaction.options);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reshuffle only when question identity changes
+  }, [choiceOptionsKey]);
+
   // Always keep content left of the avatar — especially quiz options.
+  // On mobile, leave less right pad and extra bottom pad so submit clears media controls.
   const contentPadClass = !avatarPresent
-    ? ""
+    ? hasInteraction
+      ? "pb-20"
+      : ""
     : avatarCompact || hasInteraction
-      ? "pr-[min(36%,230px)] md:pr-[min(32%,250px)]"
-      : "pr-[min(48%,380px)] md:pr-[min(44%,420px)]";
+      ? "pr-[min(28%,160px)] sm:pr-[min(36%,230px)] md:pr-[min(32%,250px)] pb-24 sm:pb-20"
+      : "pr-[min(40%,200px)] sm:pr-[min(48%,380px)] md:pr-[min(44%,420px)] pb-16";
 
   return (
     <div
@@ -133,7 +149,7 @@ export default function ClassBlackboard({
           }`}
         >
           <div
-            className={`${compact ? "space-y-1.5" : "space-y-2.5"} ${hasInteraction ? "pb-2" : "overflow-hidden"}`}
+            className={`${compact ? "space-y-1.5" : "space-y-2.5"} ${hasInteraction ? "pb-4" : "overflow-hidden"}`}
             style={{ fontSize: compact ? "clamp(12px, 1.9vh, 14px)" : "clamp(13px, 2.1vh, 15px)" }}
           >
             {greeting && (
@@ -231,7 +247,7 @@ export default function ClassBlackboard({
                 {showChoiceOptions && (
                   <>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-xl">
-                      {interaction.options.map((option) => {
+                      {shuffledChoiceOptions.map((option) => {
                         const isSelected = selectedOptionId === option.id;
                         const showResult = selectedOptionId != null;
                         let borderColor = "rgba(255,255,255,0.2)";

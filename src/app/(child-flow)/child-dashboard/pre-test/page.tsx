@@ -13,6 +13,7 @@ import {
 } from "@/lib/badge-api";
 import { startChildClass } from "@/lib/curriculum-api";
 import { getStartClassErrorMessage } from "@/lib/child-class-messages";
+import { shuffleArray } from "@/lib/shuffle";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
@@ -67,6 +68,15 @@ export default function ChildPretestPage() {
 
   const questions = pretestQuery.data?.questions ?? [];
   const current = questions[index] as PretestQuestion | undefined;
+  const choiceOptionsKey =
+    current && current.type !== "word_ladder"
+      ? `${current.id}:${current.options.map((o) => o.id).join(",")}`
+      : "";
+  const shuffledCurrentOptions = useMemo(() => {
+    if (!current || current.type === "word_ladder") return [];
+    return shuffleArray(current.options);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reshuffle only when question identity changes
+  }, [choiceOptionsKey]);
   const allAnswered =
     questions.length > 0 &&
     questions.every((q) => {
@@ -329,7 +339,7 @@ export default function ChildPretestPage() {
               />
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {current.options.map((option) => {
+                {shuffledCurrentOptions.map((option) => {
                   const selected = answers[current.id]?.optionId === option.id;
                   return (
                     <div key={option.id} className="flex items-stretch gap-1.5">

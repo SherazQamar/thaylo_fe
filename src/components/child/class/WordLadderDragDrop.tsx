@@ -144,11 +144,10 @@ export default function WordLadderDragDrop({
           type="button"
           disabled={disabled}
           onClick={handleSubmit}
-          className={`sticky bottom-0 z-10 w-full rounded-xl font-semibold transition-opacity hover:opacity-90 disabled:opacity-50 ${compact ? "py-2.5 text-xs" : "py-3 text-sm"}`}
+          className={`relative z-10 w-full rounded-xl font-semibold transition-opacity hover:opacity-90 disabled:opacity-50 ${compact ? "py-2.5 text-xs" : "py-3 text-sm"}`}
           style={{
             backgroundColor: "#00CED1",
             color: "#111023",
-            boxShadow: "0 -8px 24px rgba(15,41,34,0.65)",
             ...inter,
           }}
         >

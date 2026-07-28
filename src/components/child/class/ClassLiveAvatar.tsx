@@ -16,7 +16,6 @@ type ClassLiveAvatarProps = {
   variant?: "stage" | "tile";
   compact?: boolean;
   controls?: ReactNode;
-  childCamera?: ReactNode;
 };
 
 /**
@@ -33,7 +32,6 @@ export default function ClassLiveAvatar({
   variant = "stage",
   compact = false,
   controls,
-  childCamera,
 }: ClassLiveAvatarProps) {
   const showLive = status === "connected" || status === "connecting";
   const isStage = variant === "stage";
@@ -139,12 +137,9 @@ export default function ClassLiveAvatar({
             </div>
           )}
 
-          {(controls || childCamera) && (
-            <div className="absolute inset-x-0 bottom-0 z-30 flex items-end gap-2 bg-gradient-to-t from-black/80 via-black/45 to-transparent px-2.5 pb-2.5 pt-10">
-              <div className="flex min-w-0 flex-1 items-center justify-start pl-6 md:pl-10">
-                {controls}
-              </div>
-              {childCamera ? <div className="shrink-0">{childCamera}</div> : null}
+          {controls && (
+            <div className="absolute inset-x-0 bottom-0 z-30 flex items-center justify-center bg-gradient-to-t from-black/80 via-black/45 to-transparent px-2.5 pb-3 pt-10">
+              {controls}
             </div>
           )}
         </div>
@@ -177,7 +172,11 @@ export default function ClassLiveAvatar({
             </div>
           )}
         </div>
-        {controls ? <div className="px-2 py-2 bg-[#111023]">{controls}</div> : null}
+        {controls ? (
+          <div className="flex items-center justify-center px-2 py-2 bg-[#111023]">
+            {controls}
+          </div>
+        ) : null}
       </div>
     </div>
   );

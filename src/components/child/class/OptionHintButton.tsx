@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId } from "react";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
@@ -11,6 +11,9 @@ type OptionHintButtonProps = {
   placement?: "above" | "below";
 };
 
+/**
+ * Hint "i" icon — shows clue on hover / keyboard focus (not click).
+ */
 export default function OptionHintButton({
   hint,
   label = "See a clue to help you think",
@@ -18,23 +21,22 @@ export default function OptionHintButton({
   placement = compact ? "above" : "below",
 }: OptionHintButtonProps) {
   const popoverId = useId();
-  const [open, setOpen] = useState(false);
 
   return (
-    <span className="relative inline-flex shrink-0">
+    <span className="group/hint relative inline-flex shrink-0">
       <button
         type="button"
         aria-label={label}
-        aria-expanded={open}
-        aria-controls={popoverId}
-        className={`inline-flex items-center justify-center rounded-full border transition-colors ${
+        aria-describedby={popoverId}
+        title={hint}
+        className={`inline-flex items-center justify-center rounded-full border border-white/30 text-white/60 transition-colors hover:border-[#00CED1]/60 hover:text-[#00CED1] focus-visible:border-[#00CED1] focus-visible:text-[#00CED1] ${
           compact ? "h-6 w-6 text-[11px]" : "h-7 w-7 text-xs"
-        } ${open ? "border-[#00CED1] text-[#00CED1] bg-[#00CED1]/10" : "border-white/30 text-white/60 hover:border-[#00CED1]/60 hover:text-[#00CED1]"}`}
+        }`}
         style={{ ...inter, fontWeight: 700 }}
         onClick={(event) => {
+          // Keep click from selecting the quiz option; hint opens on hover/focus only.
           event.stopPropagation();
           event.preventDefault();
-          setOpen((prev) => !prev);
         }}
       >
         <svg
@@ -52,38 +54,28 @@ export default function OptionHintButton({
         </svg>
       </button>
 
-      {open && (
-        <>
-          <button
-            type="button"
-            aria-label="Close clue"
-            className="fixed inset-0 z-40 cursor-default"
-            onClick={() => setOpen(false)}
-          />
-          <span
-            id={popoverId}
-            role="dialog"
-            className={`absolute z-[60] rounded-xl border border-[#00CED1]/30 bg-[#0f2922] shadow-xl ${
-              placement === "above"
-                ? `bottom-full mb-1.5 right-0 ${compact ? "w-[min(240px,70vw)] px-2.5 py-2" : "w-[min(260px,75vw)] px-3 py-2.5"}`
-                : `top-full mt-2 right-0 ${compact ? "w-[min(240px,70vw)] px-2.5 py-2" : "w-[min(260px,75vw)] px-3 py-2.5"}`
-            }`}
-          >
-            <p
-              className="text-[10px] font-semibold uppercase tracking-wide text-[#00CED1]/80 mb-1"
-              style={inter}
-            >
-              Think about this
-            </p>
-            <p
-              className={compact ? "text-[11px] leading-snug" : "text-xs leading-relaxed"}
-              style={{ ...inter, color: "rgba(232,245,233,0.9)" }}
-            >
-              {hint}
-            </p>
-          </span>
-        </>
-      )}
+      <span
+        id={popoverId}
+        role="tooltip"
+        className={`pointer-events-none absolute z-[60] rounded-xl border border-[#00CED1]/30 bg-[#0f2922] opacity-0 shadow-xl transition-opacity duration-150 group-hover/hint:opacity-100 group-focus-within/hint:opacity-100 ${
+          placement === "above"
+            ? `bottom-full mb-1.5 right-0 ${compact ? "w-[min(240px,70vw)] px-2.5 py-2" : "w-[min(260px,75vw)] px-3 py-2.5"}`
+            : `top-full mt-2 right-0 ${compact ? "w-[min(240px,70vw)] px-2.5 py-2" : "w-[min(260px,75vw)] px-3 py-2.5"}`
+        }`}
+      >
+        <p
+          className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-[#00CED1]/80"
+          style={inter}
+        >
+          Think about this
+        </p>
+        <p
+          className={compact ? "text-[11px] leading-snug" : "text-xs leading-relaxed"}
+          style={{ ...inter, color: "rgba(232,245,233,0.9)" }}
+        >
+          {hint}
+        </p>
+      </span>
     </span>
   );
 }

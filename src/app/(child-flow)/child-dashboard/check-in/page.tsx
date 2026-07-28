@@ -20,8 +20,8 @@ export default function BloomBuddyCheckInPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#111023] px-4 py-8">
-      <div className="max-w-2xl mx-auto">
+    <div className="flex h-full min-h-0 w-full items-center justify-center overflow-hidden px-3 py-3 sm:px-6 sm:py-6">
+      <div className="w-full max-w-xl">
         <BloomBuddyCheckIn timing={timing} onComplete={handleComplete} onSkip={handleComplete} />
       </div>
     </div>
