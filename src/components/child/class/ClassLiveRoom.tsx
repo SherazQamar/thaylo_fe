@@ -131,13 +131,18 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
     let cancelled = false;
     let stopPolling = false;
     const startMs = Date.now();
+    const sessionId = session.sessionId;
+    const baseLessonTitle = session.lessonTitle;
+    const baseLessonScript = session.lessonScript ?? null;
+    const baseSegmentsLen =
+      session.lessonScript?.runtimePlan?.segments?.length ?? 0;
     const shouldWaitForInterests =
       session.interestPersonalizationPending === true || !alreadyPersonalized;
 
     async function tick() {
       if (cancelled || stopPolling) return;
       try {
-        const data = await fetchChildClassSession(session.sessionId);
+        const data = await fetchChildClassSession(sessionId);
         if (cancelled || stopPolling) return;
 
         const runtimePlan = data.lessonScript?.runtimePlan;
@@ -148,7 +153,7 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
         const stillPending = data.interestPersonalizationPending === true;
 
         if (interestPersonalized || (!stillPending && segmentsLen > 0)) {
-          setLessonTitleState(data.lessonTitle ?? data.lessonTitle);
+          setLessonTitleState(data.lessonTitle ?? baseLessonTitle);
           setLessonScriptState(data.lessonScript ?? null);
           setLessonContentReady(segmentsLen > 0);
           if (interestPersonalized || !stillPending) {
@@ -163,18 +168,16 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
 
         // Give interest AI time; then allow join with best available plan.
         if (Date.now() - startMs > 75_000) {
-          if (segmentsLen > 0 || (session.lessonScript?.runtimePlan?.segments?.length ?? 0) > 0) {
-            setLessonTitleState(data.lessonTitle ?? session.lessonTitle);
-            setLessonScriptState(data.lessonScript ?? session.lessonScript ?? null);
+          if (segmentsLen > 0 || baseSegmentsLen > 0) {
+            setLessonTitleState(data.lessonTitle ?? baseLessonTitle);
+            setLessonScriptState(data.lessonScript ?? baseLessonScript);
             setLessonContentReady(true);
           }
           stopPolling = true;
         }
       } catch {
         if (Date.now() - startMs > 30_000) {
-          const hasSegments =
-            (session.lessonScript?.runtimePlan?.segments?.length ?? 0) > 0;
-          setLessonContentReady(hasSegments);
+          setLessonContentReady(baseSegmentsLen > 0);
           stopPolling = true;
         }
       }
