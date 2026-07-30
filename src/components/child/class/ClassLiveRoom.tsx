@@ -18,6 +18,7 @@ import { useAiSettings } from "@/hooks/use-ai-settings";
 import { useClassChat } from "@/hooks/use-class-chat";
 import { useClassMedia } from "@/hooks/use-class-media";
 import { useInstructorSpeech } from "@/hooks/use-instructor-speech";
+import { useSpeechRecognition } from "@/hooks/use-speech-recognition";
 import ClassLiveAvatar from "@/components/child/class/ClassLiveAvatar";
 import {
   phaseForStepIndex,
@@ -26,6 +27,7 @@ import {
 import { buildBlackboardSteps } from "@/lib/class-lesson-builder";
 import {
   completeClassSession,
+  fetchChildClassSession,
   submitClassAnswer,
   type ChildClassSession,
   type ClassSessionScore,
@@ -58,9 +60,13 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
   const [chatOpen, setChatOpen] = useState(false);
   const [greetingDone, setGreetingDone] = useState(false);
   const [isGreeting, setIsGreeting] = useState(false);
+  const [teachingPaused, setTeachingPaused] = useState(false);
+  const [pushToTalkActive, setPushToTalkActive] = useState(false);
+  const [pttStatus, setPttStatus] = useState<string | null>(null);
   const [faceStatus, setFaceStatus] = useState<FaceMonitorStatus | null>(null);
   const greetingStartedRef = useRef(false);
   const stepIndexRef = useRef(stepIndex);
+  const pttBusyRef = useRef(false);
 
   const child = useChildAuthStore((state) => state.child);
   const studentName = child?.userName?.trim() || "Student";
@@ -69,7 +75,22 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
     stepIndexRef.current = stepIndex;
   }, [stepIndex]);
 
-  const lessonTitle = session?.lessonTitle ?? "Live Class";
+  const [lessonTitleState, setLessonTitleState] = useState(
+    session?.lessonTitle ?? "Live Class",
+  );
+  const [lessonScriptState, setLessonScriptState] = useState(
+    session?.lessonScript ?? null,
+  );
+
+  useEffect(() => {
+    setLessonTitleState(session?.lessonTitle ?? "Live Class");
+    setLessonScriptState(session?.lessonScript ?? null);
+  }, [session?.lessonTitle, session?.lessonScript]);
+
+  const [lessonContentReady, setLessonContentReady] = useState(true);
+
+  const lessonTitle = lessonTitleState;
+
   const isRetake = session?.isRetake ?? false;
   const moduleLabel = session
     ? isRetake
@@ -80,13 +101,108 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
     ? `${session.curriculumTitle} · ${session.subject} · ${session.gradeLevel}`
     : undefined;
 
+  // Wait for verified interest personalization when pending — don't join on generic base.
+  useEffect(() => {
+    if (!session) return;
+    const hasSegments = (session.lessonScript?.runtimePlan?.segments?.length ?? 0) > 0;
+    const pending = session.interestPersonalizationPending === true;
+    const alreadyPersonalized = !!(
+      session.lessonScript?.runtimePlan as { interestPersonalized?: boolean } | null | undefined
+    )?.interestPersonalized;
+    setLessonContentReady(hasSegments && (!pending || alreadyPersonalized));
+  }, [
+    session?.sessionId,
+    session?.interestPersonalizationPending,
+    session?.lessonScript?.runtimePlan?.segments?.length,
+    session?.lessonScript?.runtimePlan,
+  ]);
+
+  // Soft-upgrade: poll until interest-verified plan arrives (or timeout).
+  useEffect(() => {
+    if (!session || classJoined) return;
+    const alreadyPersonalized = !!(
+      session.lessonScript?.runtimePlan as { interestPersonalized?: boolean } | null | undefined
+    )?.interestPersonalized;
+    if (alreadyPersonalized && !session.interestPersonalizationPending) {
+      setLessonContentReady(true);
+      return;
+    }
+
+    let cancelled = false;
+    let stopPolling = false;
+    const startMs = Date.now();
+    const shouldWaitForInterests =
+      session.interestPersonalizationPending === true || !alreadyPersonalized;
+
+    async function tick() {
+      if (cancelled || stopPolling) return;
+      try {
+        const data = await fetchChildClassSession(session.sessionId);
+        if (cancelled || stopPolling) return;
+
+        const runtimePlan = data.lessonScript?.runtimePlan;
+        const segmentsLen = runtimePlan?.segments?.length ?? 0;
+        const interestPersonalized = !!(
+          runtimePlan as { interestPersonalized?: boolean } | null | undefined
+        )?.interestPersonalized;
+        const stillPending = data.interestPersonalizationPending === true;
+
+        if (interestPersonalized || (!stillPending && segmentsLen > 0)) {
+          setLessonTitleState(data.lessonTitle ?? data.lessonTitle);
+          setLessonScriptState(data.lessonScript ?? null);
+          setLessonContentReady(segmentsLen > 0);
+          if (interestPersonalized || !stillPending) {
+            stopPolling = true;
+          }
+          return;
+        }
+
+        if (segmentsLen > 0 && !shouldWaitForInterests) {
+          setLessonContentReady(true);
+        }
+
+        // Give interest AI time; then allow join with best available plan.
+        if (Date.now() - startMs > 75_000) {
+          if (segmentsLen > 0 || (session.lessonScript?.runtimePlan?.segments?.length ?? 0) > 0) {
+            setLessonTitleState(data.lessonTitle ?? session.lessonTitle);
+            setLessonScriptState(data.lessonScript ?? session.lessonScript ?? null);
+            setLessonContentReady(true);
+          }
+          stopPolling = true;
+        }
+      } catch {
+        if (Date.now() - startMs > 30_000) {
+          const hasSegments =
+            (session.lessonScript?.runtimePlan?.segments?.length ?? 0) > 0;
+          setLessonContentReady(hasSegments);
+          stopPolling = true;
+        }
+      }
+    }
+
+    void tick();
+    const t = window.setInterval(() => {
+      if (stopPolling) {
+        window.clearInterval(t);
+        return;
+      }
+      void tick();
+    }, 2500);
+
+    return () => {
+      cancelled = true;
+      stopPolling = true;
+      window.clearInterval(t);
+    };
+  }, [classJoined, session]);
+
   const blackboardSteps = useMemo(
     () =>
       buildBlackboardSteps({
-        lessonTitle: session?.lessonTitle,
-        lessonScript: session?.lessonScript,
+        lessonTitle: lessonTitleState,
+        lessonScript: lessonScriptState,
       }),
-    [session?.lessonTitle, session?.lessonScript],
+    [lessonTitleState, lessonScriptState],
   );
   const firstAssessmentStepIndex = useMemo(
     () => blackboardSteps.findIndex((step) => step.phase === "quick_check"),
@@ -110,7 +226,8 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
     hasAudio,
     startMedia,
     stopStream,
-    toggleMic,
+    beginPushToTalk,
+    endPushToTalk,
     toggleCamera,
   } = useClassMedia(false);
 
@@ -166,11 +283,37 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
     !avatarRequested || !liveAvatar || liveAvatar.isReady || Boolean(liveAvatar.errorMessage);
 
   const handleCalyxSpeak = useCallback(
-    (text: string) => {
-      void speak(text);
+    async (text: string) => {
+      await speak(text);
     },
     [speak],
   );
+
+  const handleQuestionFlow = useCallback(
+    (phase: "start" | "end") => {
+      if (phase === "start") {
+        setTeachingPaused(true);
+        try {
+          stopSpeaking();
+        } catch {
+          // ignore
+        }
+        return;
+      }
+      setTeachingPaused(false);
+    },
+    [stopSpeaking],
+  );
+
+  const {
+    supported: speechSupported,
+    listening: speechListening,
+    displayTranscript,
+    start: startSpeech,
+    stop: stopSpeech,
+    reset: resetSpeech,
+    transcript,
+  } = useSpeechRecognition();
 
   const advanceStep = useCallback(() => {
     setSelectedOptionId(null);
@@ -249,6 +392,7 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
   const { reveal, isNarrating } = useBlackboardNarration({
     step: currentStep,
     enabled: classJoined && !!session && greetingDone && avatarReady,
+    paused: teachingPaused,
     voiceEnabled: true,
     speakProgress,
     onCaption: NOOP_CAPTION,
@@ -264,12 +408,88 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
   const interactionActive = Boolean(reveal.interactionVisible && currentStep?.interaction);
 
   const { messages, isTyping, sendMessage, pushCalyxMessage } = useClassChat({
+    sessionId: session?.sessionId,
     lessonTitle,
     stepTitle: currentStep?.title,
+    stepPhase: currentStep?.phase,
+    boardLines: currentStep?.lines,
     instructorName,
     onCalyxSpeak: handleCalyxSpeak,
     voiceEnabled: true,
+    onQuestionFlow: handleQuestionFlow,
   });
+
+  const handlePushToTalkStart = useCallback(async () => {
+    if (!classJoined || pttBusyRef.current || isTyping || isGreeting) return;
+    const micOk = await beginPushToTalk();
+    if (!micOk) {
+      setPttStatus("Allow microphone to ask a question.");
+      return;
+    }
+    setPushToTalkActive(true);
+    setTeachingPaused(true);
+    try {
+      stopSpeaking();
+    } catch {
+      // ignore
+    }
+    resetSpeech();
+    if (speechSupported) {
+      startSpeech({ continuous: true });
+      setPttStatus("Listening… ask about today's lesson");
+    } else {
+      setPttStatus("Voice input isn't supported here — use Text Mode.");
+    }
+  }, [
+    beginPushToTalk,
+    classJoined,
+    isGreeting,
+    isTyping,
+    resetSpeech,
+    speechSupported,
+    startSpeech,
+    stopSpeaking,
+  ]);
+
+  const handlePushToTalkEnd = useCallback(async () => {
+    if (!pushToTalkActive && !speechListening) {
+      endPushToTalk();
+      return;
+    }
+    setPushToTalkActive(false);
+    endPushToTalk();
+    stopSpeech();
+
+    const spoken = (transcript || displayTranscript).trim();
+    resetSpeech();
+
+    if (!spoken) {
+      setPttStatus(null);
+      setTeachingPaused(false);
+      return;
+    }
+
+    pttBusyRef.current = true;
+    setPttStatus("Thinking…");
+    try {
+      await sendMessage(spoken);
+      setPttStatus(null);
+    } catch {
+      setPttStatus("Could not ask that — try again.");
+      setTeachingPaused(false);
+    } finally {
+      pttBusyRef.current = false;
+    }
+  }, [
+    displayTranscript,
+    endPushToTalk,
+    pushToTalkActive,
+    resetSpeech,
+    sendMessage,
+    speechListening,
+    stopSpeech,
+    transcript,
+  ]);
 
   useEffect(() => {
     if (!classJoined || !session || greetingStartedRef.current) return;
@@ -380,8 +600,10 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
     }
 
     const feedback = isCorrect
-      ? `Yes! ${option.label} is the strongest. Great work!`
-      : `You picked ${option.label}. Let's move on to the next part.`;
+      ? (interaction.correctFeedback?.trim() ||
+          `Yes! ${option.label} is a strong choice. Great work!`)
+      : (interaction.incorrectFeedback?.trim() ||
+          `You picked ${option.label}. Let's keep going — you've got this.`);
 
     void advanceAfterFeedback(feedback, answeredStepIndex);
   };
@@ -419,8 +641,10 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
     }
 
     const feedback = isCorrect
-      ? "Perfect! You put the Word Ladder in the right order. Excellent work!"
-      : "Good try on the Word Ladder. Let's finish up this lesson.";
+      ? (interaction.correctFeedback?.trim() ||
+          "Perfect! You put the Word Ladder in the right order. Excellent work!")
+      : (interaction.incorrectFeedback?.trim() ||
+          "Good try on the Word Ladder. Let's keep practicing this skill.");
 
     void advanceAfterFeedback(feedback, answeredStepIndex);
   };
@@ -438,7 +662,7 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
 
   if (!classJoined) {
     return (
-      <>
+      <div className="relative h-full">
         {/* Keep stream attached while warming on the camera gate. */}
         {avatarRequested && liveAvatar ? (
           <video
@@ -467,8 +691,16 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
           onBack={() => router.push("/child-dashboard")}
           lessonTitle={lessonTitle}
           isRetake={isRetake}
+          showJoinButton={lessonContentReady}
+          loadingLessonLabel={
+            !lessonContentReady
+              ? session?.interestPersonalizationPending
+                ? "Personalizing lesson for your interests…"
+                : "Loading new lesson..."
+              : null
+          }
         />
-      </>
+      </div>
     );
   }
 
@@ -568,7 +800,13 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
                         micEnabled={micEnabled}
                         cameraEnabled={cameraEnabled}
                         cameraLocked={classJoined}
-                        onToggleMic={toggleMic}
+                        pushToTalkActive={pushToTalkActive || speechListening}
+                        onPushToTalkStart={() => {
+                          void handlePushToTalkStart();
+                        }}
+                        onPushToTalkEnd={() => {
+                          void handlePushToTalkEnd();
+                        }}
                         onToggleCamera={() => toggleCamera({ lockWhenOn: classJoined })}
                         onEndCall={handleEndCall}
                       />
@@ -581,10 +819,30 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
                       micEnabled={micEnabled}
                       cameraEnabled={cameraEnabled}
                       cameraLocked={classJoined}
-                      onToggleMic={toggleMic}
+                      pushToTalkActive={pushToTalkActive || speechListening}
+                      onPushToTalkStart={() => {
+                        void handlePushToTalkStart();
+                      }}
+                      onPushToTalkEnd={() => {
+                        void handlePushToTalkEnd();
+                      }}
                       onToggleCamera={() => toggleCamera({ lockWhenOn: classJoined })}
                       onEndCall={handleEndCall}
                     />
+                  </div>
+                )}
+
+                {(pttStatus || (pushToTalkActive && displayTranscript)) && (
+                  <div
+                    className="absolute left-1/2 bottom-16 z-30 w-[min(92%,420px)] -translate-x-1/2 rounded-[10px] border border-[#00CED1]/35 px-3 py-2 shadow-lg"
+                    style={{ backgroundColor: "rgba(17,16,35,0.92)" }}
+                  >
+                    <p className="text-center text-xs font-medium leading-snug text-[#00CED1]" style={inter}>
+                      {pttStatus}
+                      {pushToTalkActive && displayTranscript
+                        ? `${pttStatus ? " · " : ""}${displayTranscript}`
+                        : ""}
+                    </p>
                   </div>
                 )}
 
