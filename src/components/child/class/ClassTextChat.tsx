@@ -12,6 +12,8 @@ type ClassTextChatProps = {
   onSend: (text: string) => void;
   showQuickCheck?: boolean;
   onQuickCheckSubmit?: (answerIndex: number) => void;
+  /** When true, skip the outer container + header (parent provides them). */
+  hideChrome?: boolean;
 };
 
 const QUICK_CHECK_OPTIONS = ["Glad", "Happy", "Thrilled", "Ecstatic"];
@@ -23,6 +25,7 @@ export default function ClassTextChat({
   onSend,
   showQuickCheck = false,
   onQuickCheckSubmit,
+  hideChrome = false,
 }: ClassTextChatProps) {
   const [input, setInput] = useState("");
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
@@ -46,18 +49,8 @@ export default function ClassTextChat({
     onQuickCheckSubmit?.(selectedOption);
   };
 
-  return (
-    <div
-      className="w-full lg:w-[320px] xl:w-[340px] flex-shrink-0 flex flex-col rounded-[16px] min-h-[420px] lg:min-h-0 lg:h-full"
-      style={{ backgroundColor: "#1a1930", border: "1px solid rgba(255,255,255,0.05)" }}
-    >
-      <div className="px-4 py-3 border-b border-white/5 flex-shrink-0 flex items-center justify-between">
-        <h3 style={{ ...inter, fontWeight: 700, fontSize: "16px", color: "#FFFFFF" }}>Text Mode</h3>
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-[#00CED1]" style={inter}>
-          {instructorName}
-        </span>
-      </div>
-
+  const chatBody = (
+    <>
       <div ref={scrollRef} className="flex-1 overflow-y-auto scrollbar-hide px-4 py-3 flex flex-col gap-3 min-h-0">
         {messages.map((message) => (
           <ChatBubble key={message.id} message={message} />
@@ -153,6 +146,25 @@ export default function ClassTextChat({
           </svg>
         </button>
       </div>
+    </>
+  );
+
+  if (hideChrome) {
+    return chatBody;
+  }
+
+  return (
+    <div
+      className="w-full lg:w-[320px] xl:w-[340px] flex-shrink-0 flex flex-col rounded-[16px] min-h-[420px] lg:min-h-0 lg:h-full"
+      style={{ backgroundColor: "#1a1930", border: "1px solid rgba(255,255,255,0.05)" }}
+    >
+      <div className="px-4 py-3 border-b border-white/5 flex-shrink-0 flex items-center justify-between">
+        <h3 style={{ ...inter, fontWeight: 700, fontSize: "16px", color: "#FFFFFF" }}>Text Mode</h3>
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-[#00CED1]" style={inter}>
+          {instructorName}
+        </span>
+      </div>
+      {chatBody}
     </div>
   );
 }

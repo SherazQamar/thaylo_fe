@@ -3,25 +3,34 @@
 import { useCallback, useRef, useState } from "react";
 import {
   createMessage,
-  generateCalyxReply,
   getWelcomeMessage,
   type ClassChatMessage,
 } from "@/lib/calyx-class-chat";
+import { askClassQuestion } from "@/lib/curriculum-api";
 
 type UseClassChatOptions = {
+  sessionId?: number | null;
   lessonTitle?: string;
   stepTitle?: string;
+  stepPhase?: string;
+  boardLines?: string[];
   instructorName?: string;
-  onCalyxSpeak?: (text: string) => void;
+  onCalyxSpeak?: (text: string) => void | Promise<void>;
   voiceEnabled?: boolean;
+  /** Pause teaching before answering; resume after speak finishes. */
+  onQuestionFlow?: (phase: "start" | "end") => void;
 };
 
 export function useClassChat({
+  sessionId,
   lessonTitle = "your class",
   stepTitle,
+  stepPhase,
+  boardLines,
   instructorName = "AI Instructor",
   onCalyxSpeak,
   voiceEnabled = true,
+  onQuestionFlow,
 }: UseClassChatOptions) {
   const [messages, setMessages] = useState<ClassChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
@@ -32,7 +41,7 @@ export function useClassChat({
       const message = createMessage("calyx", text);
       setMessages((prev) => [...prev, message]);
       if (voiceEnabled && onCalyxSpeak && options?.speak !== false) {
-        onCalyxSpeak(text);
+        void onCalyxSpeak(text);
       }
       return message;
     },
@@ -53,14 +62,48 @@ export function useClassChat({
 
       setMessages((prev) => [...prev, createMessage("child", trimmed)]);
       setIsTyping(true);
+      onQuestionFlow?.("start");
 
-      await new Promise((resolve) => setTimeout(resolve, 600 + Math.random() * 400));
-
-      const reply = generateCalyxReply(trimmed, { lessonTitle, stepTitle, instructorName });
-      pushCalyxMessage(reply);
-      setIsTyping(false);
+      try {
+        let reply =
+          "Let's stay with today's lesson. I'll keep teaching in a moment.";
+        if (sessionId) {
+          const result = await askClassQuestion(sessionId, {
+            question: trimmed,
+            stepTitle,
+            stepPhase,
+            boardLines,
+          });
+          reply = result.reply?.trim() || reply;
+        }
+        const message = createMessage("calyx", reply);
+        setMessages((prev) => [...prev, message]);
+        if (voiceEnabled && onCalyxSpeak) {
+          await onCalyxSpeak(reply);
+        }
+      } catch {
+        const fallback = `Good question — let's keep going with ${lessonTitle}.`;
+        const message = createMessage("calyx", fallback);
+        setMessages((prev) => [...prev, message]);
+        if (voiceEnabled && onCalyxSpeak) {
+          await onCalyxSpeak(fallback);
+        }
+      } finally {
+        setIsTyping(false);
+        onQuestionFlow?.("end");
+      }
     },
-    [instructorName, isTyping, lessonTitle, pushCalyxMessage, stepTitle],
+    [
+      boardLines,
+      isTyping,
+      lessonTitle,
+      onCalyxSpeak,
+      onQuestionFlow,
+      sessionId,
+      stepPhase,
+      stepTitle,
+      voiceEnabled,
+    ],
   );
 
   return {

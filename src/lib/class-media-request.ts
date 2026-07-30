@@ -23,7 +23,7 @@ function mapCameraError(error: unknown): ClassMediaError {
           code: error.name,
           message: "Camera access was blocked.",
           guidance:
-            "Click the lock icon in your browser address bar and set Camera to Allow, then click Try again. Microphone is optional — you do not need to enable it to join.",
+            "Click the lock icon in your browser address bar and set Camera to Allow, then click Try again. You only need the camera to join — the microphone is used later for push-to-talk questions.",
         };
       case "NotFoundError":
       case "DevicesNotFoundError":
@@ -68,36 +68,6 @@ function mapCameraError(error: unknown): ClassMediaError {
   };
 }
 
-function mergeStreams(audioStream: MediaStream, videoStream: MediaStream): MediaStream {
-  const tracks = [
-    ...audioStream.getAudioTracks(),
-    ...videoStream.getVideoTracks(),
-  ];
-  return new MediaStream(tracks);
-}
-
-async function requestOptionalMicrophone(
-  videoStream: MediaStream,
-): Promise<ClassMediaAccess> {
-  try {
-    const audioStream = await navigator.mediaDevices.getUserMedia({
-      audio: true,
-      video: false,
-    });
-    return {
-      stream: mergeStreams(audioStream, videoStream),
-      hasVideo: true,
-      hasAudio: true,
-    };
-  } catch {
-    return {
-      stream: videoStream,
-      hasVideo: true,
-      hasAudio: false,
-    };
-  }
-}
-
 async function requestCameraStream(): Promise<MediaStream> {
   const videoOnlyConstraints: MediaStreamConstraints[] = [
     { audio: false, video: true },
@@ -124,8 +94,8 @@ async function requestCameraStream(): Promise<MediaStream> {
 }
 
 /**
- * Request camera (required) and optionally microphone.
- * Must be called directly from a user click/tap.
+ * Request camera only for class join.
+ * Microphone is requested later for push-to-talk questions.
  */
 export async function requestClassMedia(): Promise<ClassMediaAccess> {
   if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
@@ -145,23 +115,55 @@ export async function requestClassMedia(): Promise<ClassMediaAccess> {
   }
 
   const videoStream = await requestCameraStream();
-  return requestOptionalMicrophone(videoStream);
+  return {
+    stream: videoStream,
+    hasVideo: true,
+    hasAudio: false,
+  };
+}
+
+/** Request mic on demand for push-to-talk (after class has started). */
+export async function requestClassMicrophone(): Promise<MediaStream> {
+  if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
+    throw {
+      code: "unsupported",
+      message: "Microphone is not supported in this browser.",
+      guidance: "Use Chrome, Edge, or Safari.",
+    } satisfies ClassMediaError;
+  }
+
+  try {
+    return await navigator.mediaDevices.getUserMedia({
+      audio: true,
+      video: false,
+    });
+  } catch (error) {
+    if (isDomException(error)) {
+      throw {
+        code: error.name,
+        message: "Microphone access was blocked.",
+        guidance:
+          "Allow microphone in the browser address bar, then hold the mic button to ask a question.",
+      } satisfies ClassMediaError;
+    }
+    throw {
+      code: "unknown",
+      message: "Could not access microphone.",
+      guidance: "Check browser microphone permissions and try again.",
+    } satisfies ClassMediaError;
+  }
 }
 
 export async function queryMediaPermissionHint(): Promise<string | null> {
   if (!navigator.permissions?.query) return null;
 
   try {
-    const [camera, microphone] = await Promise.all([
-      navigator.permissions.query({ name: "camera" as PermissionName }),
-      navigator.permissions.query({ name: "microphone" as PermissionName }),
-    ]);
+    const camera = await navigator.permissions.query({
+      name: "camera" as PermissionName,
+    });
 
     if (camera.state === "denied") {
       return "Camera is blocked for this site. Use the lock icon in the address bar → Allow camera, then try again.";
-    }
-    if (microphone.state === "denied") {
-      return "Microphone is off — that's fine. You only need camera access to join class.";
     }
   } catch {
     // Permissions API not fully supported (e.g. Safari).

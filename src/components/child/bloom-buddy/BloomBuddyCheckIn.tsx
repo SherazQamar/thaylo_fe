@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Image from "next/image";
 
 import {
   fetchBloomBuddyStatus,
@@ -10,8 +11,9 @@ import {
   type SelMood,
   type SelCheckInTiming,
 } from "@/lib/bloom-buddy-api";
-import { synthesizeAiSpeech } from "@/lib/ai-settings-api";
 import { useAiSettings } from "@/hooks/use-ai-settings";
+import { useSpeechSynthesis } from "@/hooks/use-speech-synthesis";
+import { KaraokeText } from "@/components/child/class/ClassInstructorCaption";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
@@ -34,14 +36,20 @@ export default function BloomBuddyCheckIn({
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [visibleWords, setVisibleWords] = useState(0);
+  const [messageWordCount, setMessageWordCount] = useState(0);
+  const [speechPhase, setSpeechPhase] = useState<"idle" | "speaking" | "done">("idle");
+
+  const { speakProgress, stop: stopSpeech } = useSpeechSynthesis(settings.voice, "child");
 
   const buddyName = status?.bloomBuddy?.name ?? settings.bloomBuddy?.name ?? "Calyx";
-  const buddyTagline = status?.bloomBuddy?.tagline ?? settings.bloomBuddy?.tagline ?? "your Bloom Buddy";
+  const buddyTagline =
+    status?.bloomBuddy?.tagline ?? settings.bloomBuddy?.tagline ?? "your Bloom Buddy";
 
   const promptText =
     timing === "AFTER_LESSON"
-      ? "How are you feeling after your lesson? A quick check-in helps me support you."
-      : "How are you feeling today? This helps me support you before your lesson.";
+      ? "How are you feeling after your lesson?"
+      : "How are you feeling today?";
 
   useEffect(() => {
     fetchBloomBuddyStatus(timing)
@@ -67,19 +75,29 @@ export default function BloomBuddyCheckIn({
       .finally(() => setIsLoading(false));
   }, [timing]);
 
-  const playResponse = useCallback(async (text: string) => {
-    if (!text.trim() || settings.voice.engine !== "elevenlabs") return;
-    try {
-      const blob = await synthesizeAiSpeech(text, "child");
-      const url = URL.createObjectURL(blob);
-      const audio = new Audio(url);
-      audio.onended = () => URL.revokeObjectURL(url);
-      audio.onerror = () => URL.revokeObjectURL(url);
-      await audio.play();
-    } catch {
-      // Voice is optional for SEL check-in.
-    }
-  }, [settings.voice.engine]);
+  const speakResponse = useCallback(
+    async (text: string) => {
+      if (!text.trim()) return;
+
+      setSpeechPhase("speaking");
+      setVisibleWords(0);
+      const totalWords = text.split(/\s+/).filter(Boolean).length;
+
+      try {
+        await speakProgress(text, {
+          onWord: (index) => {
+            setVisibleWords(index + 1);
+          },
+        });
+      } finally {
+        // If the audio engine fails, we still want the child unblocked.
+        setVisibleWords(totalWords);
+        setMessageWordCount(totalWords);
+        setSpeechPhase("done");
+      }
+    },
+    [speakProgress],
+  );
 
   const handleSubmit = async () => {
     if (!selectedMood || isSubmitting) return;
@@ -92,7 +110,9 @@ export default function BloomBuddyCheckIn({
         timing,
       });
       setResult(data);
-      await playResponse(data.response.speechText);
+      const displayWordCount = (data.response.displayText ?? "").split(/\s+/).filter(Boolean).length;
+      setMessageWordCount(displayWordCount);
+      await speakResponse(data.response.speechText || data.response.displayText || "");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to save your check-in.");
     } finally {
@@ -100,108 +120,180 @@ export default function BloomBuddyCheckIn({
     }
   };
 
+  useEffect(() => {
+    return () => {
+      // Ensure we don't keep speaking after route change / unmount.
+      try {
+        stopSpeech();
+      } catch {
+        // ignore
+      }
+    };
+  }, [stopSpeech]);
+
   if (isLoading) {
     return (
-      <div className="rounded-2xl border border-white/10 bg-[#313044] p-8 text-center text-white/60">
+      <div className="rounded-2xl border border-white/10 bg-[#313044] px-4 py-8 text-center text-sm text-white/60">
         Loading Bloom Buddy…
       </div>
     );
   }
 
+  const moodOptions = status?.moodOptions ?? [];
+  const selectedLabel = moodOptions.find((option) => option.value === selectedMood)?.label;
+
   return (
     <div
-      className="rounded-2xl border border-[#60D624]/25 bg-[#313044] p-6 md:p-8"
+      className="w-full max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-2xl border border-[#60D624]/25 bg-[#313044]/80 backdrop-blur px-3 py-3 sm:px-6 sm:py-5"
       style={inter}
     >
-      <div className="flex items-start gap-4 mb-6">
-        <div className="w-12 h-12 rounded-full bg-[#60D624]/20 flex items-center justify-center text-2xl">
+      <div className="mb-2 flex items-center gap-2.5 sm:mb-4 sm:gap-3">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#60D624]/20 text-base sm:h-10 sm:w-10 sm:text-xl">
           🌼
         </div>
-        <div>
-          <h2 className="text-white text-xl font-semibold">
+        <div className="min-w-0">
+          <h2 className="truncate text-sm font-semibold text-white sm:text-lg">
             {buddyName}
-            <span className="text-white/50 text-sm font-normal ml-2">{buddyTagline}</span>
+            <span className="ml-1 text-[10px] font-normal text-white/50 sm:ml-1.5 sm:text-xs">{buddyTagline}</span>
           </h2>
-          <p className="text-white/60 text-sm mt-1">{promptText}</p>
+          <p className="mt-0.5 text-[11px] text-white/60 sm:text-sm">{promptText}</p>
         </div>
       </div>
 
       {error && (
-        <div className="rounded-xl border border-[#FF7B7B]/30 bg-[#FF7B7B]/10 px-4 py-3 text-[#FF7B7B] text-sm mb-4">
+        <div className="mb-3 rounded-lg border border-[#FF7B7B]/30 bg-[#FF7B7B]/10 px-3 py-2 text-xs text-[#FF7B7B]">
           {error}
         </div>
       )}
 
       {!result ? (
         <>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-5">
-            {(status?.moodOptions ?? []).map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                onClick={() => setSelectedMood(option.value)}
-                className={
-                  "rounded-xl border px-4 py-4 text-left transition-colors " +
-                  (selectedMood === option.value
-                    ? "border-[#60D624] bg-[#60D624]/15 text-white"
-                    : "border-white/10 bg-[#111023] text-white/80 hover:border-[#60D624]/40")
-                }
-              >
-                <span className="text-2xl block mb-1">{option.emoji}</span>
-                <span className="text-sm font-semibold">{option.label}</span>
-              </button>
-            ))}
+          {/* Plain emoji grid — 3 per row, equal spacing all sides */}
+          <div className="mb-2 grid grid-cols-3 place-items-center gap-2.5 sm:mb-3 sm:gap-5">
+            {moodOptions.map((option) => {
+              const isSelected = selectedMood === option.value;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  title={option.label}
+                  aria-label={option.label}
+                  aria-pressed={isSelected}
+                  onClick={() => setSelectedMood(option.value)}
+                  className={
+                    "group relative inline-flex h-10 w-10 items-center justify-center transition-transform sm:h-14 sm:w-14 " +
+                    (isSelected ? "scale-125" : "scale-100 opacity-80 hover:scale-110 hover:opacity-100")
+                  }
+                >
+                  <span className="text-[26px] leading-none sm:text-[36px]">{option.emoji}</span>
+
+                  <span
+                    className={
+                      "pointer-events-none absolute -top-7 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-md bg-[#111023] px-1.5 py-0.5 text-[10px] font-semibold text-white opacity-0 shadow-lg ring-1 ring-white/10 transition-opacity sm:-top-8 sm:text-[11px] sm:px-2 " +
+                      "group-hover:opacity-100 group-focus-visible:opacity-100"
+                    }
+                  >
+                    {option.label}
+                  </span>
+                </button>
+              );
+            })}
           </div>
 
-          <label className="block text-white/70 text-sm mb-2">
-            Anything you want to share? (optional)
+          <p className="mb-3 min-h-[1.1rem] text-center text-xs text-white/55">
+            {selectedLabel ? (
+              <>
+                Selected: <span className="font-semibold text-white/90">{selectedLabel}</span>
+              </>
+            ) : (
+              <span className="text-white/35">Tap an emoji</span>
+            )}
+          </p>
+
+          <label className="mb-1 block text-[11px] text-white/70 sm:mb-1.5 sm:text-xs">
+            Anything to share? <span className="text-white/40">(optional)</span>
           </label>
           <textarea
             value={note}
             onChange={(event) => setNote(event.target.value)}
             placeholder="I feel nervous about today's lesson…"
-            className="w-full min-h-[80px] rounded-xl bg-[#111023] border border-white/10 px-4 py-3 text-white text-sm outline-none focus:border-[#60D624]/50 mb-5"
+            rows={2}
+            className="mb-2 w-full resize-none rounded-xl border border-white/10 bg-[#111023] px-3 py-2 text-[13px] text-white outline-none placeholder:text-white/30 focus:border-[#60D624]/50 sm:mb-3 sm:text-sm"
           />
 
-          <div className="flex flex-wrap gap-3">
+          <div className="flex gap-2">
             <button
               type="button"
               disabled={!selectedMood || isSubmitting}
               onClick={handleSubmit}
-              className="rounded-full bg-[#60D624] px-6 py-2.5 text-sm font-semibold text-[#111023] disabled:opacity-50"
+              className="min-w-0 flex-1 rounded-full bg-[#60D624] px-3 py-2 text-[13px] font-semibold text-[#111023] disabled:opacity-50 sm:flex-none sm:px-6 sm:py-2.5 sm:text-sm"
             >
-              {isSubmitting ? "Sharing with Bloom Buddy…" : "Share how I feel"}
+              {isSubmitting ? "Sharing…" : "Share how I feel"}
             </button>
             {onSkip && (
               <button
                 type="button"
                 onClick={onSkip}
-                className="rounded-full border border-white/15 px-6 py-2.5 text-sm font-semibold text-white/70"
+                className="shrink-0 rounded-full border border-white/15 px-4 py-2.5 text-sm font-semibold text-white/70 sm:px-5"
               >
-                Skip for now
+                Skip
               </button>
             )}
           </div>
         </>
       ) : (
-        <div className="space-y-4">
-          <div className="rounded-xl border border-[#60D624]/20 bg-[#111023] px-4 py-4">
-            <p className="text-white text-sm leading-relaxed">
-              {result.response.displayText}
-            </p>
+        <div className="space-y-3">
+          <div className="rounded-xl border border-[#60D624]/20 bg-[#111023]/70 px-2.5 py-2.5 sm:px-3 sm:py-3">
+            <div className="flex items-start gap-2 sm:gap-3">
+              <div className="shrink-0">
+                <Image
+                  src="/assets/new-learning-support.png"
+                  alt="Support avatar"
+                  width={56}
+                  height={56}
+                  className="w-10 h-10 object-contain sm:w-[56px] sm:h-[56px]"
+                  unoptimized
+                />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[13px] leading-relaxed text-white sm:text-sm">
+                  <KaraokeText
+                    text={result.response.displayText}
+                    // Only reveal words while Calyx is actually speaking.
+                    // When speech hasn't started yet (idle), show 0 words to avoid a flash of the full sentence.
+                    visibleWords={
+                      speechPhase === "idle"
+                        ? 0
+                        : speechPhase === "speaking"
+                          ? visibleWords
+                          : messageWordCount
+                    }
+                    keyPrefix="bloom-support"
+                  />
+                </p>
+              </div>
+            </div>
             {result.response.suggestedActivity && (
-              <p className="text-[#60D624] text-sm mt-3">
+              <p className="mt-2 text-sm text-[#60D624]">
                 Try this: {result.response.suggestedActivity}
               </p>
             )}
           </div>
-          <button
-            type="button"
-            onClick={onComplete}
-            className="rounded-full bg-[#00CED1] px-6 py-2.5 text-sm font-semibold text-[#111023]"
-          >
-            Continue to lesson
-          </button>
+
+          {speechPhase !== "done" ? (
+            <div className="flex items-center justify-center gap-2 py-1 text-xs text-white/60">
+              <span className="inline-block h-2 w-2 rounded-full bg-[#00CED1] animate-pulse" />
+              <span>Listening…</span>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={onComplete}
+              className="w-full rounded-full bg-[#00CED1] px-4 py-2 text-[13px] font-semibold text-[#111023] sm:w-auto sm:px-6 sm:py-2.5 sm:text-sm"
+            >
+              Continue to lesson
+            </button>
+          )}
         </div>
       )}
     </div>

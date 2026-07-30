@@ -8,6 +8,7 @@ import {
   buildBlackboardStepsFromRuntimePlan,
   isLessonRuntimePlan,
 } from "@/lib/class-runtime-plan";
+import { shuffleArray } from "@/lib/shuffle";
 
 export type ParsedPracticeExample = {
   category: string;
@@ -66,11 +67,13 @@ function buildPracticeInteraction(
     id: `practice-${slug(parsed.category)}-${index}`,
     prompt: `Tap the strongest ${parsed.category.toLowerCase()} word:`,
     type: "single_choice",
-    options: parsed.words.map((word) => ({
-      id: slug(word),
-      label: word,
-      correct: word === parsed.strongestWord,
-    })),
+    options: shuffleArray(
+      parsed.words.map((word) => ({
+        id: slug(word),
+        label: word,
+        correct: word === parsed.strongestWord,
+      })),
+    ),
   };
 }
 
@@ -138,6 +141,7 @@ function buildQuickCheckStep(
   );
 
   if (mcq?.options?.length) {
+    // Legacy assessments list the correct answer last; mark it, then shuffle display order.
     const correctOption = mcq.options[mcq.options.length - 1] ?? mcq.options[0];
     return {
       id: "quick-check",
@@ -148,11 +152,13 @@ function buildQuickCheckStep(
         id: mcq.key || "quick-check",
         prompt: mcq.prompt,
         type: "word_pick",
-        options: mcq.options.map((label) => ({
-          id: slug(label),
-          label,
-          correct: label === correctOption,
-        })),
+        options: shuffleArray(
+          mcq.options.map((label) => ({
+            id: slug(label),
+            label,
+            correct: label === correctOption,
+          })),
+        ),
       },
     };
   }

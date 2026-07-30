@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import ChildUserDropdown from "@/components/child/ChildUserDropdown";
@@ -18,6 +18,7 @@ import { useAiSettings } from "@/hooks/use-ai-settings";
 import { useClassChat } from "@/hooks/use-class-chat";
 import { useClassMedia } from "@/hooks/use-class-media";
 import { useInstructorSpeech } from "@/hooks/use-instructor-speech";
+import { useSpeechRecognition } from "@/hooks/use-speech-recognition";
 import ClassLiveAvatar from "@/components/child/class/ClassLiveAvatar";
 import {
   phaseForStepIndex,
@@ -26,6 +27,7 @@ import {
 import { buildBlackboardSteps } from "@/lib/class-lesson-builder";
 import {
   completeClassSession,
+  fetchChildClassSession,
   submitClassAnswer,
   type ChildClassSession,
   type ClassSessionScore,
@@ -55,11 +57,16 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
   const [classScore, setClassScore] = useState<ClassSessionScore | null>(null);
   const [retakeBlocked, setRetakeBlocked] = useState(false);
   const [chatInitialized, setChatInitialized] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
   const [greetingDone, setGreetingDone] = useState(false);
   const [isGreeting, setIsGreeting] = useState(false);
+  const [teachingPaused, setTeachingPaused] = useState(false);
+  const [pushToTalkActive, setPushToTalkActive] = useState(false);
+  const [pttStatus, setPttStatus] = useState<string | null>(null);
   const [faceStatus, setFaceStatus] = useState<FaceMonitorStatus | null>(null);
   const greetingStartedRef = useRef(false);
   const stepIndexRef = useRef(stepIndex);
+  const pttBusyRef = useRef(false);
 
   const child = useChildAuthStore((state) => state.child);
   const studentName = child?.userName?.trim() || "Student";
@@ -68,7 +75,22 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
     stepIndexRef.current = stepIndex;
   }, [stepIndex]);
 
-  const lessonTitle = session?.lessonTitle ?? "Live Class";
+  const [lessonTitleState, setLessonTitleState] = useState(
+    session?.lessonTitle ?? "Live Class",
+  );
+  const [lessonScriptState, setLessonScriptState] = useState(
+    session?.lessonScript ?? null,
+  );
+
+  useEffect(() => {
+    setLessonTitleState(session?.lessonTitle ?? "Live Class");
+    setLessonScriptState(session?.lessonScript ?? null);
+  }, [session?.lessonTitle, session?.lessonScript]);
+
+  const [lessonContentReady, setLessonContentReady] = useState(true);
+
+  const lessonTitle = lessonTitleState;
+
   const isRetake = session?.isRetake ?? false;
   const moduleLabel = session
     ? isRetake
@@ -79,13 +101,111 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
     ? `${session.curriculumTitle} · ${session.subject} · ${session.gradeLevel}`
     : undefined;
 
+  // Wait for verified interest personalization when pending — don't join on generic base.
+  useEffect(() => {
+    if (!session) return;
+    const hasSegments = (session.lessonScript?.runtimePlan?.segments?.length ?? 0) > 0;
+    const pending = session.interestPersonalizationPending === true;
+    const alreadyPersonalized = !!(
+      session.lessonScript?.runtimePlan as { interestPersonalized?: boolean } | null | undefined
+    )?.interestPersonalized;
+    setLessonContentReady(hasSegments && (!pending || alreadyPersonalized));
+  }, [
+    session?.sessionId,
+    session?.interestPersonalizationPending,
+    session?.lessonScript?.runtimePlan?.segments?.length,
+    session?.lessonScript?.runtimePlan,
+  ]);
+
+  // Soft-upgrade: poll until interest-verified plan arrives (or timeout).
+  useEffect(() => {
+    if (!session || classJoined) return;
+    const alreadyPersonalized = !!(
+      session.lessonScript?.runtimePlan as { interestPersonalized?: boolean } | null | undefined
+    )?.interestPersonalized;
+    if (alreadyPersonalized && !session.interestPersonalizationPending) {
+      setLessonContentReady(true);
+      return;
+    }
+
+    let cancelled = false;
+    let stopPolling = false;
+    const startMs = Date.now();
+    const sessionId = session.sessionId;
+    const baseLessonTitle = session.lessonTitle;
+    const baseLessonScript = session.lessonScript ?? null;
+    const baseSegmentsLen =
+      session.lessonScript?.runtimePlan?.segments?.length ?? 0;
+    const shouldWaitForInterests =
+      session.interestPersonalizationPending === true || !alreadyPersonalized;
+
+    async function tick() {
+      if (cancelled || stopPolling) return;
+      try {
+        const data = await fetchChildClassSession(sessionId);
+        if (cancelled || stopPolling) return;
+
+        const runtimePlan = data.lessonScript?.runtimePlan;
+        const segmentsLen = runtimePlan?.segments?.length ?? 0;
+        const interestPersonalized = !!(
+          runtimePlan as { interestPersonalized?: boolean } | null | undefined
+        )?.interestPersonalized;
+        const stillPending = data.interestPersonalizationPending === true;
+
+        if (interestPersonalized || (!stillPending && segmentsLen > 0)) {
+          setLessonTitleState(data.lessonTitle ?? baseLessonTitle);
+          setLessonScriptState(data.lessonScript ?? null);
+          setLessonContentReady(segmentsLen > 0);
+          if (interestPersonalized || !stillPending) {
+            stopPolling = true;
+          }
+          return;
+        }
+
+        if (segmentsLen > 0 && !shouldWaitForInterests) {
+          setLessonContentReady(true);
+        }
+
+        // Give interest AI time; then allow join with best available plan.
+        if (Date.now() - startMs > 75_000) {
+          if (segmentsLen > 0 || baseSegmentsLen > 0) {
+            setLessonTitleState(data.lessonTitle ?? baseLessonTitle);
+            setLessonScriptState(data.lessonScript ?? baseLessonScript);
+            setLessonContentReady(true);
+          }
+          stopPolling = true;
+        }
+      } catch {
+        if (Date.now() - startMs > 30_000) {
+          setLessonContentReady(baseSegmentsLen > 0);
+          stopPolling = true;
+        }
+      }
+    }
+
+    void tick();
+    const t = window.setInterval(() => {
+      if (stopPolling) {
+        window.clearInterval(t);
+        return;
+      }
+      void tick();
+    }, 2500);
+
+    return () => {
+      cancelled = true;
+      stopPolling = true;
+      window.clearInterval(t);
+    };
+  }, [classJoined, session]);
+
   const blackboardSteps = useMemo(
     () =>
       buildBlackboardSteps({
-        lessonTitle: session?.lessonTitle,
-        lessonScript: session?.lessonScript,
+        lessonTitle: lessonTitleState,
+        lessonScript: lessonScriptState,
       }),
-    [session?.lessonTitle, session?.lessonScript],
+    [lessonTitleState, lessonScriptState],
   );
   const firstAssessmentStepIndex = useMemo(
     () => blackboardSteps.findIndex((step) => step.phase === "quick_check"),
@@ -109,7 +229,8 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
     hasAudio,
     startMedia,
     stopStream,
-    toggleMic,
+    beginPushToTalk,
+    endPushToTalk,
     toggleCamera,
   } = useClassMedia(false);
 
@@ -165,11 +286,37 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
     !avatarRequested || !liveAvatar || liveAvatar.isReady || Boolean(liveAvatar.errorMessage);
 
   const handleCalyxSpeak = useCallback(
-    (text: string) => {
-      void speak(text);
+    async (text: string) => {
+      await speak(text);
     },
     [speak],
   );
+
+  const handleQuestionFlow = useCallback(
+    (phase: "start" | "end") => {
+      if (phase === "start") {
+        setTeachingPaused(true);
+        try {
+          stopSpeaking();
+        } catch {
+          // ignore
+        }
+        return;
+      }
+      setTeachingPaused(false);
+    },
+    [stopSpeaking],
+  );
+
+  const {
+    supported: speechSupported,
+    listening: speechListening,
+    displayTranscript,
+    start: startSpeech,
+    stop: stopSpeech,
+    reset: resetSpeech,
+    transcript,
+  } = useSpeechRecognition();
 
   const advanceStep = useCallback(() => {
     setSelectedOptionId(null);
@@ -248,6 +395,7 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
   const { reveal, isNarrating } = useBlackboardNarration({
     step: currentStep,
     enabled: classJoined && !!session && greetingDone && avatarReady,
+    paused: teachingPaused,
     voiceEnabled: true,
     speakProgress,
     onCaption: NOOP_CAPTION,
@@ -263,12 +411,88 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
   const interactionActive = Boolean(reveal.interactionVisible && currentStep?.interaction);
 
   const { messages, isTyping, sendMessage, pushCalyxMessage } = useClassChat({
+    sessionId: session?.sessionId,
     lessonTitle,
     stepTitle: currentStep?.title,
+    stepPhase: currentStep?.phase,
+    boardLines: currentStep?.lines,
     instructorName,
     onCalyxSpeak: handleCalyxSpeak,
     voiceEnabled: true,
+    onQuestionFlow: handleQuestionFlow,
   });
+
+  const handlePushToTalkStart = useCallback(async () => {
+    if (!classJoined || pttBusyRef.current || isTyping || isGreeting) return;
+    const micOk = await beginPushToTalk();
+    if (!micOk) {
+      setPttStatus("Allow microphone to ask a question.");
+      return;
+    }
+    setPushToTalkActive(true);
+    setTeachingPaused(true);
+    try {
+      stopSpeaking();
+    } catch {
+      // ignore
+    }
+    resetSpeech();
+    if (speechSupported) {
+      startSpeech({ continuous: true });
+      setPttStatus("Listening… ask about today's lesson");
+    } else {
+      setPttStatus("Voice input isn't supported here — use Text Mode.");
+    }
+  }, [
+    beginPushToTalk,
+    classJoined,
+    isGreeting,
+    isTyping,
+    resetSpeech,
+    speechSupported,
+    startSpeech,
+    stopSpeaking,
+  ]);
+
+  const handlePushToTalkEnd = useCallback(async () => {
+    if (!pushToTalkActive && !speechListening) {
+      endPushToTalk();
+      return;
+    }
+    setPushToTalkActive(false);
+    endPushToTalk();
+    stopSpeech();
+
+    const spoken = (transcript || displayTranscript).trim();
+    resetSpeech();
+
+    if (!spoken) {
+      setPttStatus(null);
+      setTeachingPaused(false);
+      return;
+    }
+
+    pttBusyRef.current = true;
+    setPttStatus("Thinking…");
+    try {
+      await sendMessage(spoken);
+      setPttStatus(null);
+    } catch {
+      setPttStatus("Could not ask that — try again.");
+      setTeachingPaused(false);
+    } finally {
+      pttBusyRef.current = false;
+    }
+  }, [
+    displayTranscript,
+    endPushToTalk,
+    pushToTalkActive,
+    resetSpeech,
+    sendMessage,
+    speechListening,
+    stopSpeech,
+    transcript,
+  ]);
 
   useEffect(() => {
     if (!classJoined || !session || greetingStartedRef.current) return;
@@ -379,8 +603,10 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
     }
 
     const feedback = isCorrect
-      ? `Yes! ${option.label} is the strongest. Great work!`
-      : `You picked ${option.label}. Let's move on to the next part.`;
+      ? (interaction.correctFeedback?.trim() ||
+          `Yes! ${option.label} is a strong choice. Great work!`)
+      : (interaction.incorrectFeedback?.trim() ||
+          `You picked ${option.label}. Let's keep going — you've got this.`);
 
     void advanceAfterFeedback(feedback, answeredStepIndex);
   };
@@ -418,8 +644,10 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
     }
 
     const feedback = isCorrect
-      ? "Perfect! You put the Word Ladder in the right order. Excellent work!"
-      : "Good try on the Word Ladder. Let's finish up this lesson.";
+      ? (interaction.correctFeedback?.trim() ||
+          "Perfect! You put the Word Ladder in the right order. Excellent work!")
+      : (interaction.incorrectFeedback?.trim() ||
+          "Good try on the Word Ladder. Let's keep practicing this skill.");
 
     void advanceAfterFeedback(feedback, answeredStepIndex);
   };
@@ -437,7 +665,7 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
 
   if (!classJoined) {
     return (
-      <>
+      <div className="relative h-full">
         {/* Keep stream attached while warming on the camera gate. */}
         {avatarRequested && liveAvatar ? (
           <video
@@ -466,8 +694,16 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
           onBack={() => router.push("/child-dashboard")}
           lessonTitle={lessonTitle}
           isRetake={isRetake}
+          showJoinButton={lessonContentReady}
+          loadingLessonLabel={
+            !lessonContentReady
+              ? session?.interestPersonalizationPending
+                ? "Personalizing lesson for your interests…"
+                : "Loading new lesson..."
+              : null
+          }
         />
-      </>
+      </div>
     );
   }
 
@@ -489,14 +725,23 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row flex-1 min-h-0 px-3 md:px-5 pb-2 gap-2 lg:gap-3">
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2">
+      <div
+        className={
+          "flex flex-1 min-h-0 px-3 md:px-5 pb-2 " +
+          (chatOpen ? "flex-col lg:flex-row gap-2 lg:gap-3" : "flex-col")
+        }
+      >
+        <div className="flex min-h-0 min-w-0 w-full flex-1 flex-col gap-2">
           <ClassLessonHeader
             moduleLabel={isLoading ? "Loading…" : moduleLabel}
             lessonTitle={isLoading ? "Starting class…" : lessonTitle}
             subtitle={subtitle}
             currentPhase={currentPhase}
-            quickCheckLabel={currentPhase === "quick_check" ? "Quick Check now" : "Quick Check coming up"}
+            quickCheckLabel={
+              currentPhase === "quick_check"
+                ? "Quick Check now"
+                : "Quick Check coming up"
+            }
             sessionTimer={
               classJoined && greetingDone && !classScore
                 ? {
@@ -507,6 +752,17 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
                     teachUntilMinute,
                   }
                 : undefined
+            }
+            rightSlot={
+              <ClassChildVideo
+                stream={stream}
+                cameraEnabled={cameraEnabled}
+                micEnabled={micEnabled}
+                onEnableMedia={() => void startMedia()}
+                faceMonitorEnabled={classJoined && cameraEnabled}
+                onFaceStatusChange={setFaceStatus}
+                variant="header"
+              />
             }
           />
 
@@ -547,55 +803,58 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
                         micEnabled={micEnabled}
                         cameraEnabled={cameraEnabled}
                         cameraLocked={classJoined}
-                        onToggleMic={toggleMic}
+                        pushToTalkActive={pushToTalkActive || speechListening}
+                        onPushToTalkStart={() => {
+                          void handlePushToTalkStart();
+                        }}
+                        onPushToTalkEnd={() => {
+                          void handlePushToTalkEnd();
+                        }}
                         onToggleCamera={() => toggleCamera({ lockWhenOn: classJoined })}
                         onEndCall={handleEndCall}
-                      />
-                    }
-                    childCamera={
-                      <ClassChildVideo
-                        stream={stream}
-                        cameraEnabled={cameraEnabled}
-                        micEnabled={micEnabled}
-                        onEnableMedia={() => void startMedia()}
-                        faceMonitorEnabled={classJoined && cameraEnabled}
-                        onFaceStatusChange={setFaceStatus}
-                        variant="avatarDock"
                       />
                     }
                   />
                 ) : (
-                  <>
-                    <div className="absolute bottom-3 left-1/2 z-30 -translate-x-1/2">
-                      <ClassMediaControls
-                        variant="overlay"
-                        micEnabled={micEnabled}
-                        cameraEnabled={cameraEnabled}
-                        cameraLocked={classJoined}
-                        onToggleMic={toggleMic}
-                        onToggleCamera={() => toggleCamera({ lockWhenOn: classJoined })}
-                        onEndCall={handleEndCall}
-                      />
-                    </div>
-                    <ClassChildVideo
-                      stream={stream}
-                      cameraEnabled={cameraEnabled}
+                  <div className="absolute bottom-3 left-1/2 z-30 -translate-x-1/2">
+                    <ClassMediaControls
+                      variant="overlay"
                       micEnabled={micEnabled}
-                      onEnableMedia={() => void startMedia()}
-                      faceMonitorEnabled={classJoined && cameraEnabled}
-                      onFaceStatusChange={setFaceStatus}
-                      variant="pip"
-                      dock="bottom"
+                      cameraEnabled={cameraEnabled}
+                      cameraLocked={classJoined}
+                      pushToTalkActive={pushToTalkActive || speechListening}
+                      onPushToTalkStart={() => {
+                        void handlePushToTalkStart();
+                      }}
+                      onPushToTalkEnd={() => {
+                        void handlePushToTalkEnd();
+                      }}
+                      onToggleCamera={() => toggleCamera({ lockWhenOn: classJoined })}
+                      onEndCall={handleEndCall}
                     />
-                  </>
+                  </div>
+                )}
+
+                {(pttStatus || (pushToTalkActive && displayTranscript)) && (
+                  <div
+                    className="absolute left-1/2 bottom-16 z-30 w-[min(92%,420px)] -translate-x-1/2 rounded-[10px] border border-[#00CED1]/35 px-3 py-2 shadow-lg"
+                    style={{ backgroundColor: "rgba(17,16,35,0.92)" }}
+                  >
+                    <p className="text-center text-xs font-medium leading-snug text-[#00CED1]" style={inter}>
+                      {pttStatus}
+                      {pushToTalkActive && displayTranscript
+                        ? `${pttStatus ? " · " : ""}${displayTranscript}`
+                        : ""}
+                    </p>
+                  </div>
                 )}
 
                 {showStayInViewNudge && (
                   <div
-                    className="absolute top-3 left-3 right-[48%] z-30 rounded-[10px] border border-[#FF7B7B]/40 px-3 py-2"
-                    style={{ backgroundColor: "rgba(255,123,123,0.15)" }}
+                    className="absolute left-1/2 top-16 z-30 w-[min(92%,420px)] -translate-x-1/2 rounded-[10px] border border-[#FF7B7B]/40 px-3 py-2 shadow-lg md:top-[4.5rem]"
+                    style={{ backgroundColor: "rgba(20,12,12,0.92)" }}
                   >
-                    <p className="text-xs font-medium text-[#FF7B7B]" style={inter}>
+                    <p className="text-center text-xs font-medium leading-snug text-[#FF7B7B]" style={inter}>
                       Please stay in view of your camera so {instructorName} can see you.
                     </p>
                   </div>
@@ -603,10 +862,10 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
 
                 {!showStayInViewNudge && showLookAtScreenNudge && (
                   <div
-                    className="absolute top-3 left-3 right-[48%] z-30 rounded-[10px] border border-[#FBBF24]/30 px-3 py-2"
-                    style={{ backgroundColor: "rgba(251,191,36,0.12)" }}
+                    className="absolute left-1/2 top-16 z-30 w-[min(92%,420px)] -translate-x-1/2 rounded-[10px] border border-[#FBBF24]/30 px-3 py-2 shadow-lg md:top-[4.5rem]"
+                    style={{ backgroundColor: "rgba(20,16,8,0.92)" }}
                   >
-                    <p className="text-xs font-medium text-[#FBBF24]" style={inter}>
+                    <p className="text-center text-xs font-medium leading-snug text-[#FBBF24]" style={inter}>
                       Look at the screen to stay focused.
                     </p>
                   </div>
@@ -616,13 +875,69 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
           </div>
         </div>
 
-        <ClassTextChat
-          messages={messages}
-          isTyping={isTyping}
-          instructorName={instructorName}
-          onSend={sendMessage}
-          showQuickCheck={false}
-        />
+        {/* Floating chat toggle when minimized — board uses full width */}
+        {!chatOpen && (
+          <button
+            type="button"
+            onClick={() => setChatOpen(true)}
+            className="fixed bottom-6 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-full shadow-lg transition-transform hover:scale-105 active:scale-95"
+            style={{ backgroundColor: "#00CED1", color: "#111023" }}
+            aria-label="Open chat"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+            </svg>
+            {messages.length > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                {messages.length > 9 ? "9+" : messages.length}
+              </span>
+            )}
+          </button>
+        )}
+
+        {/* Chat panel only mounts when open so it never reserves blank space */}
+        {chatOpen && (
+          <div
+            className="w-full lg:w-[320px] xl:w-[340px] flex-shrink-0 flex flex-col min-h-[420px] lg:min-h-0 lg:h-full"
+          >
+            <div
+              className="flex h-full flex-col rounded-[16px] min-h-[420px] lg:min-h-0 lg:h-full"
+              style={{ backgroundColor: "#1a1930", border: "1px solid rgba(255,255,255,0.05)" } as CSSProperties}
+            >
+              <div className="px-4 py-3 border-b border-white/5 flex-shrink-0 flex items-center justify-between">
+                <h3 style={{ ...inter, fontWeight: 700, fontSize: "16px", color: "#FFFFFF" }}>Text Mode</h3>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-[#00CED1]" style={inter}>
+                    {instructorName}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setChatOpen(false)}
+                    className="ml-1 flex h-7 w-7 items-center justify-center rounded-lg transition-colors hover:bg-white/10"
+                    aria-label="Minimize chat"
+                    style={{ color: "rgba(255,255,255,0.5)" }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="4 14 10 14 10 20" />
+                      <polyline points="20 10 14 10 14 4" />
+                      <line x1="14" y1="10" x2="21" y2="3" />
+                      <line x1="3" y1="21" x2="10" y2="14" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <ClassTextChat
+                messages={messages}
+                isTyping={isTyping}
+                instructorName={instructorName}
+                onSend={sendMessage}
+                showQuickCheck={false}
+                hideChrome
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       {classScore && (

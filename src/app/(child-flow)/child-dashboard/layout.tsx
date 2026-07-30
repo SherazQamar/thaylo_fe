@@ -9,13 +9,14 @@ export default function ChildDashboardLayout({ children }: { children: React.Rea
   const pathname = usePathname();
   const isLessonRoute = pathname.startsWith("/child-dashboard/lesson");
   const isMessageRoute = pathname.startsWith("/child-dashboard/message");
-  const isImmersiveRoute = isLessonRoute || isMessageRoute;
+  const isCheckInRoute = pathname.startsWith("/child-dashboard/check-in");
+  const isImmersiveRoute = isLessonRoute || isMessageRoute || isCheckInRoute;
 
   return (
     <ChildAuthGuard>
       <OnboardingGate portal="child" onboardingPath="/child-onboarding">
         <div className="h-screen flex overflow-hidden bg-[#111023]">
-          {!isLessonRoute && <ChildSidebar />}
+          {!isImmersiveRoute && <ChildSidebar />}
           <main
             className={
               isImmersiveRoute

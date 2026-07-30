@@ -63,7 +63,7 @@ export function generateCalyxReply(
 }
 
 export function getWelcomeMessage(lessonTitle: string, instructorName = "AI Instructor"): string {
-  return `Welcome to ${lessonTitle}! I'm ${instructorName}. Watch the blackboard as we learn together — you can type questions here anytime.`;
+  return `Welcome to ${lessonTitle}! I'm ${instructorName}. Hold the mic button anytime to ask a question about today's lesson.`;
 }
 
 export function buildClassGreeting(

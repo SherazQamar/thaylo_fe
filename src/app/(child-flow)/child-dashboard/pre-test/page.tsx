@@ -13,6 +13,9 @@ import {
 } from "@/lib/badge-api";
 import { startChildClass } from "@/lib/curriculum-api";
 import { getStartClassErrorMessage } from "@/lib/child-class-messages";
+import { shuffleArray } from "@/lib/shuffle";
+import ClassMediaSetupGate from "@/components/child/class/ClassMediaSetupGate";
+import { useClassMedia } from "@/hooks/use-class-media";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
@@ -25,7 +28,6 @@ type AnswerState = {
 const titleStyle: CSSProperties = {
   ...inter,
   fontWeight: 700,
-  fontSize: 24,
   color: "#FFFFFF",
   marginBottom: 4,
 };
@@ -67,6 +69,15 @@ export default function ChildPretestPage() {
 
   const questions = pretestQuery.data?.questions ?? [];
   const current = questions[index] as PretestQuestion | undefined;
+  const choiceOptionsKey =
+    current && current.type !== "word_ladder"
+      ? `${current.id}:${current.options.map((o) => o.id).join(",")}`
+      : "";
+  const shuffledCurrentOptions = useMemo(() => {
+    if (!current || current.type === "word_ladder") return [];
+    return shuffleArray(current.options);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reshuffle only when question identity changes
+  }, [choiceOptionsKey]);
   const allAnswered =
     questions.length > 0 &&
     questions.every((q) => {
@@ -153,7 +164,7 @@ export default function ChildPretestPage() {
       ...prev,
       [question.id]: { orderedIds, locked: true },
     }));
-    setLocalFeedback("Order saved");
+    setLocalFeedback("Saved");
   }
 
   async function takeLessonInstead() {
@@ -221,21 +232,21 @@ export default function ChildPretestPage() {
     return (
       <Shell>
         <div
-          className="rounded-[16px] p-6 text-center"
+          className="rounded-2xl p-4 sm:p-6 text-center"
           style={{ backgroundColor: "#313044" }}
         >
           <p
+            className="text-lg sm:text-[22px]"
             style={{
               ...inter,
               fontWeight: 700,
-              fontSize: "22px",
               color: resultBanner.passed ? "#00CED1" : "#FFC542",
               marginBottom: 8,
             }}
           >
             {resultBanner.passed ? "Bloom Ahead!" : "Nice try"}
           </p>
-          <p style={{ ...inter, color: "rgba(255,255,255,0.7)", marginBottom: 12 }}>
+          <p className="text-[13px] sm:text-base" style={{ ...inter, color: "rgba(255,255,255,0.7)", marginBottom: 12 }}>
             Score {resultBanner.scorePercent}%
             {resultBanner.passed
               ? " — you showed mastery and can skip this lesson."
@@ -265,12 +276,12 @@ export default function ChildPretestPage() {
 
   return (
     <Shell>
-      <div className="flex items-start justify-between gap-3 mb-4">
-        <div>
+      <div className="flex items-start justify-between gap-2 mb-3 sm:mb-4 sm:gap-3">
+        <div className="min-w-0">
           <p
+            className="text-[10px] sm:text-xs"
             style={{
               ...inter,
-              fontSize: 12,
               letterSpacing: "0.6px",
               textTransform: "uppercase",
               color: "#00CED1",
@@ -279,10 +290,10 @@ export default function ChildPretestPage() {
           >
             Pre-test · Bloom Ahead
           </p>
-          <h1 style={titleStyle}>
+          <h1 className="text-lg sm:text-2xl truncate" style={titleStyle}>
             {pretestQuery.data.lessonTitle ?? "Next lesson"}
           </h1>
-          <p style={{ ...inter, fontSize: 13, color: "rgba(255,255,255,0.5)" }}>
+          <p className="text-[11px] sm:text-[13px]" style={{ ...inter, color: "rgba(255,255,255,0.5)" }}>
             Pass with {pretestQuery.data.passThreshold}%+ to skip the lesson.{" "}
             {progressLabel}
           </p>
@@ -290,10 +301,10 @@ export default function ChildPretestPage() {
         <button
           type="button"
           onClick={() => void takeLessonInstead()}
-          className="rounded-full px-3 py-1.5 text-sm hover:bg-white/10"
+          className="shrink-0 rounded-full px-2.5 py-1 text-[12px] hover:bg-white/10 sm:px-3 sm:py-1.5 sm:text-sm"
           style={{ ...inter, color: "rgba(255,255,255,0.7)" }}
         >
-          Skip pre-test
+          Skip
         </button>
       </div>
 
@@ -305,14 +316,14 @@ export default function ChildPretestPage() {
               "linear-gradient(180deg, #1a3d32 0%, #0f2922 45%, #0a1f1a 100%)",
           }}
         >
-          <div className="p-4 md:p-5">
+          <div className="p-3 sm:p-4 md:p-5">
             <p
+              className="text-[13px] sm:text-[15px]"
               style={{
                 ...inter,
                 fontWeight: 600,
-                fontSize: 15,
                 color: "#E8F5E9",
-                marginBottom: 14,
+                marginBottom: 12,
                 lineHeight: 1.4,
               }}
             >
@@ -328,8 +339,8 @@ export default function ChildPretestPage() {
                 onSubmit={(orderedIds) => submitLadder(current, orderedIds)}
               />
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {current.options.map((option) => {
+              <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2 sm:gap-2">
+                {shuffledCurrentOptions.map((option) => {
                   const selected = answers[current.id]?.optionId === option.id;
                   return (
                     <div key={option.id} className="flex items-stretch gap-1.5">
@@ -337,7 +348,7 @@ export default function ChildPretestPage() {
                         type="button"
                         disabled={Boolean(answers[current.id]?.locked)}
                         onClick={() => selectOption(current, option.id)}
-                        className="flex-1 rounded-xl px-3 py-3 text-left transition-transform hover:scale-[1.01] disabled:cursor-default"
+                        className="flex-1 rounded-xl px-2.5 py-2.5 text-left transition-transform hover:scale-[1.01] disabled:cursor-default sm:px-3 sm:py-3"
                         style={{
                           border: `2px solid ${
                             selected ? "#00CED1" : "rgba(255,255,255,0.2)"
@@ -381,7 +392,7 @@ export default function ChildPretestPage() {
         </p>
       )}
 
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-2 sm:gap-3">
         <button
           type="button"
           disabled={index === 0 || submitMutation.isPending}
@@ -389,7 +400,7 @@ export default function ChildPretestPage() {
             setLocalFeedback(null);
             setIndex((v) => Math.max(0, v - 1));
           }}
-          className="rounded-full px-5 py-2.5 disabled:opacity-50"
+          className="rounded-full px-4 py-2 text-[13px] disabled:opacity-50 sm:px-5 sm:py-2.5 sm:text-sm"
           style={secondaryBtnStyle}
         >
           Back
@@ -404,7 +415,7 @@ export default function ChildPretestPage() {
               : !allAnswered)
           }
           onClick={goNext}
-          className="rounded-full px-5 py-2.5 disabled:opacity-50"
+          className="rounded-full px-4 py-2 text-[13px] disabled:opacity-50 sm:px-5 sm:py-2.5 sm:text-sm"
           style={primaryBtnStyle}
         >
           {submitMutation.isPending
@@ -419,9 +430,57 @@ export default function ChildPretestPage() {
 }
 
 function Shell({ children }: { children: ReactNode }) {
+  const {
+    stream,
+    isRequesting,
+    permissionError,
+    permissionHint,
+    hasActiveMedia,
+    canJoinClass,
+    hasVideo,
+    hasAudio,
+    startMedia,
+  } = useClassMedia(false);
+
   return (
-    <div className="min-h-screen bg-[#111023] px-4 py-8">
-      <div className="max-w-2xl mx-auto">{children}</div>
+    <div className="relative min-h-[100dvh] overflow-hidden bg-transparent px-2 py-4 sm:px-4 sm:py-8">
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        {(hasActiveMedia || isRequesting || permissionError) ? (
+          <ClassMediaSetupGate
+            stream={stream}
+            isRequesting={isRequesting}
+            permissionError={permissionError}
+            permissionHint={permissionHint}
+            hasActiveMedia={hasActiveMedia}
+            canJoinClass={canJoinClass}
+            hasVideo={hasVideo}
+            hasAudio={hasAudio}
+            onEnableMedia={() => void startMedia()}
+            onJoinClass={() => undefined}
+            onBack={() => undefined}
+            showJoinButton={false}
+            showBackButton={false}
+            showTurnOnCameraButton={false}
+            lessonTitle="your lesson"
+            isRetake={false}
+          />
+        ) : null}
+      </div>
+
+      {!hasActiveMedia && !isRequesting && !permissionError ? (
+        <div className="absolute inset-x-0 top-2 z-10 flex justify-center px-3 sm:top-4 sm:px-4">
+          <button
+            type="button"
+            onClick={() => void startMedia()}
+            className="rounded-full px-4 py-2 text-[13px] font-semibold text-[#111023] sm:px-5 sm:py-2.5 sm:text-sm"
+            style={{ backgroundColor: "#00CED1" }}
+          >
+            Enable camera background
+          </button>
+        </div>
+      ) : null}
+
+      <div className="relative z-10 max-w-2xl mx-auto overflow-y-auto max-h-[calc(100dvh-2rem)]">{children}</div>
     </div>
   );
 }
