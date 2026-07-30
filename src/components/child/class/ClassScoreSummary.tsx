@@ -1,7 +1,5 @@
 "use client";
 
-import { useState } from "react";
-
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
 const PASS_THRESHOLD = 85;
@@ -27,50 +25,38 @@ export default function ClassScoreSummary({
   passThreshold = PASS_THRESHOLD,
   wayfinderBlocked = false,
   onContinue,
-  onRetake,
 }: ClassScoreSummaryProps) {
-  const [isRetaking, setIsRetaking] = useState(false);
   const percent = scoreTotal > 0 ? Math.round((scoreCorrect / scoreTotal) * 100) : 0;
 
-  const handleRetake = async () => {
-    if (!onRetake || isRetaking) return;
-    setIsRetaking(true);
-    try {
-      await onRetake();
-    } finally {
-      setIsRetaking(false);
-    }
-  };
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/70">
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-3 py-4 sm:px-4 bg-black/70">
       <div
-        className="w-full max-w-md rounded-[20px] p-8 border text-center"
+        className="w-full max-w-md rounded-2xl p-5 sm:p-8 border text-center max-h-[calc(100dvh-2rem)] overflow-y-auto"
         style={{
           backgroundColor: "#313044",
           borderColor: passed ? "rgba(0,206,209,0.3)" : "rgba(255,197,66,0.35)",
         }}
       >
         <p
-          className="text-xs uppercase tracking-widest mb-2"
+          className="text-[10px] sm:text-xs uppercase tracking-widest mb-1.5 sm:mb-2"
           style={{ ...inter, color: passed ? "#00CED1" : "#FFC542" }}
         >
           {passed ? "Lesson passed" : "Retake needed"}
         </p>
-        <h2 className="text-white text-xl font-semibold mb-1" style={inter}>
+        <h2 className="text-white text-lg sm:text-xl font-semibold mb-1" style={inter}>
           {lessonTitle}
         </h2>
-        <p className="text-white/55 text-sm mb-6" style={inter}>
+        <p className="text-white/55 text-[13px] sm:text-sm mb-4 sm:mb-6" style={inter}>
           {passed
             ? "You scored high enough to move on to the next lesson."
             : `You need at least ${passThreshold}% to pass. ${instructorName} will prepare a fresh retake with new examples.`}
         </p>
 
-        <div className="rounded-2xl bg-[#111023] border border-white/10 py-6 px-4 mb-6">
-          <p className="text-4xl font-bold" style={{ ...inter, color: passed ? "#00CED1" : "#FFC542" }}>
+        <div className="rounded-2xl bg-[#111023] border border-white/10 py-4 px-3 mb-4 sm:py-6 sm:px-4 sm:mb-6">
+          <p className="text-3xl sm:text-4xl font-bold" style={{ ...inter, color: passed ? "#00CED1" : "#FFC542" }}>
             {scoreCorrect}/{scoreTotal}
           </p>
-          <p className="text-white/50 text-sm mt-2" style={inter}>
+          <p className="text-white/50 text-[13px] sm:text-sm mt-1.5 sm:mt-2" style={inter}>
             {percent}% correct · need {passThreshold}% to pass
           </p>
         </div>
@@ -94,15 +80,12 @@ export default function ClassScoreSummary({
                 Your Wayfinder teacher needs to help you before you can try this lesson again. Check back soon!
               </div>
             ) : (
-              <button
-                type="button"
-                onClick={() => void handleRetake()}
-                disabled={isRetaking}
-                className="w-full py-3.5 rounded-xl bg-[#FFC542] text-[#111023] text-sm font-semibold uppercase tracking-wide hover:opacity-90 transition-opacity disabled:opacity-60"
-                style={inter}
+              <div
+                className="rounded-xl px-4 py-3 text-sm text-left mb-1"
+                style={{ backgroundColor: "rgba(255,197,66,0.12)", color: "#FFC542" }}
               >
-                {isRetaking ? "Preparing your retake…" : "Retake class"}
-              </button>
+                You did not pass this lesson yet. Return to your learning pathway and try again later.
+              </div>
             )}
             <button
               type="button"

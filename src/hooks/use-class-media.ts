@@ -4,12 +4,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   queryMediaPermissionHint,
   requestClassMedia,
+  requestClassMicrophone,
   type ClassMediaError,
 } from "@/lib/class-media-request";
 
 export function useClassMedia(autoStart = false) {
   const [stream, setStream] = useState<MediaStream | null>(null);
-  const [micEnabled, setMicEnabled] = useState(true);
+  /** Mic starts off — push-to-talk enables it only while asking. */
+  const [micEnabled, setMicEnabled] = useState(false);
   const [cameraEnabled, setCameraEnabled] = useState(true);
   const [hasVideo, setHasVideo] = useState(false);
   const [hasAudio, setHasAudio] = useState(false);
@@ -28,6 +30,7 @@ export function useClassMedia(autoStart = false) {
     setStream(null);
     setHasVideo(false);
     setHasAudio(false);
+    setMicEnabled(false);
   }, []);
 
   const startMedia = useCallback(async () => {
@@ -41,8 +44,8 @@ export function useClassMedia(autoStart = false) {
       streamRef.current = result.stream;
       setStream(result.stream);
       setHasVideo(result.hasVideo);
-      setHasAudio(result.hasAudio);
-      setMicEnabled(result.hasAudio);
+      setHasAudio(false);
+      setMicEnabled(false);
       setCameraEnabled(result.hasVideo);
       setPermissionHint(null);
       return result.stream;
@@ -63,15 +66,55 @@ export function useClassMedia(autoStart = false) {
     }
   }, [stopStream]);
 
-  const toggleMic = useCallback(() => {
+  const setMicTracksEnabled = useCallback((enabled: boolean) => {
     const tracks = streamRef.current?.getAudioTracks() ?? [];
-    if (tracks.length === 0) return;
-    const next = !micEnabled;
     tracks.forEach((track) => {
-      track.enabled = next;
+      track.enabled = enabled;
     });
-    setMicEnabled(next);
-  }, [micEnabled]);
+    setMicEnabled(enabled && tracks.length > 0);
+  }, []);
+
+  /** Ensure an audio track exists (requested on first push-to-talk). */
+  const ensureMicrophone = useCallback(async (): Promise<boolean> => {
+    const existing = streamRef.current?.getAudioTracks() ?? [];
+    if (existing.some((track) => track.readyState === "live")) {
+      setHasAudio(true);
+      return true;
+    }
+
+    try {
+      const audioStream = await requestClassMicrophone();
+      const audioTrack = audioStream.getAudioTracks()[0];
+      if (!audioTrack) return false;
+
+      if (streamRef.current) {
+        streamRef.current.addTrack(audioTrack);
+        setStream(streamRef.current);
+      } else {
+        streamRef.current = audioStream;
+        setStream(audioStream);
+      }
+      setHasAudio(true);
+      return true;
+    } catch (error) {
+      const mediaError = error as ClassMediaError;
+      if (mediaError?.message && mediaError?.guidance) {
+        setPermissionError(mediaError);
+      }
+      return false;
+    }
+  }, []);
+
+  const beginPushToTalk = useCallback(async (): Promise<boolean> => {
+    const ok = await ensureMicrophone();
+    if (!ok) return false;
+    setMicTracksEnabled(true);
+    return true;
+  }, [ensureMicrophone, setMicTracksEnabled]);
+
+  const endPushToTalk = useCallback(() => {
+    setMicTracksEnabled(false);
+  }, [setMicTracksEnabled]);
 
   const toggleCamera = useCallback((options?: { lockWhenOn?: boolean }) => {
     const tracks = streamRef.current?.getVideoTracks() ?? [];
@@ -109,7 +152,8 @@ export function useClassMedia(autoStart = false) {
     canJoinClass,
     startMedia,
     stopStream,
-    toggleMic,
+    beginPushToTalk,
+    endPushToTalk,
     toggleCamera,
   };
 }

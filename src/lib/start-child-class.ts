@@ -6,15 +6,20 @@ import { getStartClassErrorMessage, NO_CLASS_AVAILABLE_MESSAGE } from "@/lib/chi
 
 type RouterLike = {
   push: (href: string) => void;
+  replace?: (href: string) => void;
 };
 
 type NavigateOptions = {
   skipBloomBuddy?: boolean;
   skipPretest?: boolean;
+  /** When true, wait for gate APIs before navigating (legacy). Default: instant launch page. */
+  waitForGates?: boolean;
 };
 
 /**
- * Gate onboarding + Bloom Buddy + pre-test, then start class / open lesson.
+ * Start class from Pathway.
+ * Default: navigate instantly to /launch (child leaves Pathway immediately).
+ * Gate checks (onboarding / Bloom Buddy / pre-test / start) run on the launch page.
  */
 export async function navigateToChildClass(
   router: RouterLike,
@@ -23,6 +28,11 @@ export async function navigateToChildClass(
 ) {
   if (!hasAssignedClass) {
     throw new Error(NO_CLASS_AVAILABLE_MESSAGE);
+  }
+
+  if (!options.waitForGates) {
+    router.push("/child-dashboard/launch");
+    return;
   }
 
   try {

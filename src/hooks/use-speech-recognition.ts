@@ -30,7 +30,7 @@ export function useSpeechRecognition() {
     setInterimTranscript("");
   }, []);
 
-  const start = useCallback(() => {
+  const start = useCallback((options?: { continuous?: boolean }) => {
     const Ctor = getSpeechRecognitionCtor();
     if (!Ctor) return;
 
@@ -38,7 +38,7 @@ export function useSpeechRecognition() {
 
     const recognition = new Ctor();
     recognition.lang = "en-US";
-    recognition.continuous = false;
+    recognition.continuous = options?.continuous === true;
     recognition.interimResults = true;
     recognition.maxAlternatives = 3;
 

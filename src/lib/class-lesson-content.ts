@@ -15,6 +15,10 @@ export type BlackboardInteraction = {
   options: BlackboardOption[];
   /** Correct weak → strong order for word_ladder interactions */
   correctOrder?: string[];
+  /** Scripted praise from curricular addendum / personalized runtime */
+  correctFeedback?: string;
+  /** Scripted misconception repair from curricular addendum / personalized runtime */
+  incorrectFeedback?: string;
 };
 
 export type BlackboardStep = {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Image from "next/image";
 
 import {
   fetchBloomBuddyStatus,
@@ -10,8 +11,9 @@ import {
   type SelMood,
   type SelCheckInTiming,
 } from "@/lib/bloom-buddy-api";
-import { synthesizeAiSpeech } from "@/lib/ai-settings-api";
 import { useAiSettings } from "@/hooks/use-ai-settings";
+import { useSpeechSynthesis } from "@/hooks/use-speech-synthesis";
+import { KaraokeText } from "@/components/child/class/ClassInstructorCaption";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
@@ -34,6 +36,11 @@ export default function BloomBuddyCheckIn({
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [visibleWords, setVisibleWords] = useState(0);
+  const [messageWordCount, setMessageWordCount] = useState(0);
+  const [speechPhase, setSpeechPhase] = useState<"idle" | "speaking" | "done">("idle");
+
+  const { speakProgress, stop: stopSpeech } = useSpeechSynthesis(settings.voice, "child");
 
   const buddyName = status?.bloomBuddy?.name ?? settings.bloomBuddy?.name ?? "Calyx";
   const buddyTagline =
@@ -68,21 +75,28 @@ export default function BloomBuddyCheckIn({
       .finally(() => setIsLoading(false));
   }, [timing]);
 
-  const playResponse = useCallback(
+  const speakResponse = useCallback(
     async (text: string) => {
-      if (!text.trim() || settings.voice.engine !== "elevenlabs") return;
+      if (!text.trim()) return;
+
+      setSpeechPhase("speaking");
+      setVisibleWords(0);
+      const totalWords = text.split(/\s+/).filter(Boolean).length;
+
       try {
-        const blob = await synthesizeAiSpeech(text, "child");
-        const url = URL.createObjectURL(blob);
-        const audio = new Audio(url);
-        audio.onended = () => URL.revokeObjectURL(url);
-        audio.onerror = () => URL.revokeObjectURL(url);
-        await audio.play();
-      } catch {
-        // Voice is optional for SEL check-in.
+        await speakProgress(text, {
+          onWord: (index) => {
+            setVisibleWords(index + 1);
+          },
+        });
+      } finally {
+        // If the audio engine fails, we still want the child unblocked.
+        setVisibleWords(totalWords);
+        setMessageWordCount(totalWords);
+        setSpeechPhase("done");
       }
     },
-    [settings.voice.engine],
+    [speakProgress],
   );
 
   const handleSubmit = async () => {
@@ -96,13 +110,26 @@ export default function BloomBuddyCheckIn({
         timing,
       });
       setResult(data);
-      await playResponse(data.response.speechText);
+      const displayWordCount = (data.response.displayText ?? "").split(/\s+/).filter(Boolean).length;
+      setMessageWordCount(displayWordCount);
+      await speakResponse(data.response.speechText || data.response.displayText || "");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to save your check-in.");
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    return () => {
+      // Ensure we don't keep speaking after route change / unmount.
+      try {
+        stopSpeech();
+      } catch {
+        // ignore
+      }
+    };
+  }, [stopSpeech]);
 
   if (isLoading) {
     return (
@@ -117,19 +144,19 @@ export default function BloomBuddyCheckIn({
 
   return (
     <div
-      className="w-full rounded-2xl border border-[#60D624]/25 bg-[#313044] px-4 py-4 sm:px-6 sm:py-5"
+      className="w-full max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-2xl border border-[#60D624]/25 bg-[#313044]/80 backdrop-blur px-3 py-3 sm:px-6 sm:py-5"
       style={inter}
     >
-      <div className="mb-3 flex items-center gap-3 sm:mb-4">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#60D624]/20 text-lg sm:h-10 sm:w-10 sm:text-xl">
+      <div className="mb-2 flex items-center gap-2.5 sm:mb-4 sm:gap-3">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#60D624]/20 text-base sm:h-10 sm:w-10 sm:text-xl">
           🌼
         </div>
         <div className="min-w-0">
-          <h2 className="truncate text-base font-semibold text-white sm:text-lg">
+          <h2 className="truncate text-sm font-semibold text-white sm:text-lg">
             {buddyName}
-            <span className="ml-1.5 text-xs font-normal text-white/50">{buddyTagline}</span>
+            <span className="ml-1 text-[10px] font-normal text-white/50 sm:ml-1.5 sm:text-xs">{buddyTagline}</span>
           </h2>
-          <p className="mt-0.5 text-xs text-white/60 sm:text-sm">{promptText}</p>
+          <p className="mt-0.5 text-[11px] text-white/60 sm:text-sm">{promptText}</p>
         </div>
       </div>
 
@@ -142,7 +169,7 @@ export default function BloomBuddyCheckIn({
       {!result ? (
         <>
           {/* Plain emoji grid — 3 per row, equal spacing all sides */}
-          <div className="mb-2 grid grid-cols-3 place-items-center gap-4 sm:mb-3 sm:gap-5">
+          <div className="mb-2 grid grid-cols-3 place-items-center gap-2.5 sm:mb-3 sm:gap-5">
             {moodOptions.map((option) => {
               const isSelected = selectedMood === option.value;
               return (
@@ -154,15 +181,15 @@ export default function BloomBuddyCheckIn({
                   aria-pressed={isSelected}
                   onClick={() => setSelectedMood(option.value)}
                   className={
-                    "group relative inline-flex h-12 w-12 items-center justify-center transition-transform sm:h-14 sm:w-14 " +
+                    "group relative inline-flex h-10 w-10 items-center justify-center transition-transform sm:h-14 sm:w-14 " +
                     (isSelected ? "scale-125" : "scale-100 opacity-80 hover:scale-110 hover:opacity-100")
                   }
                 >
-                  <span className="text-[32px] leading-none sm:text-[36px]">{option.emoji}</span>
+                  <span className="text-[26px] leading-none sm:text-[36px]">{option.emoji}</span>
 
                   <span
                     className={
-                      "pointer-events-none absolute -top-8 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-md bg-[#111023] px-2 py-0.5 text-[11px] font-semibold text-white opacity-0 shadow-lg ring-1 ring-white/10 transition-opacity " +
+                      "pointer-events-none absolute -top-7 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-md bg-[#111023] px-1.5 py-0.5 text-[10px] font-semibold text-white opacity-0 shadow-lg ring-1 ring-white/10 transition-opacity sm:-top-8 sm:text-[11px] sm:px-2 " +
                       "group-hover:opacity-100 group-focus-visible:opacity-100"
                     }
                   >
@@ -183,7 +210,7 @@ export default function BloomBuddyCheckIn({
             )}
           </p>
 
-          <label className="mb-1.5 block text-xs text-white/70">
+          <label className="mb-1 block text-[11px] text-white/70 sm:mb-1.5 sm:text-xs">
             Anything to share? <span className="text-white/40">(optional)</span>
           </label>
           <textarea
@@ -191,7 +218,7 @@ export default function BloomBuddyCheckIn({
             onChange={(event) => setNote(event.target.value)}
             placeholder="I feel nervous about today's lesson…"
             rows={2}
-            className="mb-3 w-full resize-none rounded-xl border border-white/10 bg-[#111023] px-3 py-2 text-sm text-white outline-none placeholder:text-white/30 focus:border-[#60D624]/50"
+            className="mb-2 w-full resize-none rounded-xl border border-white/10 bg-[#111023] px-3 py-2 text-[13px] text-white outline-none placeholder:text-white/30 focus:border-[#60D624]/50 sm:mb-3 sm:text-sm"
           />
 
           <div className="flex gap-2">
@@ -199,7 +226,7 @@ export default function BloomBuddyCheckIn({
               type="button"
               disabled={!selectedMood || isSubmitting}
               onClick={handleSubmit}
-              className="min-w-0 flex-1 rounded-full bg-[#60D624] px-4 py-2.5 text-sm font-semibold text-[#111023] disabled:opacity-50 sm:flex-none sm:px-6"
+              className="min-w-0 flex-1 rounded-full bg-[#60D624] px-3 py-2 text-[13px] font-semibold text-[#111023] disabled:opacity-50 sm:flex-none sm:px-6 sm:py-2.5 sm:text-sm"
             >
               {isSubmitting ? "Sharing…" : "Share how I feel"}
             </button>
@@ -216,21 +243,57 @@ export default function BloomBuddyCheckIn({
         </>
       ) : (
         <div className="space-y-3">
-          <div className="rounded-xl border border-[#60D624]/20 bg-[#111023] px-3 py-3">
-            <p className="text-sm leading-relaxed text-white">{result.response.displayText}</p>
+          <div className="rounded-xl border border-[#60D624]/20 bg-[#111023]/70 px-2.5 py-2.5 sm:px-3 sm:py-3">
+            <div className="flex items-start gap-2 sm:gap-3">
+              <div className="shrink-0">
+                <Image
+                  src="/assets/new-learning-support.png"
+                  alt="Support avatar"
+                  width={56}
+                  height={56}
+                  className="w-10 h-10 object-contain sm:w-[56px] sm:h-[56px]"
+                  unoptimized
+                />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[13px] leading-relaxed text-white sm:text-sm">
+                  <KaraokeText
+                    text={result.response.displayText}
+                    // Only reveal words while Calyx is actually speaking.
+                    // When speech hasn't started yet (idle), show 0 words to avoid a flash of the full sentence.
+                    visibleWords={
+                      speechPhase === "idle"
+                        ? 0
+                        : speechPhase === "speaking"
+                          ? visibleWords
+                          : messageWordCount
+                    }
+                    keyPrefix="bloom-support"
+                  />
+                </p>
+              </div>
+            </div>
             {result.response.suggestedActivity && (
               <p className="mt-2 text-sm text-[#60D624]">
                 Try this: {result.response.suggestedActivity}
               </p>
             )}
           </div>
-          <button
-            type="button"
-            onClick={onComplete}
-            className="w-full rounded-full bg-[#00CED1] px-6 py-2.5 text-sm font-semibold text-[#111023] sm:w-auto"
-          >
-            Continue to lesson
-          </button>
+
+          {speechPhase !== "done" ? (
+            <div className="flex items-center justify-center gap-2 py-1 text-xs text-white/60">
+              <span className="inline-block h-2 w-2 rounded-full bg-[#00CED1] animate-pulse" />
+              <span>Listening…</span>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={onComplete}
+              className="w-full rounded-full bg-[#00CED1] px-4 py-2 text-[13px] font-semibold text-[#111023] sm:w-auto sm:px-6 sm:py-2.5 sm:text-sm"
+            >
+              Continue to lesson
+            </button>
+          )}
         </div>
       )}
     </div>

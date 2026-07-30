@@ -22,12 +22,20 @@ type ClassMediaSetupGateProps = {
   onEnableMedia: () => void | Promise<void>;
   onJoinClass: () => void;
   onBack: () => void;
+  /** Hide the "Join" primary action (used for Bloom Buddy overlay screen). */
+  showJoinButton?: boolean;
+  /** Hide the "Turn on camera" primary action. */
+  showTurnOnCameraButton?: boolean;
+  /** Hide the "Back to Pathway" secondary action. */
+  showBackButton?: boolean;
   lessonTitle?: string;
   isRetake?: boolean;
   instructorName?: string;
   /** LiveAvatar warm-up status while on the camera gate (null = avatar off). */
   avatarStatus?: HeygenAgentStatus | null;
   avatarError?: string | null;
+  /** Optional loader badge shown above preview card. */
+  loadingLessonLabel?: string | null;
 };
 
 function positioningHint(status: ReturnType<typeof useClassFaceMonitor>["status"]): string {
@@ -67,11 +75,15 @@ export default function ClassMediaSetupGate({
   onEnableMedia,
   onJoinClass,
   onBack,
+  showJoinButton = true,
+  showTurnOnCameraButton = true,
+  showBackButton = true,
   lessonTitle = "your class",
   isRetake = false,
   instructorName = "AI Instructor",
   avatarStatus = null,
   avatarError = null,
+  loadingLessonLabel = null,
 }: ClassMediaSetupGateProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -99,28 +111,28 @@ export default function ClassMediaSetupGate({
   const avatarHint = avatarWarmHint(avatarStatus, instructorName, avatarError);
 
   return (
-    <div className="flex flex-col items-center justify-center h-full px-4 py-8">
+    <div className="flex flex-col items-center justify-center h-full px-3 py-4 sm:px-4 sm:py-8">
       <div
-        className="w-full max-w-lg rounded-[20px] p-6 md:p-8 border border-white/10"
+        className="w-full max-w-lg rounded-2xl p-4 sm:p-6 md:p-8 border border-white/10 max-h-[100dvh] overflow-y-hidden sm:max-h-none sm:overflow-y-visible"
         style={{ backgroundColor: "#313044" }}
       >
-        <div className="text-center mb-6">
+        <div className="text-center mb-4 sm:mb-6">
           <div
-            className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center"
+            className="w-11 h-11 sm:w-14 sm:h-14 rounded-2xl mx-auto mb-3 sm:mb-4 flex items-center justify-center"
             style={{ backgroundColor: "rgba(0,206,209,0.15)" }}
           >
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#00CED1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg className="w-5 h-5 sm:w-7 sm:h-7" viewBox="0 0 24 24" fill="none" stroke="#00CED1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M23 7l-7 5 7 5V7z" />
               <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
             </svg>
           </div>
-          <h2 style={{ ...inter, fontWeight: 700, fontSize: "22px", color: "#FFFFFF" }}>
+          <h2 className="text-lg sm:text-[22px]" style={{ ...inter, fontWeight: 700, color: "#FFFFFF" }}>
             {isRetake ? "Get ready to retake" : "Get ready for class"}
           </h2>
-          <p style={{ ...inter, fontWeight: 400, fontSize: "14px", color: "rgba(255,255,255,0.55)", marginTop: "8px" }}>
+          <p className="text-[13px] sm:text-sm mt-1.5 sm:mt-2" style={{ ...inter, fontWeight: 400, color: "rgba(255,255,255,0.55)" }}>
             {isRetake
               ? `${instructorName} prepared new examples for ${lessonTitle}. Turn on your camera before joining.`
-              : `Turn on your camera before joining ${lessonTitle}. Microphone is optional.`}
+              : `Turn on your camera before joining ${lessonTitle}. You can ask questions with the mic after class starts.`}
           </p>
         </div>
 
@@ -130,7 +142,6 @@ export default function ClassMediaSetupGate({
             style={{ backgroundColor: "rgba(0,206,209,0.08)", ...inter }}
           >
             <strong>Check your browser</strong> — allow <strong>Camera</strong> when prompted.
-            Microphone is optional.
           </div>
         )}
 
@@ -179,9 +190,18 @@ export default function ClassMediaSetupGate({
           </div>
         )}
 
+        {loadingLessonLabel ? (
+          <div className="mb-3 sm:mb-4 flex justify-center pointer-events-none">
+            <div className="flex items-center gap-2.5 rounded-2xl border border-white/10 bg-[#111023]/70 px-4 py-2.5 text-white/70 sm:gap-3 sm:px-5 sm:py-3">
+              <span className="inline-block h-2 w-2 rounded-full bg-[#00CED1] animate-pulse" />
+              <span>{loadingLessonLabel}</span>
+            </div>
+          </div>
+        ) : null}
+
         <div
           ref={containerRef}
-          className="relative aspect-video rounded-[14px] overflow-hidden mb-3 border-2"
+          className="relative aspect-video rounded-xl sm:rounded-[14px] overflow-hidden mb-2 sm:mb-3 border-2"
           style={{
             borderColor: showPreview ? "#00CED1" : "#525162",
             backgroundColor: "#1a1830",
@@ -244,37 +264,47 @@ export default function ClassMediaSetupGate({
 
         <div className="flex flex-col gap-3">
           {!canJoinClass ? (
-            <button
-              type="button"
-              onClick={() => void onEnableMedia()}
-              disabled={isRequesting}
-              className="w-full py-3.5 rounded-xl font-semibold text-sm transition-opacity hover:opacity-90 disabled:opacity-60"
-              style={{ backgroundColor: "#00CED1", color: "#111023", ...inter }}
-            >
-              {isRequesting ? "Waiting for browser permission…" : permissionError ? "Try again" : "Turn on camera"}
-            </button>
+            showTurnOnCameraButton ? (
+              <button
+                type="button"
+                onClick={() => void onEnableMedia()}
+                disabled={isRequesting}
+                className="w-full py-3.5 rounded-xl font-semibold text-sm transition-opacity hover:opacity-90 disabled:opacity-60"
+                style={{ backgroundColor: "#00CED1", color: "#111023", ...inter }}
+              >
+                {isRequesting
+                  ? "Waiting for browser permission…"
+                  : permissionError
+                    ? "Try again"
+                    : "Turn on camera"}
+              </button>
+            ) : null
           ) : (
-            <button
-              type="button"
-              onClick={onJoinClass}
-              className="w-full py-3.5 rounded-xl font-semibold text-sm transition-opacity hover:opacity-90"
-              style={{ backgroundColor: "#00CED1", color: "#111023", ...inter }}
-            >
-              Join {isRetake ? "retake" : "class"}
-            </button>
+            showJoinButton ? (
+              <button
+                type="button"
+                onClick={onJoinClass}
+                className="w-full py-3.5 rounded-xl font-semibold text-sm transition-opacity hover:opacity-90"
+                style={{ backgroundColor: "#00CED1", color: "#111023", ...inter }}
+              >
+                Join {isRetake ? "retake" : "class"}
+              </button>
+            ) : null
           )}
 
-          <button
-            type="button"
-            onClick={onBack}
-            className="w-full py-3 rounded-xl text-sm text-white/50 hover:text-white/80"
-            style={inter}
-          >
-            Back to Pathway
-          </button>
+          {showBackButton ? (
+            <button
+              type="button"
+              onClick={onBack}
+              className="w-full py-3 rounded-xl text-sm text-white/50 hover:text-white/80"
+              style={inter}
+            >
+              Back to Pathway
+            </button>
+          ) : null}
         </div>
 
-        <p className="text-center text-[11px] text-white/30 mt-5 leading-relaxed" style={inter}>
+        <p className="text-center text-[10px] sm:text-[11px] text-white/30 mt-3 sm:mt-5 leading-relaxed" style={inter}>
           If no popup appears, click the lock icon left of the address bar and set Camera to Allow.
         </p>
       </div>

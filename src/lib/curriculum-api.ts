@@ -49,6 +49,8 @@ export interface ChildClassLessonScript {
         type: "single_choice" | "word_pick" | "word_ladder";
         options: Array<{ id: string; label: string; correct?: boolean; hint?: string }>;
         correctOrder?: string[];
+        correctFeedback?: string;
+        incorrectFeedback?: string;
       };
     }>;
     generatedAt?: string;
@@ -76,6 +78,8 @@ export interface ChildClassSession {
   isRetake?: boolean;
   attemptNumber?: number;
   calyxIntro?: string | null;
+  /** True while interest adapt is still running in the background. */
+  interestPersonalizationPending?: boolean;
 }
 
 export interface ClassSessionAnswerRecord {
@@ -131,6 +135,23 @@ export async function submitClassAnswer(
     payload,
     { authMode: "child" },
   );
+  return data.data;
+}
+
+export async function askClassQuestion(
+  sessionId: number,
+  payload: {
+    question: string;
+    stepTitle?: string;
+    stepPhase?: string;
+    boardLines?: string[];
+  },
+) {
+  const { data } = await api.post<
+    ApiResponse<{ onTopic: boolean; reply: string }>
+  >(`/child/classes/sessions/${sessionId}/ask`, payload, {
+    authMode: "child",
+  });
   return data.data;
 }
 
