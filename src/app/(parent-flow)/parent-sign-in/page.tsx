@@ -8,7 +8,8 @@ import { useMutation } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import ThayloBrandLink from "@/components/shared/ThayloBrandLink";
 import PasswordInput from "@/components/shared/PasswordInput";
-import { forgotPassword, getApiErrorMessage, loginParent } from "@/lib/auth-api";
+import { forgotPassword, loginParent } from "@/lib/auth-api";
+import { notify } from "@/lib/notify";
 import { clearResendCooldown } from "@/lib/pending-verification";
 import { logoutParent, setParentSession } from "@/lib/auth-session";
 import { hasCompletedFamilyRegistration } from "@/lib/parent-registration";
@@ -21,8 +22,6 @@ export default function ParentSignIn() {
   const [password, setPassword] = useState("");
   const [modal, setModal] = useState<ModalState>("none");
   const [resetEmail, setResetEmail] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [resetError, setResetError] = useState<string | null>(null);
   const [resetSuccessMessage, setResetSuccessMessage] = useState<string | null>(
     null,
   );
@@ -49,7 +48,7 @@ export default function ParentSignIn() {
     onSuccess: async (user) => {
       if (user.role !== "PARENT") {
         logoutParent();
-        setError(
+        notify.error(
           "This account cannot sign in here. Please use the Wayfinder sign-in page.",
         );
         return;
@@ -97,7 +96,7 @@ export default function ParentSignIn() {
         );
         return;
       }
-      setError(getApiErrorMessage(err));
+      notify.error(err);
     },
   });
 
@@ -110,25 +109,23 @@ export default function ParentSignIn() {
       return forgotPassword(emailTrimmed);
     },
     onSuccess: (response) => {
-      setResetError(null);
       setResetSuccessMessage(response.message);
+      notify.success(response.message);
       setModal("verification");
     },
     onError: (err) => {
-      setResetError(getApiErrorMessage(err));
+      notify.error(err);
     },
   });
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    setError(null);
     setSuccessMessage(null);
     loginMutation.mutate();
   }
 
   function handleSendReset(e: FormEvent) {
     e.preventDefault();
-    setResetError(null);
     forgotPasswordMutation.mutate();
   }
 
@@ -238,7 +235,6 @@ export default function ParentSignIn() {
                     type="button"
                     onClick={() => {
                       setResetEmail("");
-                      setResetError(null);
                       setResetSuccessMessage(null);
                       setModal("reset");
                     }}
@@ -256,16 +252,6 @@ export default function ParentSignIn() {
                     role="status"
                   >
                     {successMessage}
-                  </p>
-                )}
-
-                {error && (
-                  <p
-                    className="text-sm text-red-400 text-center"
-                    style={{ fontFamily: "Inter, sans-serif" }}
-                    role="alert"
-                  >
-                    {error}
                   </p>
                 )}
 
@@ -340,12 +326,6 @@ export default function ParentSignIn() {
               <p className="text-white/50 text-xs leading-relaxed">
                 Enter your email address and we&apos;ll send you instructions to reset your password. For security reasons, we do NOT store your password. So rest assured that we will never send your password via email.
               </p>
-
-              {resetError && (
-                <p className="text-sm text-red-400 text-center" role="alert">
-                  {resetError}
-                </p>
-              )}
 
               <button
                 type="submit"

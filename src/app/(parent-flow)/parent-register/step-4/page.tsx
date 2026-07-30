@@ -16,6 +16,7 @@ import {
 import { submitRegisterChildren } from "@/lib/submit-register-children";
 import { useRegisterWizardStore } from "@/stores/register-wizard.store";
 import ThayloBrandLink from "@/components/shared/ThayloBrandLink";
+import { notify } from "@/lib/notify";
 
 const consents = [
   { label: "Learning data usage", key: "learningDataUsage" },
@@ -29,7 +30,7 @@ function ParentRegisterStep4Content() {
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const isAddMode = isAddChildWizardMode(searchParams);
-  const { status, error: accessError } = useParentRegisterAccess(!isAddMode);
+  const { status } = useParentRegisterAccess(!isAddMode);
   const children = useRegisterWizardStore((s) => s.children);
   const resetWizard = useRegisterWizardStore((s) => s.reset);
   const [checked, setChecked] = useState<boolean[]>(
@@ -37,7 +38,6 @@ function ParentRegisterStep4Content() {
   );
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const allChecked = checked.every(Boolean);
 
@@ -63,7 +63,6 @@ function ParentRegisterStep4Content() {
   async function handleContinue() {
     if (!allChecked || isSubmitting) return;
 
-    setSubmitError(null);
     setIsSubmitting(true);
 
     const permission = Object.fromEntries(
@@ -84,7 +83,7 @@ function ParentRegisterStep4Content() {
           ? (err as { response?: { data?: { message?: string } } }).response
               ?.data?.message
           : null;
-      setSubmitError(
+      notify.error(
         typeof message === "string"
           ? message
           : "Something went wrong. Please try again.",
@@ -99,7 +98,7 @@ function ParentRegisterStep4Content() {
   }
 
   if (status === "error") {
-    return <RegisterStepError message={accessError ?? "Please try again later."} />;
+    return <RegisterStepError />;
   }
 
   if (children.length === 0 && !submitted) {
@@ -249,12 +248,6 @@ function ParentRegisterStep4Content() {
                     </label>
                   ))}
                 </div>
-
-                {submitError && (
-                  <p className="text-sm text-red-400 text-center mb-4" role="alert">
-                    {submitError}
-                  </p>
-                )}
 
                 <button
                   type="button"

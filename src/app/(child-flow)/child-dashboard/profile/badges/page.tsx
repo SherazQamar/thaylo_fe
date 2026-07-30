@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import ChildUserDropdown from "@/components/child/ChildUserDropdown";
 import { BadgeShield } from "@/components/shared/BadgeArtwork";
 import { fetchChildBadges } from "@/lib/badge-api";
+import { useNotifyError } from "@/hooks/use-notify-error";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
@@ -13,6 +14,7 @@ export default function BadgesPage() {
     queryKey: ["child", "badges"],
     queryFn: fetchChildBadges,
   });
+  useNotifyError(badgesQuery.error, badgesQuery.isError);
 
   const summary = badgesQuery.data;
   const badges = summary?.badges ?? [];
@@ -96,8 +98,8 @@ export default function BadgesPage() {
       )}
 
       {badgesQuery.isError && (
-        <p style={{ ...inter, color: "#F87171" }}>
-          Could not load badges. Please try again.
+        <p style={{ ...inter, color: "rgba(255,255,255,0.5)" }}>
+          Unable to load badges right now.
         </p>
       )}
 

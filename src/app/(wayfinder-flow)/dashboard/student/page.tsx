@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import UserDropdown from "@/components/wayfinder/UserDropdown";
 import StudentProgressOverview from "@/components/shared/StudentProgressOverview";
-import { getApiErrorMessage } from "@/lib/auth-api";
+import { useNotifyError } from "@/hooks/use-notify-error";
 import {
   fetchWayfinderStudentSnapshot,
   wayfinderQueryKeys,
@@ -28,6 +28,7 @@ export default function StudentDetailsPage() {
     queryFn: () => fetchWayfinderStudentSnapshot(childId),
     enabled: hasValidId,
   });
+  useNotifyError(snapshotQuery.error, snapshotQuery.isError);
 
   const snapshot = snapshotQuery.data;
   const displayName = snapshot
@@ -62,8 +63,8 @@ export default function StudentDetailsPage() {
       ) : snapshotQuery.isLoading ? (
         <p style={{ ...inter, color: "rgba(255,255,255,0.7)" }}>Loading student…</p>
       ) : snapshotQuery.isError ? (
-        <p style={{ ...inter, color: "#F87171" }}>
-          {getApiErrorMessage(snapshotQuery.error, "Could not load student details.")}
+        <p style={{ ...inter, color: "rgba(255,255,255,0.7)" }}>
+          Unable to load student details right now.
         </p>
       ) : snapshot ? (
         <StudentProgressOverview

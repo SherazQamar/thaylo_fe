@@ -11,6 +11,7 @@ import {
   type ParentPaymentMethodPreview,
   type ParentSubscriptionStatus,
 } from "@/lib/parent-api";
+import { notify } from "@/lib/notify";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
@@ -44,20 +45,15 @@ export default function BillingPage() {
   const [subscription, setSubscription] =
     useState<ParentSubscriptionStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
   const [actionPending, setActionPending] = useState(false);
 
   const load = useCallback(async () => {
     setIsLoading(true);
-    setError(null);
     try {
       const status = await fetchParentSubscription();
       setSubscription(status);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Could not load billing status",
-      );
+      notify.error(err, "Could not load billing status");
     } finally {
       setIsLoading(false);
     }
@@ -77,7 +73,6 @@ export default function BillingPage() {
   }
 
   async function handleUpgradeToAnnual() {
-    setActionError(null);
     setActionPending(true);
     try {
       if (subscription?.canSwitchToAnnual) {
@@ -90,16 +85,13 @@ export default function BillingPage() {
         window.location.href = url;
       }
     } catch (err) {
-      setActionError(
-        err instanceof Error ? err.message : "Could not change plan",
-      );
+      notify.error(err, "Could not change plan");
     } finally {
       setActionPending(false);
     }
   }
 
   async function handleStartMonthly() {
-    setActionError(null);
     setActionPending(true);
     try {
       const { url } = await createParentSubscriptionCheckout({
@@ -107,9 +99,7 @@ export default function BillingPage() {
       });
       window.location.href = url;
     } catch (err) {
-      setActionError(
-        err instanceof Error ? err.message : "Could not start checkout",
-      );
+      notify.error(err, "Could not start checkout");
     } finally {
       setActionPending(false);
     }
@@ -180,15 +170,6 @@ export default function BillingPage() {
           <p style={{ ...inter, color: "rgba(255,255,255,0.5)", fontSize: "14px" }}>
             Loading billing…
           </p>
-        </div>
-      )}
-
-      {error && (
-        <div
-          className="rounded-[12px] p-4 mb-6 border border-[#FF7B7B]/30"
-          style={{ backgroundColor: "rgba(255,123,123,0.1)" }}
-        >
-          <p style={{ ...inter, color: "#FF7B7B", fontSize: "14px" }}>{error}</p>
         </div>
       )}
 
@@ -362,17 +343,6 @@ export default function BillingPage() {
                 ))}
               </ul>
             </div>
-
-          {actionError && (
-            <div
-              className="rounded-[12px] p-4 mb-6 border border-[#FF7B7B]/30"
-              style={{ backgroundColor: "rgba(255,123,123,0.1)" }}
-            >
-              <p style={{ ...inter, color: "#FF7B7B", fontSize: "14px" }}>
-                {actionError}
-              </p>
-            </div>
-          )}
 
           {isBeta ? (
             <div

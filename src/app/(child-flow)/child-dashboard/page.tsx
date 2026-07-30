@@ -14,6 +14,7 @@ import { useAiSettings } from "@/hooks/use-ai-settings";
 import { fetchChildBadges, syncChildBadgeActivity } from "@/lib/badge-api";
 import { fetchBloomBuddyTrends } from "@/lib/bloom-buddy-api";
 import { navigateToChildClass } from "@/lib/start-child-class";
+import { notify } from "@/lib/notify";
 import { useChildAuthStore } from "@/stores/child-auth.store";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
@@ -42,7 +43,6 @@ export default function ChildPathwayPage() {
   const greetingName = child?.userName?.trim() || "Student";
   const { primaryClass, hasAssignedClass, isLoading: classesLoading } = useChildAssignedClasses();
   const [isStarting, setIsStarting] = useState(false);
-  const [startError, setStartError] = useState<string | null>(null);
   const [latestMoodLabel, setLatestMoodLabel] = useState<string | null>(null);
   const canStartClass = hasAssignedClass && !classesLoading;
   const focusArea = primaryClass?.focusArea?.trim() || null;
@@ -80,17 +80,13 @@ export default function ChildPathwayPage() {
 
   const handleStartClass = async () => {
     if (isStarting || !canStartClass) {
-      if (!canStartClass) {
-        setStartError(null);
-      }
       return;
     }
     setIsStarting(true);
-    setStartError(null);
     try {
       await navigateToChildClass(router, hasAssignedClass);
     } catch (error) {
-      setStartError(error instanceof Error ? error.message : "Unable to start class.");
+      notify.error(error, "Unable to start class.");
     } finally {
       setIsStarting(false);
     }
@@ -167,12 +163,6 @@ export default function ChildPathwayPage() {
         {!classesLoading && !hasAssignedClass && (
           <div className="mb-4">
             <ChildNoClassBanner />
-          </div>
-        )}
-
-        {startError && (
-          <div className="rounded-[12px] px-4 py-3 mb-4 text-sm text-[#FF7B7B]" style={{ backgroundColor: "rgba(255,123,123,0.12)" }}>
-            {startError}
           </div>
         )}
 

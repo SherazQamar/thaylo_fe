@@ -655,7 +655,9 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
   if (loadError) {
     return (
       <div className="flex flex-col items-center justify-center h-full px-6 text-center gap-4">
-        <p className="text-[#FF7B7B] text-sm" style={inter}>{loadError}</p>
+        <p className="text-white/60 text-sm" style={inter}>
+          We couldn&apos;t load your class session.
+        </p>
         <Link href="/child-dashboard" className="text-[#00CED1] text-sm font-semibold underline">
           Back to Pathway
         </Link>

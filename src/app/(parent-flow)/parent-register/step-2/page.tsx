@@ -19,6 +19,7 @@ import { useAuthStore } from "@/stores/auth.store";
 import type { Child } from "@/types/api";
 import ThayloBrandLink from "@/components/shared/ThayloBrandLink";
 import InfoTooltip from "@/components/shared/InfoTooltip";
+import { notify } from "@/lib/notify";
 
 const EMPTY_CHILDREN: Child[] = [];
 const DEFAULT_GRADE = "K4";
@@ -28,7 +29,7 @@ function ParentRegisterStep2Content() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isAddMode = isAddChildWizardMode(searchParams);
-  const { status, error } = useParentRegisterAccess(!isAddMode);
+  const { status } = useParentRegisterAccess(!isAddMode);
   const children = useRegisterWizardStore((s) => s.children);
   const addChild = useRegisterWizardStore((s) => s.addChild);
   const updateChild = useRegisterWizardStore((s) => s.updateChild);
@@ -43,7 +44,6 @@ function ParentRegisterStep2Content() {
   const [studentUserName, setStudentUserName] = useState("");
   const [grade, setGrade] = useState(DEFAULT_GRADE);
   const [pin, setPin] = useState(["", "", "", "", "", ""]);
-  const [modalError, setModalError] = useState<string | null>(null);
   const pinRef0 = useRef<HTMLInputElement>(null);
   const pinRef1 = useRef<HTMLInputElement>(null);
   const pinRef2 = useRef<HTMLInputElement>(null);
@@ -58,7 +58,6 @@ function ParentRegisterStep2Content() {
     setStudentUserName("");
     setGrade(DEFAULT_GRADE);
     setPin(["", "", "", "", "", ""]);
-    setModalError(null);
     setEditingChildId(null);
   }
 
@@ -85,7 +84,6 @@ function ParentRegisterStep2Content() {
 
   function handleSaveChild(e: FormEvent) {
     e.preventDefault();
-    setModalError(null);
 
     const firstName = studentFirstName.trim();
     const secondName = studentSecondName.trim();
@@ -93,29 +91,29 @@ function ParentRegisterStep2Content() {
     const pinStr = pin.join("");
 
     if (!firstName) {
-      setModalError("Student first name is required");
+      notify.error("Student first name is required");
       return;
     }
     if (!secondName) {
-      setModalError("Student second name is required");
+      notify.error("Student second name is required");
       return;
     }
     if (!userName) {
-      setModalError("Student user name is required");
+      notify.error("Student user name is required");
       return;
     }
     if (!USERNAME_REGEX.test(userName)) {
-      setModalError(
+      notify.error(
         "Student user name must be 5-12 characters and contain only lowercase letters and numbers",
       );
       return;
     }
     if (!grade) {
-      setModalError("Grade is required");
+      notify.error("Grade is required");
       return;
     }
     if (pinStr.length !== 6) {
-      setModalError("PIN must be 6 digits");
+      notify.error("PIN must be 6 digits");
       return;
     }
 
@@ -128,7 +126,7 @@ function ParentRegisterStep2Content() {
       (c) => c.userName.toLowerCase() === userName.toLowerCase(),
     );
     if (duplicate || duplicateExisting) {
-      setModalError("A child with this user name already exists");
+      notify.error("A child with this user name already exists");
       return;
     }
 
@@ -182,7 +180,6 @@ function ParentRegisterStep2Content() {
     setStudentUserName(child.userName);
     setGrade(child.grade || DEFAULT_GRADE);
     setPin(child.pin.split("").concat(["", "", "", "", "", ""]).slice(0, 6));
-    setModalError(null);
     setShowModal(true);
   }
 
@@ -195,7 +192,7 @@ function ParentRegisterStep2Content() {
   }
 
   if (status === "error") {
-    return <RegisterStepError message={error ?? "Please try again later."} />;
+    return <RegisterStepError />;
   }
 
   return (
@@ -500,12 +497,6 @@ function ParentRegisterStep2Content() {
                   Set a 6-digit PIN.
                 </p>
               </div>
-
-              {modalError && (
-                <p className="text-sm text-red-400 text-center" role="alert">
-                  {modalError}
-                </p>
-              )}
 
               <button
                 type="submit"

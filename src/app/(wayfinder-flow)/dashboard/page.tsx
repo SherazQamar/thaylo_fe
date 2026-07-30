@@ -7,7 +7,7 @@ import UserDropdown from "@/components/wayfinder/UserDropdown";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import InfoTooltip from "@/components/shared/InfoTooltip";
 import PortalAvatar from "@/components/shared/PortalAvatar";
-import { getApiErrorMessage } from "@/lib/auth-api";
+import { useNotifyError } from "@/hooks/use-notify-error";
 import {
   fetchWayfinderDashboard,
   type WayfinderDashboardStudent,
@@ -217,6 +217,8 @@ export default function DashboardPage() {
   const stats = data?.stats ?? [];
   const totalStudents = data?.totalStudents ?? students.length;
 
+  useNotifyError(dashboardQuery.error, dashboardQuery.isError);
+
   return (
     <div className="p-4 md:p-6 lg:p-10">
       <div className="flex items-center justify-between mb-2 md:mb-3">
@@ -239,12 +241,6 @@ export default function DashboardPage() {
       {dashboardQuery.isLoading && (
         <p style={{ ...inter, fontWeight: 400, fontSize: "14px", color: "rgba(255,255,255,0.5)" }} className="py-8">
           Loading dashboard…
-        </p>
-      )}
-
-      {dashboardQuery.isError && (
-        <p style={{ ...inter, fontWeight: 400, fontSize: "14px", color: "#EF4444" }} className="py-8" role="alert">
-          {getApiErrorMessage(dashboardQuery.error)}
         </p>
       )}
 

@@ -7,6 +7,7 @@ import UserDropdown from "@/components/wayfinder/UserDropdown";
 import AlertDetailDrawer from "@/components/wayfinder/AlertDetailDrawer";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import ListPagination from "@/components/shared/ListPagination";
+import { notify } from "@/lib/notify";
 import { formatStudentGrade } from "@/lib/wayfinder-student";
 import {
   flagMeta,
@@ -144,7 +145,6 @@ export default function AlertsCenterPage() {
   const [cards, setCards] = useState<WayfinderAlertCard[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState("ACTIVE");
   const [severityFilter, setSeverityFilter] = useState("");
@@ -167,7 +167,6 @@ export default function AlertsCenterPage() {
 
   const loadAlerts = useCallback(async () => {
     setIsLoading(true);
-    setError(null);
     try {
       const result = await fetchWayfinderAlerts(queryParams);
       const lessonCards = result.items.map(mapLessonAlertToCard);
@@ -199,7 +198,7 @@ export default function AlertsCenterPage() {
         activeCount: result.meta.activeCount ?? 0,
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load alerts");
+      notify.error(err, "Failed to load alerts");
       setCards([]);
     } finally {
       setIsLoading(false);
@@ -321,8 +320,6 @@ export default function AlertsCenterPage() {
           ))}
         </select>
       </div>
-
-      {error && <p className="text-[#FF7B7B] text-sm mt-4">{error}</p>}
 
       {isLoading && <p className="text-white/40 text-sm mt-6">Loading alerts…</p>}
 

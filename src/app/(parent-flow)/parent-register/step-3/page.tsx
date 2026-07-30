@@ -23,7 +23,7 @@ function ParentRegisterStep3Content() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isAddMode = isAddChildWizardMode(searchParams);
-  const { status, error } = useParentRegisterAccess(!isAddMode);
+  const { status } = useParentRegisterAccess(!isAddMode);
   const children = useRegisterWizardStore((s) => s.children);
 
   useEffect(() => {
@@ -42,7 +42,7 @@ function ParentRegisterStep3Content() {
   }
 
   if (status === "error") {
-    return <RegisterStepError message={error ?? "Please try again later."} />;
+    return <RegisterStepError />;
   }
 
   if (children.length === 0) {

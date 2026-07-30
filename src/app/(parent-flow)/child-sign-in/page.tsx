@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { loginChild } from "@/lib/child-api";
-import { getApiErrorMessage } from "@/lib/auth-api";
+import { notify } from "@/lib/notify";
 import { setChildSession } from "@/lib/auth-session";
 import ThayloBrandLink from "@/components/shared/ThayloBrandLink";
 
@@ -15,7 +15,6 @@ export default function ChildSignIn() {
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [pin, setPin] = useState<number[]>([]);
-  const [error, setError] = useState<string | null>(null);
   const [showForgotPinModal, setShowForgotPinModal] = useState(false);
 
   const loginMutation = useMutation({
@@ -38,7 +37,7 @@ export default function ChildSignIn() {
       router.push("/child-dashboard");
     },
     onError: (err) => {
-      setError(getApiErrorMessage(err));
+      notify.error(err);
     },
   });
 
@@ -57,7 +56,6 @@ export default function ChildSignIn() {
 
   function handleSubmit() {
     if (loginMutation.isPending) return;
-    setError(null);
     loginMutation.mutate();
   }
 
@@ -219,12 +217,6 @@ export default function ChildSignIn() {
                 </button>
               </div>
             </div>
-
-            {error && (
-              <p className="text-sm text-red-400 text-center" role="alert" style={inter}>
-                {error}
-              </p>
-            )}
 
             <button
               type="button"

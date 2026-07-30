@@ -11,7 +11,8 @@ import {
   isInappropriateInterest,
   isInappropriateNote,
 } from "@/constants/child-interest-areas";
-import { getApiErrorMessage } from "@/lib/auth-api";
+import { notify } from "@/lib/notify";
+import { useNotifyError } from "@/hooks/use-notify-error";
 import {
   updateChildInterestAreas,
   updateChildNotesForParent,
@@ -55,12 +56,12 @@ export default function ChildProfilePage() {
 
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [customInterest, setCustomInterest] = useState("");
-  const [interestError, setInterestError] = useState<string | null>(null);
   const [interestSaved, setInterestSaved] = useState(false);
 
   const [notesForParent, setNotesForParent] = useState("");
-  const [notesError, setNotesError] = useState<string | null>(null);
   const [notesSaved, setNotesSaved] = useState(false);
+
+  useNotifyError(badgesQuery.error, badgesQuery.isError);
 
   useEffect(() => {
     setSelectedInterests(child?.interestAreas ?? []);
@@ -76,32 +77,29 @@ export default function ChildProfilePage() {
     onSuccess: (result) => {
       setSelectedInterests(result.child.interestAreas ?? []);
       if (result.rejectedInterests.length > 0) {
-        setInterestError(
+        notify.warning(
           "Some words were blocked because they are not school-appropriate. Everything else was saved.",
         );
       } else {
-        setInterestError(null);
         setInterestSaved(true);
         setTimeout(() => setInterestSaved(false), 2500);
       }
     },
-    onError: (err) => setInterestError(getApiErrorMessage(err)),
+    onError: (err) => notify.error(err),
   });
 
   const notesMutation = useMutation({
     mutationFn: (notes: string) => updateChildNotesForParent(notes),
     onSuccess: (updated) => {
       setNotesForParent(updated.notesForParent ?? "");
-      setNotesError(null);
       setNotesSaved(true);
       setTimeout(() => setNotesSaved(false), 2500);
     },
-    onError: (err) => setNotesError(getApiErrorMessage(err)),
+    onError: (err) => notify.error(err),
   });
 
   function toggleInterest(label: string) {
     setInterestSaved(false);
-    setInterestError(null);
     setSelectedInterests((prev) => {
       const exists = prev.some(
         (item) => item.toLowerCase() === label.toLowerCase(),
@@ -122,7 +120,7 @@ export default function ChildProfilePage() {
     if (!trimmed) return;
 
     if (isInappropriateInterest(trimmed)) {
-      setInterestError(
+      notify.error(
         "That interest was blocked. Please choose a school-appropriate interest.",
       );
       setCustomInterest("");
@@ -134,7 +132,6 @@ export default function ChildProfilePage() {
   }
 
   function handleSaveInterests() {
-    setInterestError(null);
     interestsMutation.mutate(selectedInterests);
   }
 
@@ -142,12 +139,11 @@ export default function ChildProfilePage() {
     setNotesSaved(false);
     const trimmed = notesForParent.trim();
     if (trimmed && isInappropriateNote(trimmed)) {
-      setNotesError(
+      notify.error(
         "That note was blocked. Please write something school-appropriate.",
       );
       return;
     }
-    setNotesError(null);
     notesMutation.mutate(notesForParent);
   }
 
@@ -346,10 +342,7 @@ export default function ChildProfilePage() {
           <input
             type="text"
             value={customInterest}
-            onChange={(e) => {
-              setCustomInterest(e.target.value);
-              setInterestError(null);
-            }}
+            onChange={(e) => setCustomInterest(e.target.value)}
             maxLength={60}
             placeholder="Add a new interest"
             className="flex-1 min-w-[180px] rounded-full px-4 py-2.5 outline-none text-white"
@@ -374,16 +367,7 @@ export default function ChildProfilePage() {
           </button>
         </form>
 
-        {interestError && (
-          <p
-            className="text-sm text-red-400 mb-3"
-            role="alert"
-            style={inter}
-          >
-            {interestError}
-          </p>
-        )}
-        {interestSaved && !interestError && (
+        {interestSaved && (
           <p
             className="mb-3"
             style={{ ...inter, fontSize: "13px", color: "#22C55E" }}
@@ -462,7 +446,6 @@ export default function ChildProfilePage() {
           value={notesForParent}
           onChange={(e) => {
             setNotesForParent(e.target.value);
-            setNotesError(null);
             setNotesSaved(false);
           }}
           maxLength={2000}
@@ -487,12 +470,7 @@ export default function ChildProfilePage() {
           {notesForParent.length}/2000
         </p>
 
-        {notesError && (
-          <p className="text-sm text-red-400 mb-3" role="alert" style={inter}>
-            {notesError}
-          </p>
-        )}
-        {notesSaved && !notesError && (
+        {notesSaved && (
           <p
             className="mb-3"
             style={{ ...inter, fontSize: "13px", color: "#22C55E" }}
@@ -623,18 +601,7 @@ export default function ChildProfilePage() {
           </div>
         )}
 
-        {badgesQuery.isError && (
-          <div
-            className="rounded-[12px] px-4 py-8 text-center"
-            style={{ backgroundColor: "#313044" }}
-          >
-            <p style={{ ...inter, fontSize: "14px", color: "#F87171" }}>
-              Could not load badges. Please try again.
-            </p>
-          </div>
-        )}
-
-        {!badgesQuery.isLoading && !badgesQuery.isError && previewBadges.length === 0 && (
+        {!badgesQuery.isLoading && previewBadges.length === 0 && (
           <div
             className="rounded-[12px] px-4 py-8 text-center"
             style={{ backgroundColor: "#313044" }}
@@ -652,7 +619,7 @@ export default function ChildProfilePage() {
           </div>
         )}
 
-        {!badgesQuery.isLoading && !badgesQuery.isError && previewBadges.length > 0 && (
+        {!badgesQuery.isLoading && previewBadges.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {previewBadges.map((badge) => {
               const earned = badge.count > 0;

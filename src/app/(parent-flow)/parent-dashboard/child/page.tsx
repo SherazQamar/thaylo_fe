@@ -17,7 +17,7 @@ import {
 import { fetchParentChildBadges } from "@/lib/badge-api";
 import { BadgeShield } from "@/components/shared/BadgeArtwork";
 import PasswordInput from "@/components/shared/PasswordInput";
-import { getApiErrorMessage } from "@/lib/auth-api";
+import { notify } from "@/lib/notify";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
@@ -45,12 +45,10 @@ function ChildDetailContent() {
   const [showPinModal, setShowPinModal] = useState(false);
   const [newPin, setNewPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
-  const [actionError, setActionError] = useState<string | null>(null);
 
   const [editingInterests, setEditingInterests] = useState(false);
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [customInterest, setCustomInterest] = useState("");
-  const [interestError, setInterestError] = useState<string | null>(null);
   const [interestSaved, setInterestSaved] = useState(false);
 
   const { data: child, isLoading, isError } = useQuery({
@@ -69,7 +67,6 @@ function ChildDetailContent() {
     if (!child) return;
     setSelectedInterests(child.interestAreas ?? []);
     setEditingInterests(false);
-    setInterestError(null);
     setInterestSaved(false);
   }, [child]);
 
@@ -79,7 +76,7 @@ function ChildDetailContent() {
       await queryClient.invalidateQueries({ queryKey: ["parent-children"] });
       router.push(backHref);
     },
-    onError: (err) => setActionError(getApiErrorMessage(err)),
+    onError: (err) => notify.error(err),
   });
 
   const resetPinMutation = useMutation({
@@ -88,9 +85,8 @@ function ChildDetailContent() {
       setShowPinModal(false);
       setNewPin("");
       setConfirmPin("");
-      setActionError(null);
     },
-    onError: (err) => setActionError(getApiErrorMessage(err)),
+    onError: (err) => notify.error(err),
   });
 
   const interestsMutation = useMutation({
@@ -102,11 +98,10 @@ function ChildDetailContent() {
         queryClient.invalidateQueries({ queryKey: ["parent-children"] }),
       ]);
       setEditingInterests(false);
-      setInterestError(null);
       setInterestSaved(true);
       setTimeout(() => setInterestSaved(false), 2500);
     },
-    onError: (err) => setInterestError(getApiErrorMessage(err)),
+    onError: (err) => notify.error(err),
   });
 
   if (!Number.isFinite(childId) || childId <= 0) {
@@ -144,13 +139,12 @@ function ChildDetailContent() {
     child.userName;
 
   function handleResetPin() {
-    setActionError(null);
     if (!/^\d{6}$/.test(newPin)) {
-      setActionError("PIN must be exactly 6 digits.");
+      notify.error("PIN must be exactly 6 digits.");
       return;
     }
     if (newPin !== confirmPin) {
-      setActionError("PINs do not match.");
+      notify.error("PINs do not match.");
       return;
     }
     resetPinMutation.mutate(newPin);
@@ -180,14 +174,12 @@ function ChildDetailContent() {
   }
 
   function handleSaveInterests() {
-    setInterestError(null);
     interestsMutation.mutate(selectedInterests);
   }
 
   function cancelEditInterests() {
     setSelectedInterests(child?.interestAreas ?? []);
     setEditingInterests(false);
-    setInterestError(null);
     setCustomInterest("");
   }
 
@@ -329,7 +321,6 @@ function ChildDetailContent() {
                   onClick={() => {
                     setEditingInterests(true);
                     setInterestSaved(false);
-                    setInterestError(null);
                   }}
                   className="shrink-0 rounded-full px-4 py-2 cursor-pointer hover:opacity-90"
                   style={{
@@ -455,16 +446,6 @@ function ChildDetailContent() {
                     Add
                   </button>
                 </form>
-
-                {interestError && (
-                  <p
-                    className="text-sm text-red-400 mb-3"
-                    role="alert"
-                    style={inter}
-                  >
-                    {interestError}
-                  </p>
-                )}
 
                 <div className="flex flex-wrap gap-3">
                   <button
@@ -672,10 +653,7 @@ function ChildDetailContent() {
       <div className="flex flex-wrap items-center gap-3 mt-8 mb-2">
         <button
           type="button"
-          onClick={() => {
-            setActionError(null);
-            setShowPinModal(true);
-          }}
+          onClick={() => setShowPinModal(true)}
           className="rounded-[16px] px-5 py-2 cursor-pointer hover:opacity-90 transition-opacity"
           style={{
             backgroundColor: "#00CED1",
@@ -689,21 +667,13 @@ function ChildDetailContent() {
         </button>
         <button
           type="button"
-          onClick={() => {
-            setActionError(null);
-            setShowArchiveConfirm(true);
-          }}
+          onClick={() => setShowArchiveConfirm(true)}
           className="rounded-[16px] px-5 py-2 cursor-pointer hover:opacity-90 transition-opacity border border-red-400/40 text-red-300"
           style={{ ...inter, fontWeight: 600, fontSize: "14px" }}
         >
           Archive
         </button>
       </div>
-      {actionError && !showPinModal && !showArchiveConfirm && (
-        <p className="text-red-400 text-sm mt-2 mb-4" role="alert" style={inter}>
-          {actionError}
-        </p>
-      )}
 
       {showArchiveConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
@@ -721,11 +691,6 @@ function ChildDetailContent() {
               This removes {displayName} from your account. They will no longer
               be able to sign in.
             </p>
-            {actionError && (
-              <p className="text-red-400 text-sm mt-3" role="alert">
-                {actionError}
-              </p>
-            )}
             <div className="flex justify-end gap-3 mt-6">
               <button
                 type="button"
@@ -787,11 +752,6 @@ function ChildDetailContent() {
                 className="w-full rounded-full px-5 py-3 bg-[#111023] border border-white/10 text-white text-sm outline-none focus:border-[#00CED1]/40"
               />
             </div>
-            {actionError && (
-              <p className="text-red-400 text-sm mt-3" role="alert">
-                {actionError}
-              </p>
-            )}
             <div className="flex justify-end gap-3 mt-6">
               <button
                 type="button"

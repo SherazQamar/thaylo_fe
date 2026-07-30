@@ -14,6 +14,7 @@ import {
 import { useAiSettings } from "@/hooks/use-ai-settings";
 import { useSpeechSynthesis } from "@/hooks/use-speech-synthesis";
 import { KaraokeText } from "@/components/child/class/ClassInstructorCaption";
+import { notify } from "@/lib/notify";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
@@ -35,7 +36,6 @@ export default function BloomBuddyCheckIn({
   const [result, setResult] = useState<BloomBuddyCheckInResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [visibleWords, setVisibleWords] = useState(0);
   const [messageWordCount, setMessageWordCount] = useState(0);
   const [speechPhase, setSpeechPhase] = useState<"idle" | "speaking" | "done">("idle");
@@ -70,7 +70,7 @@ export default function BloomBuddyCheckIn({
         }
       })
       .catch((err) => {
-        setError(err instanceof Error ? err.message : "Unable to load Bloom Buddy.");
+        notify.error(err, "Unable to load Bloom Buddy.");
       })
       .finally(() => setIsLoading(false));
   }, [timing]);
@@ -102,7 +102,6 @@ export default function BloomBuddyCheckIn({
   const handleSubmit = async () => {
     if (!selectedMood || isSubmitting) return;
     setIsSubmitting(true);
-    setError(null);
     try {
       const data = await submitBloomBuddyCheckIn({
         mood: selectedMood,
@@ -114,7 +113,7 @@ export default function BloomBuddyCheckIn({
       setMessageWordCount(displayWordCount);
       await speakResponse(data.response.speechText || data.response.displayText || "");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unable to save your check-in.");
+      notify.error(err, "Unable to save your check-in.");
     } finally {
       setIsSubmitting(false);
     }
@@ -159,12 +158,6 @@ export default function BloomBuddyCheckIn({
           <p className="mt-0.5 text-[11px] text-white/60 sm:text-sm">{promptText}</p>
         </div>
       </div>
-
-      {error && (
-        <div className="mb-3 rounded-lg border border-[#FF7B7B]/30 bg-[#FF7B7B]/10 px-3 py-2 text-xs text-[#FF7B7B]">
-          {error}
-        </div>
-      )}
 
       {!result ? (
         <>

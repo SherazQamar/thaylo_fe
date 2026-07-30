@@ -7,7 +7,7 @@ import UserDropdown from "@/components/wayfinder/UserDropdown";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import InfoTooltip from "@/components/shared/InfoTooltip";
 import PortalAvatar from "@/components/shared/PortalAvatar";
-import { getApiErrorMessage } from "@/lib/auth-api";
+import { useNotifyError } from "@/hooks/use-notify-error";
 import {
   fetchWayfinderLiveSessions,
   type WayfinderLiveSession,
@@ -183,6 +183,8 @@ export default function LiveSessionsPage() {
     });
   }, [items, gradeFilter, riskFilter]);
 
+  useNotifyError(liveQuery.error, liveQuery.isError);
+
   return (
     <div className="p-4 md:p-6 lg:p-10">
       <div className="flex items-center justify-between mb-2 md:mb-3">
@@ -273,12 +275,6 @@ export default function LiveSessionsPage() {
         {liveQuery.isLoading && (
           <p style={{ ...inter, fontWeight: 400, fontSize: "14px", color: "rgba(255,255,255,0.5)" }} className="py-10 text-center">
             Loading live sessions…
-          </p>
-        )}
-
-        {liveQuery.isError && (
-          <p style={{ ...inter, fontWeight: 400, fontSize: "14px", color: "#EF4444" }} className="py-10 text-center" role="alert">
-            {getApiErrorMessage(liveQuery.error)}
           </p>
         )}
 
