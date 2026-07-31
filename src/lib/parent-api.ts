@@ -1,6 +1,8 @@
 import { isAxiosError } from "axios";
 import { api } from "@/lib/api";
 import type { ApiResponse } from "@/types/api";
+import type { WayfinderLessonAlert } from "@/lib/wayfinder-alerts";
+import type { WeeklyGuidance } from "@/lib/weekly-guidance";
 
 export interface ParentDashboardMasteryBar {
   childId: number;
@@ -195,6 +197,40 @@ export async function fetchParentChild(childId: number) {
   return data.data;
 }
 
+export interface ParentWayfinderNote {
+  id: number;
+  childId: number;
+  body: string;
+  sentToParentAt: string;
+  createdAt: string;
+  updatedAt: string;
+  wayfinderName: string | null;
+}
+
+export async function fetchParentWayfinderNotes(childId: number) {
+  const { data } = await api.get<
+    ApiResponse<{ items: ParentWayfinderNote[] }>
+  >(`/parent/children/${childId}/wayfinder-notes`);
+  return data.data.items ?? [];
+}
+
+export async function acknowledgeParentWayfinderNote(
+  childId: number,
+  noteId: number,
+) {
+  const { data } = await api.post<ApiResponse<{ id: number }>>(
+    `/parent/children/${childId}/wayfinder-notes/${noteId}/acknowledge`,
+  );
+  return data.data;
+}
+
+export async function fetchParentWeeklyGuidance(childId: number) {
+  const { data } = await api.get<ApiResponse<WeeklyGuidance>>(
+    `/parent/children/${childId}/weekly-guidance`,
+  );
+  return data.data;
+}
+
 export async function updateParentChild(
   childId: number,
   payload: UpdateParentChildPayload,
@@ -309,3 +345,64 @@ export async function downloadParentProgressReportPdf(
     throw new Error("Could not download PDF");
   }
 }
+
+export interface ParentAlertsParams {
+  page?: number;
+  limit?: number;
+  status?: "ACTIVE" | "RESOLVED" | "DISMISSED";
+  severity?: "YELLOW" | "ORANGE" | "RED";
+  search?: string;
+  childId?: number;
+}
+
+export interface ParentAlertsMeta {
+  total: number;
+  lastPage: number;
+  currentPage: number;
+  perPage: number;
+  prev: number | null;
+  next: number | null;
+  activeCount?: number;
+}
+
+export async function fetchParentAlerts(params: ParentAlertsParams = {}) {
+  const { data } = await api.get<
+    ApiResponse<{
+      items: WayfinderLessonAlert[];
+      meta: ParentAlertsMeta;
+    }>
+  >("/parent/alerts", {
+    params: {
+      page: params.page ?? 1,
+      limit: params.limit ?? 50,
+      ...(params.status ? { status: params.status } : {}),
+      ...(params.severity ? { severity: params.severity } : {}),
+      ...(params.search ? { search: params.search } : {}),
+      ...(params.childId ? { childId: params.childId } : {}),
+    },
+  });
+
+  return {
+    items: data.data.items ?? [],
+    meta: data.data.meta ?? {
+      total: 0,
+      lastPage: 1,
+      currentPage: 1,
+      perPage: 50,
+      prev: null,
+      next: null,
+      activeCount: 0,
+    },
+  };
+}
+
+export async function fetchParentAlertCount(): Promise<number> {
+  const { data } = await api.get<ApiResponse<{ count: number }>>(
+    "/parent/alerts/count",
+  );
+  return data.data.count ?? 0;
+}
+
+export const parentQueryKeys = {
+  alertCount: () => ["parent", "alerts", "count"] as const,
+};

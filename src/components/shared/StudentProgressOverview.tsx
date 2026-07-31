@@ -43,6 +43,15 @@ const wellbeing = [
   { label: "Low Mood", count: 0, emoji: "😔" },
 ];
 
+export type GuidanceAlertTone = "teal" | "coral" | "amber";
+
+export type GuidanceAlertItem = {
+  id: string;
+  tone: GuidanceAlertTone;
+  text: string;
+  onClick?: () => void;
+};
+
 export interface StudentProgressOverviewProps {
   displayName: string;
   gradeLabel: string;
@@ -57,6 +66,14 @@ export interface StudentProgressOverviewProps {
   gardenMessage?: string;
   badgeCount?: number;
   badgePreviews?: BadgePreviewItem[];
+  /** Opens Wayfinder notes drawer from Messages → Wayfinder sent note. */
+  onWayfinderNotesClick?: () => void;
+  wayfinderNotesSubtitle?: string;
+  onReportClick?: () => void;
+  reportBusy?: boolean;
+  /** Dynamic Alerts & Guidance cards. Falls back to static demo copy when omitted. */
+  guidanceAlerts?: GuidanceAlertItem[];
+  guidanceLoading?: boolean;
 }
 
 export default function StudentProgressOverview({
@@ -72,9 +89,22 @@ export default function StudentProgressOverview({
   gardenMessage,
   badgeCount,
   badgePreviews = [],
+  onWayfinderNotesClick,
+  wayfinderNotesSubtitle = "Tap to view notes",
+  onReportClick,
+  reportBusy = false,
+  guidanceAlerts,
+  guidanceLoading = false,
 }: StudentProgressOverviewProps) {
   const gardenText = gardenMessage ?? `${displayName}'s plant is thriving`;
   const resolvedAvatarUrl = avatarUrl ?? avatarSrc ?? null;
+  const resolvedAlerts: GuidanceAlertItem[] =
+    guidanceAlerts ??
+    alerts.map((item, index) => ({
+      id: `static-${index}`,
+      tone: item.tone,
+      text: item.text,
+    }));
 
   return (
     <>
@@ -131,7 +161,10 @@ export default function StudentProgressOverview({
                 </span>
                 <button
                   type="button"
-                  className="rounded-[30px] flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={onReportClick}
+                  disabled={!onReportClick || reportBusy}
+                  data-snapshot-ignore="true"
+                  className="rounded-[30px] flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{
                     ...inter,
                     fontWeight: 500,
@@ -147,7 +180,7 @@ export default function StudentProgressOverview({
                     <polyline points="7 10 12 15 17 10" />
                     <line x1="12" y1="15" x2="12" y2="3" />
                   </svg>
-                  Report
+                  {reportBusy ? "Downloading…" : "Report"}
                 </button>
               </div>
             </div>
@@ -218,40 +251,90 @@ export default function StudentProgressOverview({
             <h3 style={{ ...inter, fontWeight: 700, fontSize: "20px", lineHeight: "28px", color: "#FFFFFF", marginBottom: "12px" }}>
               Alerts &amp; Guidance
             </h3>
-            <div className="flex flex-col sm:flex-row gap-3">
-              {alerts.map((alert) => (
-                <div
-                  key={alert.text}
-                  className="flex items-center gap-3 flex-1"
-                  style={{
-                    backgroundColor: alert.tone === "teal" ? "rgba(0,206,209,0.08)" : "rgba(255,111,111,0.08)",
-                    border: `1px solid ${alert.tone === "teal" ? "#00CED1" : "#FF6F6F"}`,
-                    borderRadius: "47px",
-                    padding: "10px 16px",
-                    minHeight: "64px",
-                  }}
-                >
-                  <div
-                    className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
-                    style={{ backgroundColor: alert.tone === "teal" ? "#00CED1" : "#FF6F6F" }}
-                  >
-                    {alert.tone === "teal" ? (
+            {guidanceLoading ? (
+              <p style={{ ...inter, fontSize: "13px", color: "rgba(255,255,255,0.45)" }}>
+                Loading this week’s guidance…
+              </p>
+            ) : (
+              <div className="flex flex-col sm:flex-row gap-3">
+                {resolvedAlerts.map((alert) => {
+                  const accent =
+                    alert.tone === "teal"
+                      ? "#00CED1"
+                      : alert.tone === "amber"
+                        ? "#F59E0B"
+                        : "#FF6F6F";
+                  const bg =
+                    alert.tone === "teal"
+                      ? "rgba(0,206,209,0.08)"
+                      : alert.tone === "amber"
+                        ? "rgba(245,158,11,0.10)"
+                        : "rgba(255,111,111,0.08)";
+                  const clickable = typeof alert.onClick === "function";
+                  const icon =
+                    alert.tone === "teal" ? (
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111023" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    ) : alert.tone === "amber" ? (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111023" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                        <line x1="12" y1="9" x2="12" y2="13" />
+                        <line x1="12" y1="17" x2="12.01" y2="17" />
                       </svg>
                     ) : (
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <rect x="3" y="3" width="18" height="18" rx="2" />
                         <path d="M9 12h6" />
                       </svg>
-                    )}
-                  </div>
-                  <p style={{ ...inter, fontWeight: 500, fontSize: "13px", lineHeight: "18px", color: "#FFFFFF" }}>
-                    {alert.text}
-                  </p>
-                </div>
-              ))}
-            </div>
+                    );
+                  const content = (
+                    <>
+                      <div
+                        className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
+                        style={{ backgroundColor: accent }}
+                      >
+                        {icon}
+                      </div>
+                      <p style={{ ...inter, fontWeight: 500, fontSize: "13px", lineHeight: "18px", color: "#FFFFFF" }}>
+                        {alert.text}
+                      </p>
+                    </>
+                  );
+                  const style = {
+                    backgroundColor: bg,
+                    border: `1px solid ${accent}`,
+                    borderRadius: "47px",
+                    padding: "10px 16px",
+                    minHeight: "64px",
+                  } as const;
+
+                  if (clickable) {
+                    return (
+                      <button
+                        key={alert.id}
+                        type="button"
+                        onClick={alert.onClick}
+                        className="flex items-center gap-3 flex-1 text-left cursor-pointer hover:opacity-90 transition-opacity"
+                        style={style}
+                      >
+                        {content}
+                      </button>
+                    );
+                  }
+
+                  return (
+                    <div
+                      key={alert.id}
+                      className="flex items-center gap-3 flex-1"
+                      style={style}
+                    >
+                      {content}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <div className="rounded-[12px] p-4 md:p-5" style={{ backgroundColor: "#313044" }}>
@@ -339,12 +422,32 @@ export default function StudentProgressOverview({
                   <p style={{ ...inter, fontWeight: 400, fontSize: "12px", lineHeight: "16px", color: "rgba(255,255,255,0.5)" }}>I feel good!</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 rounded-[12px] p-3" style={{ backgroundColor: "rgba(255,255,255,0.05)" }}>
+              <button
+                type="button"
+                onClick={onWayfinderNotesClick}
+                disabled={!onWayfinderNotesClick}
+                className={`w-full flex items-center gap-3 rounded-[12px] p-3 text-left transition-colors ${
+                  onWayfinderNotesClick
+                    ? "hover:bg-white/[0.08] cursor-pointer"
+                    : "cursor-default opacity-80"
+                }`}
+                style={{ backgroundColor: "rgba(255,255,255,0.05)" }}
+              >
                 <span className="text-2xl">🔔</span>
-                <div>
-                  <p style={{ ...inter, fontWeight: 600, fontSize: "14px", lineHeight: "20px", color: "#FFFFFF" }}>Wayfinder sent note</p>
+                <div className="min-w-0 flex-1">
+                  <p style={{ ...inter, fontWeight: 600, fontSize: "14px", lineHeight: "20px", color: "#FFFFFF" }}>
+                    Wayfinder sent note
+                  </p>
+                  {onWayfinderNotesClick ? (
+                    <p style={{ ...inter, fontWeight: 400, fontSize: "12px", lineHeight: "16px", color: "rgba(255,255,255,0.5)" }}>
+                      {wayfinderNotesSubtitle}
+                    </p>
+                  ) : null}
                 </div>
-              </div>
+                {onWayfinderNotesClick ? (
+                  <span className="text-[#00CED1] text-xs font-semibold shrink-0">View</span>
+                ) : null}
+              </button>
             </div>
           </div>
         </div>

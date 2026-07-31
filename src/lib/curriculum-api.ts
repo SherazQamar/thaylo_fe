@@ -163,3 +163,23 @@ export async function completeClassSession(sessionId: number) {
   );
   return data.data;
 }
+
+export async function abandonClassSession(
+  sessionId: number,
+  reason: "CAMERA_ABSENCE" = "CAMERA_ABSENCE",
+) {
+  const { data } = await api.post<
+    ApiResponse<{
+      sessionId: number;
+      status: string;
+      reason: string;
+      abandoned: boolean;
+      lessonTitle?: string;
+    }>
+  >(
+    `/child/classes/sessions/${sessionId}/abandon`,
+    { reason },
+    { authMode: "child" },
+  );
+  return data.data;
+}

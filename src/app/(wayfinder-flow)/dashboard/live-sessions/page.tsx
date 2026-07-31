@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import UserDropdown from "@/components/wayfinder/UserDropdown";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import InfoTooltip from "@/components/shared/InfoTooltip";
 import PortalAvatar from "@/components/shared/PortalAvatar";
 import { useNotifyError } from "@/hooks/use-notify-error";
+import { notify } from "@/lib/notify";
 import {
   fetchWayfinderLiveSessions,
   type WayfinderLiveSession,
@@ -23,24 +25,78 @@ import {
 } from "@/lib/wayfinder-student";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
+/** Matches BE LIVE_SESSION_STALE_GRACE_MINUTES. */
+const LIVE_GRACE_MS = 2 * 60 * 1000;
+
+const RISK_OPTIONS = [
+  { value: "", label: "All" },
+  { value: "Clear", label: "Clear" },
+  { value: "Amber", label: "Amber" },
+  { value: "Orange", label: "Orange" },
+  { value: "Red", label: "Red" },
+] as const;
+
+const selectClassName =
+  "bg-[#313044] outline-none text-white/90 cursor-pointer rounded-md px-1 py-0.5";
+
+function isSessionStillLive(session: WayfinderLiveSession, nowMs: number): boolean {
+  if (!session.isLive || session.sessionId == null || !session.startedAt) return false;
+  const durationMs = Math.max(1, session.durationMinutes ?? 15) * 60 * 1000;
+  const startedMs = new Date(session.startedAt).getTime();
+  const lastActiveMs = session.lastActiveAt
+    ? new Date(session.lastActiveAt).getTime()
+    : startedMs;
+  if (!Number.isFinite(startedMs) || !Number.isFinite(lastActiveMs)) return false;
+  const ageMs = nowMs - startedMs;
+  if (ageMs <= durationMs + LIVE_GRACE_MS) return true;
+  return nowMs - lastActiveMs <= LIVE_GRACE_MS;
+}
 
 function LiveSessionRow({
   session,
   nowMs,
+  onExpiredClick,
 }: {
   session: WayfinderLiveSession;
   nowMs: number;
+  onExpiredClick: () => void;
 }) {
+  const router = useRouter();
   const displayName = formatWayfinderStudentName(session);
-  const startedMs = new Date(session.startedAt).getTime();
+  const startedMs = session.startedAt ? new Date(session.startedAt).getTime() : NaN;
   const elapsedSeconds = Number.isFinite(startedMs)
     ? Math.max(0, Math.floor((nowMs - startedMs) / 1000))
     : session.elapsedSeconds;
+  const stillLive = isSessionStillLive(session, nowMs);
+
+  const openLiveView = () => {
+    if (!stillLive || session.sessionId == null) {
+      notify.info("Child is not in a live session");
+      onExpiredClick();
+      return;
+    }
+    router.push(`/dashboard/live-sessions/${session.sessionId}`);
+  };
 
   return (
     <div
-      className="md:grid md:grid-cols-[1fr_1fr_1.3fr_1fr_auto] md:items-center rounded-[12px] px-4 md:px-5 py-3 gap-3 md:gap-4 flex flex-col"
+      className={`md:grid md:grid-cols-[1fr_1fr_1.3fr_1fr_auto] md:items-center rounded-[12px] px-4 md:px-5 py-3 gap-3 md:gap-4 flex flex-col transition-colors ${
+        stillLive ? "hover:bg-[#3a3950] cursor-pointer" : "cursor-default opacity-95"
+      }`}
       style={{ backgroundColor: "#313044" }}
+      role={stillLive ? "link" : undefined}
+      tabIndex={stillLive ? 0 : undefined}
+      onClick={stillLive ? openLiveView : undefined}
+      onKeyDown={
+        stillLive
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                openLiveView();
+              }
+            }
+          : undefined
+      }
     >
       <div className="flex items-center gap-2.5">
         <PortalAvatar name={displayName} avatarUrl={session.avatarUrl} size={36} />
@@ -81,10 +137,12 @@ function LiveSessionRow({
       >
         <div className="min-w-0">
           <div className="flex items-start gap-2.5 mb-1">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#00CED1] mt-1.5 flex-shrink-0" />
+            <span
+              className={`w-2.5 h-2.5 rounded-full mt-1.5 flex-shrink-0 ${stillLive ? "bg-[#00CED1] animate-pulse" : "bg-white/30"}`}
+            />
             <div className="min-w-0">
               <p style={{ ...inter, fontWeight: 500, fontSize: "11px", lineHeight: "14px", color: "rgba(255,255,255,0.5)" }}>
-                In lesson
+                {stillLive ? "In lesson" : "Not in live lesson"}
               </p>
               <p
                 style={{ ...inter, fontWeight: 600, fontSize: "14px", lineHeight: "18px", color: "#FFFFFF" }}
@@ -125,30 +183,64 @@ function LiveSessionRow({
         style={{ backgroundColor: "#525162", padding: "10px 24px" }}
       >
         <div>
-          <p style={{ ...inter, fontWeight: 600, fontSize: "15px", lineHeight: "20px", color: "#FFFFFF" }}>
-            Timer: {formatElapsedTimer(elapsedSeconds)}
-          </p>
-          <p style={{ ...inter, fontWeight: 400, fontSize: "12px", lineHeight: "16px", color: "rgba(255,255,255,0.5)" }}>
-            {formatLastActiveLabel(session.lastActiveAt)}
-          </p>
+          {stillLive ? (
+            <>
+              <p style={{ ...inter, fontWeight: 600, fontSize: "15px", lineHeight: "20px", color: "#FFFFFF" }}>
+                Timer: {formatElapsedTimer(elapsedSeconds)}
+              </p>
+              <p style={{ ...inter, fontWeight: 400, fontSize: "12px", lineHeight: "16px", color: "rgba(255,255,255,0.5)" }}>
+                {formatLastActiveLabel(session.lastActiveAt)}
+              </p>
+            </>
+          ) : (
+            <p style={{ ...inter, fontWeight: 600, fontSize: "15px", lineHeight: "20px", color: "#FFFFFF" }}>
+              {formatLastActiveLabel(session.lastActiveAt)}
+            </p>
+          )}
         </div>
       </div>
 
-      <Link
-        href={`/dashboard/message?studentId=${session.childId}&contact=child`}
-        className="uppercase flex-shrink-0 hover:opacity-80 transition-opacity whitespace-nowrap mt-2 md:mt-0 self-start md:self-center"
-        style={{ ...inter, fontWeight: 700, fontSize: "13.5px", lineHeight: "18px", letterSpacing: "0.8px", color: "#00CED1" }}
-      >
-        Open Chat
-      </Link>
+      <div className="flex items-center gap-4 mt-2 md:mt-0 self-start md:self-center">
+        <button
+          type="button"
+          disabled={!stillLive}
+          onClick={(e) => {
+            e.stopPropagation();
+            openLiveView();
+          }}
+          className="uppercase flex-shrink-0 whitespace-nowrap transition-opacity disabled:cursor-not-allowed disabled:opacity-35 enabled:hover:opacity-80 enabled:cursor-pointer"
+          style={{
+            ...inter,
+            fontWeight: 700,
+            fontSize: "13.5px",
+            lineHeight: "18px",
+            letterSpacing: "0.8px",
+            color: "#FFFFFF",
+            background: "transparent",
+            border: "none",
+            padding: 0,
+          }}
+          title={stillLive ? "Open live session view" : "Child is not in a live session"}
+        >
+          Open View
+        </button>
+        <Link
+          href={`/dashboard/message?studentId=${session.childId}&contact=child`}
+          onClick={(e) => e.stopPropagation()}
+          className="uppercase flex-shrink-0 hover:opacity-80 transition-opacity whitespace-nowrap"
+          style={{ ...inter, fontWeight: 700, fontSize: "13.5px", lineHeight: "18px", letterSpacing: "0.8px", color: "#00CED1" }}
+        >
+          Open Chat
+        </Link>
+      </div>
     </div>
   );
 }
 
 export default function LiveSessionsPage() {
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [gradeFilter, setGradeFilter] = useState("");
   const [riskFilter, setRiskFilter] = useState("");
   const [nowMs, setNowMs] = useState(() => Date.now());
 
@@ -163,25 +255,26 @@ export default function LiveSessionsPage() {
   }, []);
 
   const liveQuery = useQuery({
-    queryKey: wayfinderQueryKeys.liveSessions({ search: debouncedSearch || undefined }),
-    queryFn: () => fetchWayfinderLiveSessions({ search: debouncedSearch || undefined }),
+    queryKey: wayfinderQueryKeys.liveSessions({
+      search: debouncedSearch || undefined,
+      risk: riskFilter || undefined,
+    }),
+    queryFn: () =>
+      fetchWayfinderLiveSessions({
+        search: debouncedSearch || undefined,
+        risk: riskFilter || undefined,
+      }),
     refetchInterval: 15_000,
   });
 
   const items = liveQuery.data?.items ?? [];
+  const liveCount = liveQuery.data?.liveCount ?? items.filter((s) => s.isLive).length;
 
-  const gradeOptions = useMemo(() => {
-    const grades = new Set(items.map((s) => s.grade).filter(Boolean) as string[]);
-    return [...grades].sort();
-  }, [items]);
-
-  const filtered = useMemo(() => {
-    return items.filter((s) => {
-      if (gradeFilter && s.grade !== gradeFilter) return false;
-      if (riskFilter && s.risk !== riskFilter) return false;
-      return true;
+  const refreshLiveList = () => {
+    void queryClient.invalidateQueries({
+      queryKey: ["wayfinder", "live-sessions"],
     });
-  }, [items, gradeFilter, riskFilter]);
+  };
 
   useNotifyError(liveQuery.error, liveQuery.isError);
 
@@ -207,14 +300,18 @@ export default function LiveSessionsPage() {
         ]}
       />
 
-      <div className="rounded-[12px] p-4 md:p-6 mt-6 md:mt-8" style={{ backgroundColor: "rgba(255,255,255,0.05)" }}>
+      <div
+        className="rounded-[12px] p-4 md:p-6 mt-6 md:mt-8"
+        style={{ backgroundColor: "rgba(255,255,255,0.05)" }}
+      >
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4 md:mb-5">
           <div>
             <h2 style={{ ...inter, fontWeight: 700, fontSize: "20px", lineHeight: "24px", color: "#FFFFFF" }}>
               Student List
             </h2>
             <p style={{ ...inter, fontWeight: 400, fontSize: "12px", color: "rgba(255,255,255,0.45)", marginTop: "4px" }}>
-              {filtered.length} live {filtered.length === 1 ? "session" : "sessions"}
+              {items.length} student{items.length === 1 ? "" : "s"}
+              {liveCount > 0 ? ` · ${liveCount} live` : ""}
               {liveQuery.isFetching ? " · updating…" : ""}
             </p>
           </div>
@@ -237,33 +334,22 @@ export default function LiveSessionsPage() {
               />
             </div>
             <div className="flex gap-2">
-              <label className="rounded-full px-4 py-2.5 flex items-center gap-2 cursor-pointer flex-1 sm:flex-none" style={{ backgroundColor: "#313044", border: "1px solid #525162" }}>
-                <span style={{ ...inter, fontWeight: 500, fontSize: "14px", color: "rgba(255,255,255,0.7)" }}>Risk</span>
+              <label
+                className="rounded-full px-4 py-2.5 flex items-center gap-2 cursor-pointer flex-1 sm:flex-none"
+                style={{ backgroundColor: "#313044", border: "1px solid #525162" }}
+              >
+                <span style={{ ...inter, fontWeight: 500, fontSize: "14px", color: "rgba(255,255,255,0.7)" }}>
+                  Risk
+                </span>
                 <select
                   value={riskFilter}
                   onChange={(e) => setRiskFilter(e.target.value)}
-                  className="bg-transparent outline-none text-white/80"
+                  className={selectClassName}
                   style={{ ...inter, fontWeight: 500, fontSize: "13px" }}
                 >
-                  <option value="">All</option>
-                  <option value="Clear">Clear</option>
-                  <option value="Amber">Amber</option>
-                  <option value="Orange">Orange</option>
-                  <option value="Red">Red</option>
-                </select>
-              </label>
-              <label className="rounded-full px-4 py-2.5 flex items-center gap-2 cursor-pointer flex-1 sm:flex-none" style={{ backgroundColor: "#313044", border: "1px solid #525162" }}>
-                <span style={{ ...inter, fontWeight: 500, fontSize: "14px", color: "rgba(255,255,255,0.7)" }}>Grade</span>
-                <select
-                  value={gradeFilter}
-                  onChange={(e) => setGradeFilter(e.target.value)}
-                  className="bg-transparent outline-none text-white/80"
-                  style={{ ...inter, fontWeight: 500, fontSize: "13px" }}
-                >
-                  <option value="">All</option>
-                  {gradeOptions.map((g) => (
-                    <option key={g} value={g}>
-                      {formatStudentGrade(g)}
+                  {RISK_OPTIONS.map((opt) => (
+                    <option key={opt.value || "all"} value={opt.value} className="bg-[#313044] text-white">
+                      {opt.label}
                     </option>
                   ))}
                 </select>
@@ -274,21 +360,26 @@ export default function LiveSessionsPage() {
 
         {liveQuery.isLoading && (
           <p style={{ ...inter, fontWeight: 400, fontSize: "14px", color: "rgba(255,255,255,0.5)" }} className="py-10 text-center">
-            Loading live sessions…
+            Loading students…
           </p>
         )}
 
-        {!liveQuery.isLoading && !liveQuery.isError && filtered.length === 0 && (
+        {!liveQuery.isLoading && !liveQuery.isError && items.length === 0 && (
           <p style={{ ...inter, fontWeight: 400, fontSize: "14px", color: "rgba(255,255,255,0.5)" }} className="py-10 text-center">
-            {debouncedSearch || gradeFilter || riskFilter
-              ? "No live sessions match your filters."
-              : "No students are in a lesson right now."}
+            {debouncedSearch || riskFilter
+              ? "No students match your filters."
+              : "No students on your caseload yet."}
           </p>
         )}
 
-        <div className="flex flex-col gap-3 md:gap-2">
-          {filtered.map((session) => (
-            <LiveSessionRow key={session.sessionId} session={session} nowMs={nowMs} />
+        <div className="flex flex-col gap-3 md:gap-2 max-h-[min(68vh,720px)] overflow-y-auto pr-1">
+          {items.map((session) => (
+            <LiveSessionRow
+              key={session.childId}
+              session={session}
+              nowMs={nowMs}
+              onExpiredClick={refreshLiveList}
+            />
           ))}
         </div>
       </div>

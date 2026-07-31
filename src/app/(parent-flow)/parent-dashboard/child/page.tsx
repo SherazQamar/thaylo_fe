@@ -5,12 +5,19 @@ import { FormEvent, Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import ParentUserDropdown from "@/components/parent/ParentUserDropdown";
+import ParentWayfinderNotesDrawer from "@/components/parent/ParentWayfinderNotesDrawer";
 import OnboardingResultsPanel from "@/components/onboarding/OnboardingResultsPanel";
-import StudentProgressOverview from "@/components/shared/StudentProgressOverview";
+import StudentProgressOverview, {
+  type GuidanceAlertItem,
+} from "@/components/shared/StudentProgressOverview";
+import WeeklyGuidanceModal from "@/components/shared/WeeklyGuidanceModal";
+import RecommendedNextStepModal from "@/components/shared/RecommendedNextStepModal";
 import { CHILD_INTEREST_SUGGESTIONS } from "@/constants/child-interest-areas";
 import {
   archiveParentChild,
   fetchParentChild,
+  fetchParentWayfinderNotes,
+  fetchParentWeeklyGuidance,
   resetParentChildPin,
   updateParentChild,
 } from "@/lib/parent-api";
@@ -43,6 +50,9 @@ function ChildDetailContent() {
   );
   const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
   const [showPinModal, setShowPinModal] = useState(false);
+  const [notesOpen, setNotesOpen] = useState(false);
+  const [weekModalOpen, setWeekModalOpen] = useState(false);
+  const [nextStepModalOpen, setNextStepModalOpen] = useState(false);
   const [newPin, setNewPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
 
@@ -60,6 +70,18 @@ function ChildDetailContent() {
   const badgesQuery = useQuery({
     queryKey: ["parent-child-badges", childId],
     queryFn: () => fetchParentChildBadges(childId),
+    enabled: Number.isFinite(childId) && childId > 0,
+  });
+
+  const wayfinderNotesQuery = useQuery({
+    queryKey: ["parent-child-wayfinder-notes", childId],
+    queryFn: () => fetchParentWayfinderNotes(childId),
+    enabled: Number.isFinite(childId) && childId > 0,
+  });
+
+  const weeklyGuidanceQuery = useQuery({
+    queryKey: ["parent-child-weekly-guidance", childId],
+    queryFn: () => fetchParentWeeklyGuidance(childId),
     enabled: Number.isFinite(childId) && childId > 0,
   });
 
@@ -137,6 +159,23 @@ function ChildDetailContent() {
   const displayName =
     [child.firstName, child.secondName].filter(Boolean).join(" ").trim() ||
     child.userName;
+
+  const guidanceAlerts: GuidanceAlertItem[] | undefined = weeklyGuidanceQuery.data
+    ? [
+        {
+          id: "week-alert",
+          tone: weeklyGuidanceQuery.data.weekAlert.tone,
+          text: weeklyGuidanceQuery.data.weekAlert.text,
+          onClick: () => setWeekModalOpen(true),
+        },
+        {
+          id: "next-step",
+          tone: "coral",
+          text: `Recommended next step: ${weeklyGuidanceQuery.data.recommendedNextStep.text}`,
+          onClick: () => setNextStepModalOpen(true),
+        },
+      ]
+    : undefined;
 
   function handleResetPin() {
     if (!/^\d{6}$/.test(newPin)) {
@@ -565,6 +604,47 @@ function ChildDetailContent() {
                   count: b.count,
                 })) ?? []
             }
+            onWayfinderNotesClick={() => setNotesOpen(true)}
+            wayfinderNotesSubtitle={
+              (wayfinderNotesQuery.data?.length ?? 0) === 0
+                ? "No notes shared yet"
+                : `${wayfinderNotesQuery.data?.length} note${
+                    (wayfinderNotesQuery.data?.length ?? 0) === 1 ? "" : "s"
+                  } · tap to view`
+            }
+            onReportClick={() =>
+              router.push(`/parent-dashboard/reports?childId=${child.id}`)
+            }
+            guidanceAlerts={guidanceAlerts}
+            guidanceLoading={weeklyGuidanceQuery.isLoading}
+          />
+
+          <ParentWayfinderNotesDrawer
+            open={notesOpen}
+            childId={child.id}
+            onClose={() => setNotesOpen(false)}
+          />
+
+          <WeeklyGuidanceModal
+            open={weekModalOpen}
+            childName={displayName}
+            emptyMessage={weeklyGuidanceQuery.data?.emptyStateMessage ?? null}
+            sessions={weeklyGuidanceQuery.data?.sessionsThisWeek ?? []}
+            onClose={() => setWeekModalOpen(false)}
+          />
+
+          <RecommendedNextStepModal
+            open={nextStepModalOpen}
+            childName={displayName}
+            recommendation={
+              weeklyGuidanceQuery.data?.recommendedNextStep.text ??
+              "Keep encouraging steady practice this week."
+            }
+            source={
+              weeklyGuidanceQuery.data?.recommendedNextStep.source ?? "fallback"
+            }
+            sessions={weeklyGuidanceQuery.data?.sessionsThisWeek ?? []}
+            onClose={() => setNextStepModalOpen(false)}
           />
 
           {badgesQuery.data && (

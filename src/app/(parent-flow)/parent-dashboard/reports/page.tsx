@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import ParentUserDropdown from "@/components/parent/ParentUserDropdown";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
@@ -58,6 +59,7 @@ function triggerBlobDownload(blob: Blob, filename: string) {
 }
 
 export default function ParentReportsPage() {
+  const searchParams = useSearchParams();
   const initial = useMemo(() => defaultRange(), []);
   const [childId, setChildId] = useState<number | "">("");
   const [from, setFrom] = useState(initial.from);
@@ -72,9 +74,17 @@ export default function ParentReportsPage() {
   });
 
   useEffect(() => {
+    const fromQuery = Number(searchParams.get("childId"));
+    if (Number.isFinite(fromQuery) && fromQuery > 0) {
+      const match = childrenQuery.data?.find((c) => c.id === fromQuery);
+      if (match) {
+        setChildId(match.id);
+        return;
+      }
+    }
     if (childId !== "" || !childrenQuery.data?.length) return;
     setChildId(childrenQuery.data[0].id);
-  }, [childId, childrenQuery.data]);
+  }, [childId, childrenQuery.data, searchParams]);
 
   const previewMutation = useMutation({
     mutationFn: () => {

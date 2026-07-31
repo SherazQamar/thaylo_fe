@@ -5,7 +5,7 @@ export type WayfinderFlagKind = "RED" | "ORANGE" | "YELLOW" | "BLUE";
 
 export interface WayfinderLessonAlert {
   id: number;
-  type: "LESSON_FAILURE";
+  type: "LESSON_FAILURE" | "INACTIVITY_3_DAY" | "CAMERA_ABSENCE";
   severity: WayfinderAlertSeverity;
   status: WayfinderAlertStatus;
   attemptNumber: number;
@@ -138,6 +138,12 @@ export function cardTitle(card: WayfinderAlertCard): string {
 
 export function cardText(card: WayfinderAlertCard): string {
   if (card.kind === "lesson") {
+    if (
+      card.alert.type === "INACTIVITY_3_DAY" ||
+      card.alert.type === "CAMERA_ABSENCE"
+    ) {
+      return card.alert.message;
+    }
     const attempt =
       card.alert.attemptNumber === 1
         ? "first"

@@ -26,6 +26,7 @@ import {
 } from "@/lib/class-lesson-content";
 import { buildBlackboardSteps } from "@/lib/class-lesson-builder";
 import {
+  abandonClassSession,
   completeClassSession,
   fetchChildClassSession,
   submitClassAnswer,
@@ -55,6 +56,8 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
   const [answeredCorrectly, setAnsweredCorrectly] = useState<boolean | null>(null);
   const [answerLocked, setAnswerLocked] = useState(false);
   const [classScore, setClassScore] = useState<ClassSessionScore | null>(null);
+  const [endedReason, setEndedReason] = useState<"camera_absence" | null>(null);
+  const cameraAbsenceEndingRef = useRef(false);
   const [retakeBlocked, setRetakeBlocked] = useState(false);
   const [chatInitialized, setChatInitialized] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
@@ -237,6 +240,10 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
   const faceMissingLong =
     faceStatus != null &&
     faceStatus.faceMissingSeconds * 1000 >= FACE_MONITOR_DEFAULTS.missingThresholdMs;
+  const faceMissingEndClass =
+    faceStatus != null &&
+    faceStatus.ready &&
+    faceStatus.faceMissingSeconds * 1000 >= FACE_MONITOR_DEFAULTS.absenceEndClassMs;
   const showLookAtScreenNudge =
     classJoined &&
     cameraEnabled &&
@@ -345,10 +352,46 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
     }
   }, [session]);
 
+  const endClassForCameraAbsence = useCallback(async () => {
+    if (!session || cameraAbsenceEndingRef.current || classScore || endedReason) return;
+    cameraAbsenceEndingRef.current = true;
+    stopSpeaking();
+    try {
+      await abandonClassSession(session.sessionId, "CAMERA_ABSENCE");
+    } catch {
+      // Still end the local session so the student cannot continue.
+    }
+    setEndedReason("camera_absence");
+    setClassScore({
+      sessionId: session.sessionId,
+      scoreCorrect: 0,
+      scoreTotal: 0,
+      scorePercent: 0,
+      passed: false,
+      passThreshold: 85,
+      needsRetake: true,
+      answers: [],
+    });
+    stopStream();
+  }, [session, classScore, endedReason, stopSpeaking, stopStream]);
+
   const finishClassRef = useRef(finishClass);
   useEffect(() => {
     finishClassRef.current = finishClass;
   }, [finishClass]);
+
+  useEffect(() => {
+    if (!classJoined || !cameraEnabled || classScore || endedReason) return;
+    if (!faceMissingEndClass) return;
+    void endClassForCameraAbsence();
+  }, [
+    classJoined,
+    cameraEnabled,
+    classScore,
+    endedReason,
+    faceMissingEndClass,
+    endClassForCameraAbsence,
+  ]);
 
   useEffect(() => {
     if (!sessionClock.isTeachWindowOver || classScore) return;
@@ -951,6 +994,7 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
           passed={classScore.passed}
           passThreshold={classScore.passThreshold}
           wayfinderBlocked={retakeBlocked}
+          endedReason={endedReason}
           onContinue={handleEndCall}
           onRetake={async () => {
             stopSpeaking();

@@ -24,6 +24,9 @@ interface AlertDetailDrawerProps {
   onResolve?: (alertId: number) => void;
   onDismiss?: (alertId: number) => void;
   isUpdating?: boolean;
+  /** Parent portal: view-only; Wayfinder still resolves blocking alerts. */
+  readOnly?: boolean;
+  title?: string;
 }
 
 export default function AlertDetailDrawer({
@@ -37,6 +40,8 @@ export default function AlertDetailDrawer({
   onResolve,
   onDismiss,
   isUpdating = false,
+  readOnly = false,
+  title = "Student alerts",
 }: AlertDetailDrawerProps) {
   const lesson = card?.kind === "lesson" ? card.alert : null;
   const sel = card?.kind === "sel" ? card.alert : null;
@@ -68,7 +73,7 @@ export default function AlertDetailDrawer({
         aria-hidden={!open}
       >
         <div className="flex items-center justify-between px-6 py-5 border-b border-white/5">
-          <h2 className="text-white text-lg font-bold">Student alerts</h2>
+          <h2 className="text-white text-lg font-bold">{title}</h2>
           <button
             type="button"
             onClick={onClose}
@@ -167,7 +172,9 @@ export default function AlertDetailDrawer({
                     className="rounded-xl px-4 py-3 text-sm"
                     style={{ backgroundColor: "rgba(255,111,111,0.12)", color: "#FF9B9B" }}
                   >
-                    This student cannot retake until you mark this alert resolved.
+                    {readOnly
+                      ? "Your child’s Wayfinder must resolve this alert before another retake is allowed."
+                      : "This student cannot retake until you mark this alert resolved."}
                   </div>
                 )}
               </div>
@@ -185,25 +192,27 @@ export default function AlertDetailDrawer({
             )}
 
             <div className="mt-6 space-y-3">
-              <button
-                type="button"
-                onClick={() => onStartChat?.(group.childId)}
-                className="w-full py-3 rounded-xl bg-[#00CED1] hover:bg-[#00B8BB] text-[#111023] text-sm font-semibold transition-colors cursor-pointer"
-              >
-                Start chat with student
-              </button>
-              {(parent || group.flags.includes("BLUE")) && (
+              {onStartChat ? (
                 <button
                   type="button"
-                  onClick={() => onStartParentChat?.(group.childId)}
+                  onClick={() => onStartChat(group.childId)}
+                  className="w-full py-3 rounded-xl bg-[#00CED1] hover:bg-[#00B8BB] text-[#111023] text-sm font-semibold transition-colors cursor-pointer"
+                >
+                  {readOnly ? "Message Wayfinder" : "Start chat with student"}
+                </button>
+              ) : null}
+              {!readOnly && (parent || group.flags.includes("BLUE")) && onStartParentChat ? (
+                <button
+                  type="button"
+                  onClick={() => onStartParentChat(group.childId)}
                   className="w-full py-3 rounded-xl border border-[#3B82F6] text-[#60A5FA] text-sm font-semibold hover:bg-[#3B82F6]/10 transition-colors cursor-pointer"
                 >
                   Reply to parent
                 </button>
-              )}
+              ) : null}
             </div>
 
-            {lesson && lesson.status === "ACTIVE" && (
+            {!readOnly && lesson && lesson.status === "ACTIVE" && (
               <div className="grid grid-cols-2 gap-3 mt-4">
                 <button
                   type="button"

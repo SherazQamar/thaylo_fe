@@ -193,6 +193,7 @@ export default function InfoTooltip({
       <button
         ref={buttonRef}
         type="button"
+        data-snapshot-ignore="true"
         aria-label={label}
         aria-expanded={open}
         aria-describedby={open ? tooltipId : undefined}
