@@ -4,7 +4,12 @@ import { useCallback, useRef } from "react";
 
 import { useHeygenAgent, type HeygenAvatarConfig } from "@/hooks/use-heygen-agent";
 import { useSpeechSynthesis } from "@/hooks/use-speech-synthesis";
-import { createHeygenSessionToken, type PublicAiSettings, type SpeechAuthMode } from "@/lib/ai-settings-api";
+import {
+  createHeygenSessionToken,
+  synthesizeLiveAvatarPcm,
+  type PublicAiSettings,
+  type SpeechAuthMode,
+} from "@/lib/ai-settings-api";
 import { sanitizeTextForSpeech } from "@/lib/tts-sanitize";
 import {
   delay,
@@ -26,7 +31,9 @@ type VoiceConfig = PublicAiSettings["voice"];
 const AVATAR_WORD_MS = 360;
 
 /**
- * Instructor speech for live class — LiveAvatar owns class audio when enabled.
+ * Instructor speech for live class.
+ * LiveAvatar FULL = avatar + LiveAvatar voice.
+ * LiveAvatar LITE (useElevenLabsVoice) = avatar face + Super Admin ElevenLabs voice.
  */
 export function useInstructorSpeech(
   voiceConfig?: VoiceConfig | null,
@@ -34,8 +41,12 @@ export function useInstructorSpeech(
   authMode: SpeechAuthMode = "child",
 ) {
   const heygenEnabled = Boolean(avatarConfig?.enabled && avatarConfig.provider === "heygen");
+  const useElevenLabsVoice = heygenEnabled && Boolean(avatarConfig?.useElevenLabsVoice);
 
-  const tts = useSpeechSynthesis(heygenEnabled ? null : voiceConfig, authMode);
+  const tts = useSpeechSynthesis(
+    heygenEnabled && !useElevenLabsVoice ? null : voiceConfig,
+    authMode,
+  );
   const heygen = useHeygenAgent(avatarConfig, createHeygenSessionToken);
 
   const ttsRef = useRef(tts);
@@ -70,11 +81,23 @@ export function useInstructorSpeech(
 
       agent = heygenRef.current;
       if (agent.isReady) {
+        let audioBase64: string | undefined;
+        if (useElevenLabsVoice) {
+          try {
+            const pcm = await synthesizeLiveAvatarPcm(spokenText);
+            audioBase64 = pcm.audioBase64;
+          } catch {
+            await ttsRef.current.speakProgress(text, options);
+            return;
+          }
+        }
+
         let started = false;
         const speakPromise = agent.speak(spokenText, {
           onStarted: () => {
             started = true;
           },
+          audioBase64,
         });
 
         const boardSync = (async () => {
@@ -109,7 +132,7 @@ export function useInstructorSpeech(
     }
 
     await ttsRef.current.speakProgress(text, options);
-  }, [heygenEnabled]);
+  }, [heygenEnabled, useElevenLabsVoice]);
 
   const speak = useCallback(
     async (text: string) => {

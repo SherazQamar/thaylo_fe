@@ -168,7 +168,7 @@ export default function InfoTooltip({
             ref={tooltipRef}
             id={tooltipId}
             role="tooltip"
-            className="fixed z-[9999] max-w-[min(280px,calc(100vw-2rem))] w-[min(280px,calc(100vw-2rem))] rounded-xl border border-white/10 bg-[#252338] px-3 py-2.5 text-left text-xs leading-relaxed text-white/80 shadow-xl"
+            className="fixed z-[9999] max-w-[min(320px,calc(100vw-2rem))] w-[min(320px,calc(100vw-2rem))] rounded-xl border border-white/10 bg-[#252338] px-3 py-2.5 text-left text-xs leading-relaxed text-white/80 shadow-xl"
             style={{
               top: coords?.top ?? -9999,
               left: coords?.left ?? -9999,
@@ -193,6 +193,7 @@ export default function InfoTooltip({
       <button
         ref={buttonRef}
         type="button"
+        data-snapshot-ignore="true"
         aria-label={label}
         aria-expanded={open}
         aria-describedby={open ? tooltipId : undefined}

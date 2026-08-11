@@ -15,6 +15,8 @@ export type HeygenAvatarConfig = {
   provider?: "none" | "heygen";
   heygenAvatarId?: string;
   heygenVoiceId?: string;
+  /** LiveAvatar face + ElevenLabs PCM (LITE). Off = LiveAvatar TTS (FULL). */
+  useElevenLabsVoice?: boolean;
 };
 
 export type HeygenAgentStatus =
@@ -53,6 +55,7 @@ export function useHeygenAgent(
   const enabled = isHeygenConfigReady(config);
   const avatarId = config?.heygenAvatarId?.trim() ?? "";
   const voiceId = config?.heygenVoiceId?.trim() ?? "";
+  const useElevenLabsVoice = Boolean(config?.useElevenLabsVoice);
 
   const attachVideoElement = useCallback((el: HTMLVideoElement | null) => {
     videoRef.current = el;
@@ -140,6 +143,7 @@ export function useHeygenAgent(
 
         void avatarId;
         void voiceId;
+        void useElevenLabsVoice;
 
         if (videoRef.current) {
           session.attach(videoRef.current);
@@ -180,14 +184,15 @@ export function useHeygenAgent(
       sessionRef.current = null;
       void session?.stop().catch(() => undefined);
     };
-  }, [enabled, avatarId, voiceId, getSessionToken]);
+  }, [enabled, avatarId, voiceId, useElevenLabsVoice, getSessionToken]);
 
   const speakOnce = useCallback(async (
     text: string,
-    handlers?: { onStarted?: () => void },
+    handlers?: { onStarted?: () => void; audioBase64?: string },
   ): Promise<boolean> => {
     const input = text.trim();
-    if (!input) {
+    const audioBase64 = handlers?.audioBase64?.trim() ?? "";
+    if (!input && !audioBase64) {
       handlers?.onStarted?.();
       return true;
     }
@@ -207,8 +212,12 @@ export function useHeygenAgent(
       });
       speakStartedResolverRef.current = fireStarted;
 
-      // Speak immediately — do not block waiting for SPEAK_STARTED (felt like a freeze).
-      session.repeat(input);
+      // LITE: ElevenLabs PCM → lips. FULL: LiveAvatar TTS from text.
+      if (audioBase64) {
+        session.repeatAudio(audioBase64);
+      } else {
+        session.repeat(input);
+      }
 
       // Notify board sync when lips start; fall back quickly if event is late.
       const startFallback = window.setTimeout(fireStarted, 500);
@@ -235,7 +244,7 @@ export function useHeygenAgent(
 
   const speak = useCallback(async (
     text: string,
-    handlers?: { onStarted?: () => void },
+    handlers?: { onStarted?: () => void; audioBase64?: string },
   ) => {
     const task = speakChainRef.current.then(() => speakOnce(text, handlers));
     speakChainRef.current = task.catch(() => false);

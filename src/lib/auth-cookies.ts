@@ -32,8 +32,11 @@ export function clearUserToken(): void {
   Cookies.remove(USER_TOKEN_KEY, removeOptions);
 }
 
-export function setChildToken(token: string): void {
-  Cookies.set(CHILD_TOKEN_KEY, token, cookieOptions);
+export function setChildToken(token: string, expiresDays = TOKEN_EXPIRES_DAYS): void {
+  Cookies.set(CHILD_TOKEN_KEY, token, {
+    ...cookieOptions,
+    expires: Math.max(1, expiresDays),
+  });
 }
 
 export function getChildToken(): string | undefined {

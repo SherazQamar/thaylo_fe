@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { US_TIMEZONES } from "@/constants/us-timezones";
 import { getApiErrorMessage, isEmailAlreadyRegisteredMessage, registerParent } from "@/lib/auth-api";
+import { notify } from "@/lib/notify";
 import {
   setPendingVerification,
   startResendCooldown,
@@ -47,8 +48,7 @@ export default function ParentRegister() {
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [confirmPasswordError, setConfirmPasswordError] = useState<string | null>(null);
   const [timezone, setTimezone] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const showLoginLink = error != null && isEmailAlreadyRegisteredMessage(error);
+  const [showLoginLink, setShowLoginLink] = useState(false);
 
   const registerMutation = useMutation({
     mutationFn: async () => {
@@ -95,7 +95,9 @@ export default function ParentRegister() {
       router.push(`/verify-email?${params.toString()}`);
     },
     onError: (err) => {
-      setError(getApiErrorMessage(err));
+      const message = getApiErrorMessage(err);
+      notify.error(err);
+      setShowLoginLink(isEmailAlreadyRegisteredMessage(message));
     },
   });
 
@@ -118,7 +120,7 @@ export default function ParentRegister() {
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    setError(null);
+    setShowLoginLink(false);
 
     const passwordValidationError = validateParentPassword(password);
     if (passwordValidationError) {
@@ -135,7 +137,7 @@ export default function ParentRegister() {
     setConfirmPasswordError(null);
 
     if (!timezone) {
-      setError("Please select a timezone");
+      notify.error("Please select a timezone");
       return;
     }
 
@@ -467,7 +469,7 @@ export default function ParentRegister() {
                       value={timezone}
                       onChange={(e) => {
                         setTimezone(e.target.value);
-                        if (error) setError(null);
+                        if (showLoginLink) setShowLoginLink(false);
                       }}
                       required
                       className={`${fieldInputClass} cursor-pointer appearance-none`}
@@ -489,25 +491,18 @@ export default function ParentRegister() {
                   </div>
                 </div>
 
-                {error && (
-                  <div
-                    className="text-sm text-red-400 text-center"
-                    style={inter}
-                    role="alert"
-                  >
-                    <p>{error}</p>
-                    {showLoginLink && (
-                      <p className="mt-2 text-white/60">
-                        Already started signing up?{" "}
-                        <Link
-                          href="/parent-sign-in"
-                          className="text-[#00CED1] font-medium hover:underline"
-                        >
-                          Sign in
-                        </Link>{" "}
-                        to verify your email or continue.
-                      </p>
-                    )}
+                {showLoginLink && (
+                  <div className="text-sm text-center" style={inter}>
+                    <p className="text-white/60">
+                      Already started signing up?{" "}
+                      <Link
+                        href="/parent-sign-in"
+                        className="text-[#00CED1] font-medium hover:underline"
+                      >
+                        Sign in
+                      </Link>{" "}
+                      to verify your email or continue.
+                    </p>
                   </div>
                 )}
 

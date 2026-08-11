@@ -42,11 +42,15 @@ export function clearUserSession(): void {
   clearLegacyAuthStorage();
 }
 
-export function setChildSession(accessToken: string, child: Child): void {
+export function setChildSession(
+  accessToken: string,
+  child: Child,
+  options?: { expiresDays?: number },
+): void {
   clearLegacyAuthStorage();
   clearUserToken();
   useAuthStore.getState().clearUser();
-  setChildToken(accessToken);
+  setChildToken(accessToken, options?.expiresDays ?? 1);
   useChildAuthStore.getState().setChild(child);
 }
 

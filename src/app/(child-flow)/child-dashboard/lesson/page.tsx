@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import ClassLiveRoom from "@/components/child/class/ClassLiveRoom";
+import { notify } from "@/lib/notify";
 import { fetchChildClassSession, type ChildClassSession } from "@/lib/curriculum-api";
 
 function LessonPageContent() {
@@ -43,6 +44,12 @@ function LessonPageContent() {
       cancelled = true;
     };
   }, [sessionId]);
+
+  useEffect(() => {
+    if (loadError) {
+      notify.error(loadError);
+    }
+  }, [loadError]);
 
   return (
     <ClassLiveRoom session={session} isLoading={isLoading} loadError={loadError} />

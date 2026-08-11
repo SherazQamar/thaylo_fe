@@ -6,9 +6,9 @@ import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import {
   forgotPassword,
-  getApiErrorMessage,
   loginUser,
 } from "@/lib/auth-api";
+import { notify } from "@/lib/notify";
 import ThayloBrandLink from "@/components/shared/ThayloBrandLink";
 import PasswordInput from "@/components/shared/PasswordInput";
 import { logoutUser, setWayfinderSession } from "@/lib/auth-session";
@@ -21,8 +21,6 @@ export default function WayfinderSignIn() {
   const [password, setPassword] = useState("");
   const [modal, setModal] = useState<ModalState>("none");
   const [resetEmail, setResetEmail] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [resetError, setResetError] = useState<string | null>(null);
   const [resetSuccessMessage, setResetSuccessMessage] = useState<string | null>(
     null,
   );
@@ -51,7 +49,7 @@ export default function WayfinderSignIn() {
     onSuccess: (user) => {
       if (user.role !== "WAY_FINDER") {
         logoutUser();
-        setError(
+        notify.error(
           "This account cannot sign in here. Please use the Parent sign-in page.",
         );
         return;
@@ -68,7 +66,7 @@ export default function WayfinderSignIn() {
       router.push("/dashboard");
     },
     onError: (err) => {
-      setError(getApiErrorMessage(err));
+      notify.error(err);
     },
   });
 
@@ -81,25 +79,23 @@ export default function WayfinderSignIn() {
       return forgotPassword(emailTrimmed);
     },
     onSuccess: (response) => {
-      setResetError(null);
       setResetSuccessMessage(response.message);
+      notify.success(response.message);
       setModal("verification");
     },
     onError: (err) => {
-      setResetError(getApiErrorMessage(err));
+      notify.error(err);
     },
   });
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    setError(null);
     setSuccessMessage(null);
     loginMutation.mutate();
   }
 
   function handleSendReset(e: FormEvent) {
     e.preventDefault();
-    setResetError(null);
     forgotPasswordMutation.mutate();
   }
 
@@ -207,7 +203,6 @@ export default function WayfinderSignIn() {
                   type="button"
                   onClick={() => {
                     setResetEmail("");
-                    setResetError(null);
                     setResetSuccessMessage(null);
                     setModal("reset");
                   }}
@@ -228,16 +223,6 @@ export default function WayfinderSignIn() {
                   role="status"
                 >
                   {successMessage}
-                </p>
-              )}
-
-              {error && (
-                <p
-                  className="text-sm text-red-400 text-center"
-                  style={{ fontFamily: "Inter, sans-serif" }}
-                  role="alert"
-                >
-                  {error}
                 </p>
               )}
 
@@ -307,12 +292,6 @@ export default function WayfinderSignIn() {
                 Enter your email address and we&apos;ll send you instructions to
                 reset your password.
               </p>
-
-              {resetError && (
-                <p className="text-sm text-red-400 text-center" role="alert">
-                  {resetError}
-                </p>
-              )}
 
               <button
                 type="submit"

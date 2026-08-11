@@ -6,10 +6,11 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
-  getApiErrorMessage,
   setWayfinderPassword,
   validateResetToken,
 } from "@/lib/auth-api";
+import { useNotifyError } from "@/hooks/use-notify-error";
+import { notify } from "@/lib/notify";
 import ThayloBrandLink from "@/components/shared/ThayloBrandLink";
 import PasswordInput from "@/components/shared/PasswordInput";
 
@@ -23,7 +24,6 @@ function SetPasswordContent() {
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [formError, setFormError] = useState<string | null>(null);
 
   const tokenQuery = useQuery({
     queryKey: ["validate-wayfinder-setup-token", token],
@@ -50,17 +50,12 @@ function SetPasswordContent() {
       router.push("/wayfinder-sign-in?setup=1");
     },
     onError: (err) => {
-      setFormError(getApiErrorMessage(err));
+      notify.error(err);
     },
   });
 
-  useEffect(() => {
-    setFormError(null);
-  }, [newPassword, confirmPassword]);
-
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    setFormError(null);
     setupMutation.mutate();
   }
 
@@ -79,6 +74,14 @@ function SetPasswordContent() {
     !tokenQuery.isLoading &&
     tokenQuery.isSuccess &&
     tokenQuery.data?.data?.role === "WAY_FINDER";
+
+  useNotifyError(tokenQuery.error, tokenInvalid);
+
+  useEffect(() => {
+    if (tokenWrongRole) {
+      notify.error("This setup link is not valid for a wayfinder account.");
+    }
+  }, [tokenWrongRole]);
 
   return (
     <div className="h-screen flex flex-col lg:flex-row overflow-hidden bg-[#111023]">
@@ -157,10 +160,10 @@ function SetPasswordContent() {
                 >
                   Link Expired
                 </h2>
-                <p className="text-white/50 text-sm" role="alert" style={inter}>
+                <p className="text-white/50 text-sm" style={inter}>
                   {tokenWrongRole
                     ? "This setup link is not valid for a wayfinder account."
-                    : getApiErrorMessage(tokenQuery.error)}
+                    : "This setup link is no longer valid."}
                 </p>
                 <p className="text-white/40 text-xs" style={inter}>
                   Setup links expire after a limited time. Ask your administrator to
@@ -229,16 +232,6 @@ function SetPasswordContent() {
                   <p className="text-white/40 text-xs text-center" style={inter}>
                     Password must be at least {MIN_PASSWORD_LENGTH} characters.
                   </p>
-
-                  {formError && (
-                    <p
-                      className="text-sm text-red-400 text-center"
-                      role="alert"
-                      style={inter}
-                    >
-                      {formError}
-                    </p>
-                  )}
 
                   <button
                     type="submit"

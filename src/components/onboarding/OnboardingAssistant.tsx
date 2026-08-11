@@ -8,6 +8,7 @@ import { useSpeechSynthesis } from "@/hooks/use-speech-synthesis";
 import { useAiSettings } from "@/hooks/use-ai-settings";
 import { useSpeechRecognition } from "@/hooks/use-speech-recognition";
 import { getChildToken, getUserToken } from "@/lib/auth-cookies";
+import { notify } from "@/lib/notify";
 import { applyVoiceToDraft } from "@/lib/onboarding-voice.util";
 import {
   fetchOnboardingStatus,
@@ -108,7 +109,6 @@ export default function OnboardingAssistant({
   const usedVoiceForQuestionRef = useRef(false);
 
   const [stage, setStage] = useState<AssistantStage>("loading");
-  const [error, setError] = useState<string | null>(null);
   const [turn, setTurn] = useState<OnboardingTurn | null>(null);
   const [sessionId, setSessionId] = useState<number | null>(null);
   const [draft, setDraft] = useState<{
@@ -156,12 +156,12 @@ export default function OnboardingAssistant({
     });
 
     socket.on("onboarding:error", (payload: { message?: string }) => {
-      setError(payload?.message ?? "Onboarding connection error");
+      notify.error(payload?.message ?? "Onboarding connection error");
       setStage("error");
     });
 
     socket.on("connect_error", () => {
-      setError(
+      notify.error(
         `Could not connect to ${aiName}. Make sure thaylo-ai is running on port 3002.`,
       );
       setStage("error");
@@ -187,7 +187,7 @@ export default function OnboardingAssistant({
   const proceedToSession = useCallback(async () => {
     if (connectedPortalRef.current !== portal) {
       if (!setupSocket(portal)) {
-        setError("You are not signed in.");
+        notify.error("You are not signed in.");
         setStage("error");
         return;
       }
@@ -201,7 +201,6 @@ export default function OnboardingAssistant({
 
   const beginWalkthrough = useCallback(async () => {
     setStage("loading");
-    setError(null);
     setDraft({});
     setCombinedWalkthrough(null);
 
@@ -321,13 +320,13 @@ export default function OnboardingAssistant({
 
   useEffect(() => {
     if (!setupSocket(portal)) {
-      setError("You are not signed in.");
+      notify.error("You are not signed in.");
       setStage("error");
       return;
     }
 
     void beginWalkthroughRef.current().catch((err) => {
-      setError(
+      notify.error(
         isAxiosError(err)
           ? ((err.response?.data?.message as string) ?? "Failed to start onboarding")
           : "Failed to start onboarding",
@@ -379,11 +378,10 @@ export default function OnboardingAssistant({
 
     const value = buildAnswerValue(turn.question.type, draft);
     if (!value) {
-      setError("Please choose or type an answer before continuing.");
+      notify.error("Please choose or type an answer before continuing.");
       return;
     }
 
-    setError(null);
     setStage("processing");
     stopListening();
 
@@ -502,7 +500,7 @@ export default function OnboardingAssistant({
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#111023] px-6">
         <div className="max-w-md text-center space-y-4">
-          <p className="text-white/70">{error ?? "Something went wrong."}</p>
+          <p className="text-white/70">Something went wrong.</p>
           <button
             type="button"
             onClick={() => void beginWalkthrough()}
@@ -637,11 +635,6 @@ export default function OnboardingAssistant({
                 </p>
               )}
 
-              {error && (
-                <p className="text-red-400 text-sm mt-4" role="alert">
-                  {error}
-                </p>
-              )}
             </div>
 
             {turn?.question && stage === "awaiting-answer" && (

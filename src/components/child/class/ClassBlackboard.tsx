@@ -29,6 +29,14 @@ type ClassBlackboardProps = {
   avatarPresent?: boolean;
   /** Avatar is shrunk for quiz mode — still reserve a right lane. */
   avatarCompact?: boolean;
+  /** After a wrong answer: highlight the correct choice. */
+  revealCorrectAnswer?: boolean;
+  /** In-lesson short reteach → re-check UI mode. */
+  answerFlowMode?: "idle" | "reteaching" | "recheck";
+  /** Force option hints visible (Need a hint? CTA). */
+  forceShowHints?: boolean;
+  /** Summative locked until formative checks are secure (Blueprint T4). */
+  interactionLocked?: boolean;
 };
 
 function renderPartialText(text: string, visibleWords: number, keyPrefix: string) {
@@ -60,6 +68,10 @@ export default function ClassBlackboard({
   onSubmitWordLadder,
   avatarPresent = false,
   avatarCompact = false,
+  revealCorrectAnswer = false,
+  answerFlowMode = "idle",
+  forceShowHints = false,
+  interactionLocked = false,
 }: ClassBlackboardProps) {
   const instructorInitial = instructorName.trim().charAt(0).toUpperCase() || "A";
   const completedLines = step.lines.slice(0, reveal.completedLines);
@@ -76,13 +88,18 @@ export default function ClassBlackboard({
   const isWordLadder = interaction?.type === "word_ladder";
   const showChoiceOptions = hasInteraction && !isWordLadder;
   const showWordLadder = hasInteraction && isWordLadder;
-  const showOptionHints = step.phase === "quick_check";
+  const showOptionHints =
+    forceShowHints ||
+    step.phase === "quick_check" ||
+    answerFlowMode === "recheck" ||
+    (revealCorrectAnswer && answeredCorrectly === false);
   const compact = hasInteraction || (step.bulletPoints?.length ?? 0) > 2;
+  const interactionRemountKey = `${interaction?.id ?? "none"}:${answerFlowMode}`;
 
   // AI/curriculum often lists the correct answer last — shuffle once per question.
   const choiceOptionsKey =
     interaction && !isWordLadder
-      ? `${interaction.id}:${interaction.options.map((o) => o.id).join(",")}`
+      ? `${interaction.id}:${interaction.options.map((o) => o.id).join(",")}:${answerFlowMode}`
       : "";
   const shuffledChoiceOptions = useMemo(() => {
     if (!interaction || isWordLadder) return [];
@@ -223,6 +240,21 @@ export default function ClassBlackboard({
 
             {hasInteraction && interaction && (
               <div className={`border-t border-white/10 ${compact ? "pt-2 mt-1" : "pt-3 mt-2"}`}>
+                {answerFlowMode === "reteaching" || answerFlowMode === "recheck" ? (
+                  <p
+                    className="mb-2 rounded-lg px-2.5 py-1.5 text-[11px] font-semibold"
+                    style={{
+                      ...inter,
+                      color: "#FFC542",
+                      backgroundColor: "rgba(255,197,66,0.12)",
+                      border: "1px solid rgba(255,197,66,0.35)",
+                    }}
+                  >
+                    {answerFlowMode === "reteaching"
+                      ? "Quick reteach — listen, then try again."
+                      : "Re-check — use what you just learned."}
+                  </p>
+                ) : null}
                 <p
                   style={{
                     ...inter,
@@ -250,19 +282,32 @@ export default function ClassBlackboard({
                       {shuffledChoiceOptions.map((option) => {
                         const isSelected = selectedOptionId === option.id;
                         const showResult = selectedOptionId != null;
+                        const isCorrectOption = option.correct === true;
                         let borderColor = "rgba(255,255,255,0.2)";
                         let bg = "rgba(0,0,0,0.2)";
 
                         if (showResult && isSelected) {
                           borderColor = answeredCorrectly ? "#00CED1" : "#FF7B7B";
                           bg = answeredCorrectly ? "rgba(0,206,209,0.15)" : "rgba(255,123,123,0.12)";
+                        } else if (
+                          showResult &&
+                          revealCorrectAnswer &&
+                          answeredCorrectly === false &&
+                          isCorrectOption
+                        ) {
+                          borderColor = "#60D624";
+                          bg = "rgba(96,214,36,0.14)";
                         }
 
                         return (
                           <div key={option.id} className="flex items-stretch gap-1.5">
                             <button
                               type="button"
-                              disabled={selectedOptionId != null}
+                              disabled={
+                                interactionLocked ||
+                                selectedOptionId != null ||
+                                answerFlowMode === "reteaching"
+                              }
                               onClick={() => onSelectOption?.(option.id)}
                               className="flex-1 rounded-xl px-3 py-2 text-left transition-transform hover:scale-[1.02] disabled:cursor-default"
                               style={{
@@ -275,6 +320,12 @@ export default function ClassBlackboard({
                               }}
                             >
                               {option.label}
+                              {showResult &&
+                              revealCorrectAnswer &&
+                              answeredCorrectly === false &&
+                              isCorrectOption
+                                ? " ✓"
+                                : ""}
                             </button>
                             {showOptionHints && option.hint?.trim() && (
                               <div className="flex items-center">
@@ -286,10 +337,25 @@ export default function ClassBlackboard({
                       })}
                     </div>
                     {selectedOptionId != null && (
-                      <p className="mt-2 text-xs" style={{ ...inter, color: answeredCorrectly ? "#00CED1" : "#FFC542" }}>
+                      <p
+                        className="mt-2 text-xs"
+                        style={{
+                          ...inter,
+                          color: answeredCorrectly ? "#00CED1" : "#FFC542",
+                        }}
+                      >
                         {answeredCorrectly
-                          ? "Great job! That's the strongest word."
-                          : "Thanks for answering — let's keep going."}
+                          ? "Great job! That's the strongest choice."
+                          : answerFlowMode === "recheck"
+                            ? "Not quite — the green choice is stronger. We'll keep practicing."
+                            : revealCorrectAnswer
+                              ? "Not quite — the green choice is stronger. We'll reteach, then re-check."
+                              : "Not quite — let's look at this together."}
+                      </p>
+                    )}
+                    {answerFlowMode === "recheck" && selectedOptionId == null && (
+                      <p className="mt-2 text-xs" style={{ ...inter, color: "#00CED1" }}>
+                        Your turn again — pick the strongest answer.
                       </p>
                     )}
                   </>
@@ -297,9 +363,12 @@ export default function ClassBlackboard({
 
                 {showWordLadder && (
                   <WordLadderDragDrop
+                    key={interactionRemountKey}
                     words={interaction.options}
                     showHints={showOptionHints}
-                    disabled={isNarrating}
+                    disabled={
+                      interactionLocked || isNarrating || answerFlowMode === "reteaching"
+                    }
                     submitted={selectedOptionId != null}
                     isCorrect={answeredCorrectly}
                     compact

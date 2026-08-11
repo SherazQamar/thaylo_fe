@@ -7,7 +7,8 @@ import UserDropdown from "@/components/wayfinder/UserDropdown";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import InfoTooltip from "@/components/shared/InfoTooltip";
 import PortalAvatar from "@/components/shared/PortalAvatar";
-import { getApiErrorMessage } from "@/lib/auth-api";
+import MasterySparkline from "@/components/wayfinder/MasterySparkline";
+import { useNotifyError } from "@/hooks/use-notify-error";
 import {
   fetchWayfinderDashboard,
   type WayfinderDashboardStudent,
@@ -51,7 +52,7 @@ function PrioritiesPanel({
               Priorities
             </h2>
             <p style={{ ...inter, fontWeight: 400, fontSize: "13px", color: "rgba(255,255,255,0.5)", marginTop: "4px" }}>
-              Students with red flags — open Alerts Center to act
+              Students with lesson or Bloom Buddy flags — open Alerts Center to act
             </p>
           </div>
           <button
@@ -66,11 +67,13 @@ function PrioritiesPanel({
 
         {priorities.length === 0 ? (
           <p style={{ ...inter, fontWeight: 400, fontSize: "14px", color: "rgba(255,255,255,0.5)" }} className="py-8 text-center">
-            No red-flag students right now.
+            No priority students right now.
           </p>
         ) : (
           <div className="flex flex-col gap-2">
-            {priorities.map((p) => (
+            {priorities.map((p) => {
+              const isAmber = p.severity === "AMBER";
+              return (
               <Link
                 key={`${p.source}-${p.childId}`}
                 href="/dashboard/alerts"
@@ -84,9 +87,12 @@ function PrioritiesPanel({
                   </p>
                   <span
                     className="rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase"
-                    style={{ backgroundColor: "#FF6F6F", color: "#111023" }}
+                    style={{
+                      backgroundColor: isAmber ? "#F59E0B" : "#FF6F6F",
+                      color: "#111023",
+                    }}
                   >
-                    Red
+                    {isAmber ? "Amber" : "Red"}
                   </span>
                 </div>
                 <p style={{ ...inter, fontWeight: 400, fontSize: "12px", color: "rgba(255,255,255,0.55)", marginTop: "4px" }}>
@@ -94,7 +100,8 @@ function PrioritiesPanel({
                   {p.reason}
                 </p>
               </Link>
-            ))}
+              );
+            })}
           </div>
         )}
 
@@ -113,10 +120,32 @@ function PrioritiesPanel({
 
 function DashboardStudentRow({ student }: { student: WayfinderDashboardStudent }) {
   const displayName = formatWayfinderStudentName(student);
+  const wellness = student.wellnessFlag ?? "GREEN";
+  const wellnessColor =
+    wellness === "RED" ? "#FF6F6F" : wellness === "AMBER" ? "#F59E0B" : "#00DCAB";
+  const trend = student.masteryTrend ?? "—";
+  const trendColor =
+    trend === "Improving"
+      ? "#00DCAB"
+      : trend === "Declining"
+        ? "#FF6F6F"
+        : "rgba(255,255,255,0.65)";
+  const presence = student.presenceStatus ?? "IDLE";
+  const presenceLabel = student.presenceLabel ?? "Idle";
+  const presenceColor =
+    presence === "IN_LESSON"
+      ? "#00CED1"
+      : presence === "ONLINE"
+        ? "#60D624"
+        : "rgba(255,255,255,0.45)";
+  const rowHref =
+    presence === "IN_LESSON" && student.liveSessionId
+      ? `/dashboard/live-sessions/${student.liveSessionId}`
+      : `/dashboard/student?id=${student.id}`;
 
   return (
     <Link
-      href={`/dashboard/student?id=${student.id}`}
+      href={rowHref}
       className="md:grid md:grid-cols-[1.1fr_1fr_1.2fr_auto] items-center rounded-[12px] px-4 md:px-5 py-3 gap-3 md:gap-4 hover:bg-white/10 transition-colors flex flex-col"
       style={{ backgroundColor: "#313044" }}
     >
@@ -129,6 +158,59 @@ function DashboardStudentRow({ student }: { student: WayfinderDashboardStudent }
           <p style={{ ...inter, fontWeight: 500, fontSize: "12px", lineHeight: "16px", color: "#858C94" }}>
             {formatStudentGrade(student.grade)}
           </p>
+          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+            <span
+              className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5"
+              style={{
+                ...inter,
+                fontWeight: 600,
+                fontSize: "10px",
+                letterSpacing: "0.3px",
+                color: presence === "IDLE" ? "rgba(255,255,255,0.75)" : "#111023",
+                backgroundColor:
+                  presence === "IDLE" ? "rgba(255,255,255,0.12)" : presenceColor,
+              }}
+              title={WAYFINDER_DASHBOARD_HINTS.presenceStudent}
+            >
+              <span
+                className={`inline-block h-1.5 w-1.5 rounded-full ${
+                  presence === "IN_LESSON" ? "animate-pulse" : ""
+                }`}
+                style={{
+                  backgroundColor:
+                    presence === "IDLE" ? "rgba(255,255,255,0.5)" : "#111023",
+                }}
+              />
+              {presenceLabel}
+            </span>
+            <span
+              className="inline-flex items-center gap-1 rounded-full px-2 py-0.5"
+              style={{
+                ...inter,
+                fontWeight: 600,
+                fontSize: "10px",
+                letterSpacing: "0.4px",
+                color: "#111023",
+                backgroundColor: wellnessColor,
+              }}
+              title={student.wellnessReason ?? WAYFINDER_DASHBOARD_HINTS.wellnessFlag}
+            >
+              SEL {wellness === "GREEN" ? "Green" : wellness === "AMBER" ? "Amber" : "Red"}
+            </span>
+            <span
+              className="inline-flex items-center gap-1.5"
+              style={{ ...inter, fontWeight: 500, fontSize: "11px", color: trendColor }}
+              title={WAYFINDER_DASHBOARD_HINTS.masteryTrendStudent}
+            >
+              <MasterySparkline
+                series={student.masteryTrendSeries ?? []}
+                width={48}
+                height={16}
+                stroke={trendColor === "rgba(255,255,255,0.65)" ? "#00CED1" : trendColor}
+              />
+              {trend === "Improving" ? "↑" : trend === "Declining" ? "↓" : "→"} {trend}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -217,6 +299,8 @@ export default function DashboardPage() {
   const stats = data?.stats ?? [];
   const totalStudents = data?.totalStudents ?? students.length;
 
+  useNotifyError(dashboardQuery.error, dashboardQuery.isError);
+
   return (
     <div className="p-4 md:p-6 lg:p-10">
       <div className="flex items-center justify-between mb-2 md:mb-3">
@@ -242,15 +326,9 @@ export default function DashboardPage() {
         </p>
       )}
 
-      {dashboardQuery.isError && (
-        <p style={{ ...inter, fontWeight: 400, fontSize: "14px", color: "#EF4444" }} className="py-8" role="alert">
-          {getApiErrorMessage(dashboardQuery.error)}
-        </p>
-      )}
-
       {!dashboardQuery.isLoading && !dashboardQuery.isError && (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 mb-8 md:mb-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 md:gap-4 mb-8 md:mb-10">
             {stats.map((stat) => {
               const fallbackHint =
                 stat.key === "masteryTrend"
@@ -259,7 +337,9 @@ export default function DashboardPage() {
                     ? WAYFINDER_DASHBOARD_HINTS.timeThisWeek
                     : stat.key === "selSummary"
                       ? WAYFINDER_DASHBOARD_HINTS.selSummary
-                      : undefined;
+                      : stat.key === "presence"
+                        ? WAYFINDER_DASHBOARD_HINTS.presence
+                        : undefined;
               const hint = stat.hint?.trim() || fallbackHint;
 
               return (
@@ -269,10 +349,19 @@ export default function DashboardPage() {
                   style={{ backgroundColor: "#525162" }}
                 >
                   <div className="w-10 h-10 rounded-full bg-[#00CED1]/20 flex items-center justify-center flex-shrink-0">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00CED1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M22 2L11 13" />
-                      <path d="M22 2L15 22L11 13L2 9L22 2Z" />
-                    </svg>
+                    {stat.key === "masteryTrend" ? (
+                      <MasterySparkline
+                        series={data?.masteryTrendSeries ?? []}
+                        width={28}
+                        height={20}
+                        stroke="#00CED1"
+                      />
+                    ) : (
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00CED1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M22 2L11 13" />
+                        <path d="M22 2L15 22L11 13L2 9L22 2Z" />
+                      </svg>
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p
@@ -313,7 +402,11 @@ export default function DashboardPage() {
                       fontSize: "13px",
                       letterSpacing: "0.6px",
                       color: "#111023",
-                      backgroundColor: priorities.length > 0 ? "#FF6F6F" : "#00CED1",
+                  backgroundColor: priorities.some((p) => p.severity === "RED")
+                    ? "#FF6F6F"
+                    : priorities.length > 0
+                      ? "#F59E0B"
+                      : "#00CED1",
                     }}
                   >
                     Priorities

@@ -538,19 +538,48 @@ function SelOverviewCard({ rows }: { rows: ParentDashboardChildSel[] }) {
                   bg="rgba(34,197,94,0.2)"
                 />
                 <SelMoodPill
-                  emoji="😕"
-                  label="Confuse"
+                  emoji="😐"
+                  label="Okay"
                   count={row.confusedCount}
                   color="#F59E0B"
                   bg="rgba(245,158,11,0.2)"
                 />
                 <SelMoodPill
-                  emoji="😢"
-                  label="Sad"
+                  emoji="😟"
+                  label="Worried"
                   count={row.sadCount}
                   color="#00CED1"
                   bg="rgba(0,206,209,0.2)"
                 />
+                {(() => {
+                  const flag = row.wellnessFlag ?? "GREEN";
+                  const color =
+                    flag === "RED"
+                      ? "#FF6F6F"
+                      : flag === "AMBER"
+                        ? "#F59E0B"
+                        : "#22C55E";
+                  return (
+                    <span
+                      className="rounded-full px-2.5 py-1"
+                      style={{
+                        ...inter,
+                        fontWeight: 700,
+                        fontSize: "11px",
+                        letterSpacing: "0.4px",
+                        color: "#111023",
+                        backgroundColor: color,
+                      }}
+                      title={row.wellnessReason ?? undefined}
+                    >
+                      {flag === "GREEN"
+                        ? "Green"
+                        : flag === "AMBER"
+                          ? "Amber"
+                          : "Red"}
+                    </span>
+                  );
+                })()}
               </div>
             </div>
           ))

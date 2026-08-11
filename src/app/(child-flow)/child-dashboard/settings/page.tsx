@@ -5,7 +5,7 @@ import { useMutation } from "@tanstack/react-query";
 import AvatarPicker from "@/components/shared/AvatarPicker";
 import ChildUserDropdown from "@/components/child/ChildUserDropdown";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
-import { getApiErrorMessage } from "@/lib/auth-api";
+import { notify } from "@/lib/notify";
 import { updateChildClassGoals } from "@/lib/child-api";
 import { useChildAuthStore } from "@/stores/child-auth.store";
 
@@ -192,7 +192,6 @@ export default function ChildSettingsPage() {
 
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [dailyMinutes, setDailyMinutes] = useState("");
-  const [goalsError, setGoalsError] = useState<string | null>(null);
   const [goalsSaved, setGoalsSaved] = useState(false);
 
   const displayName = child?.userName?.trim() || "Student";
@@ -232,23 +231,20 @@ export default function ChildSettingsPage() {
           ? String(updated.classGoalDailyMinutes)
           : "",
       );
-      setGoalsError(null);
       setGoalsSaved(true);
       setTimeout(() => setGoalsSaved(false), 2500);
     },
-    onError: (err) => setGoalsError(getApiErrorMessage(err)),
+    onError: (err) => notify.error(err),
   });
 
   function toggleDay(day: string) {
     setGoalsSaved(false);
-    setGoalsError(null);
     setSelectedDays((prev) =>
       prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day],
     );
   }
 
   function handleSaveGoals() {
-    setGoalsError(null);
     goalsMutation.mutate();
   }
 
@@ -491,7 +487,6 @@ export default function ChildSettingsPage() {
                 value={dailyMinutes}
                 onChange={(e) => {
                   setDailyMinutes(e.target.value);
-                  setGoalsError(null);
                   setGoalsSaved(false);
                 }}
                 placeholder="e.g. 30"
@@ -514,12 +509,7 @@ export default function ChildSettingsPage() {
               </span>
             </div>
 
-            {goalsError && (
-              <p className="text-sm text-red-400 mb-3" role="alert" style={inter}>
-                {goalsError}
-              </p>
-            )}
-            {goalsSaved && !goalsError && (
+            {goalsSaved && (
               <p
                 className="mb-3"
                 style={{ ...inter, fontSize: "13px", color: "#22C55E" }}
