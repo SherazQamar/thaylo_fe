@@ -20,12 +20,18 @@ export async function createChild(payload: CreateChildPayload) {
 export interface LoginChildResponseData {
   child: Child;
   accessToken: string;
+  rememberDevice?: boolean;
+  expiresInDays?: number;
 }
 
-export async function loginChild(userName: string, pin: string) {
+export async function loginChild(
+  userName: string,
+  pin: string,
+  rememberDevice = false,
+) {
   const { data } = await api.post<ApiResponse<LoginChildResponseData>>(
     "/child/login",
-    { userName, pin },
+    { userName, pin, rememberDevice },
     { authMode: "none" },
   );
   return {

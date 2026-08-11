@@ -25,6 +25,10 @@ export interface WayfinderStudent {
   createdAt: string;
   /** Most recent lesson activity ISO timestamp; null if never active in a lesson. */
   lastActiveAt: string | null;
+  /** Blueprint W3 presence triad. */
+  presenceStatus?: "IN_LESSON" | "ONLINE" | "IDLE";
+  presenceLabel?: string;
+  liveSessionId?: number | null;
   badgesEarned: number;
   /** Distinct earned badge kinds for card preview strip (original artwork). */
   badgePreviews?: WayfinderBadgePreview[];
@@ -112,6 +116,28 @@ export interface WayfinderStudentSnapshot {
   /** @deprecated Prefer badgePreviews */
   badgeIcons: string[];
   badgePreviews?: WayfinderBadgePreview[];
+  risk?: "Clear" | "Amber" | "Orange" | "Red";
+  riskSeverity?: "NONE" | "YELLOW" | "ORANGE" | "RED";
+  riskReason?: string | null;
+  wellnessFlag?: "GREEN" | "AMBER" | "RED";
+  wellnessReason?: string | null;
+  confidence?: string;
+  curricularProgress?: Array<{
+    label: string;
+    value: number;
+    mastered: number;
+    total: number;
+  }>;
+  learningSummary?: {
+    currentFocus: string;
+    confidence: string;
+    engagement: "High" | "Medium" | "Low" | "Building";
+  };
+  wellbeing?: {
+    positive: number;
+    neutral: number;
+    lowMood: number;
+  };
 }
 
 export async function fetchWayfinderStudentSnapshot(
@@ -268,6 +294,15 @@ export interface WayfinderDashboardStudent {
   contentArea: string
   focusArea: string
   confidence: string
+  masteryTrend?: "Improving" | "Steady" | "Declining" | "—"
+  /** Daily distinct lesson passes (last 7 days) for sparkline. */
+  masteryTrendSeries?: number[]
+  wellnessFlag?: "GREEN" | "AMBER" | "RED"
+  wellnessReason?: string | null
+  /** Blueprint W3 presence triad. */
+  presenceStatus?: "IN_LESSON" | "ONLINE" | "IDLE"
+  presenceLabel?: string
+  liveSessionId?: number | null
   parent: WayfinderStudentParent
 }
 
@@ -276,8 +311,8 @@ export interface WayfinderPriorityStudent {
   name: string
   grade: string | null
   reason: string
-  source: "LESSON_RED" | "SEL_RED"
-  severity: "RED"
+  source: "LESSON_RED" | "SEL_RED" | "SEL_AMBER"
+  severity: "RED" | "AMBER"
 }
 
 export interface WayfinderDashboard {
@@ -285,6 +320,12 @@ export interface WayfinderDashboard {
   students: WayfinderDashboardStudent[]
   priorities: WayfinderPriorityStudent[]
   totalStudents: number
+  masteryTrendSeries?: number[]
+  presenceSummary?: {
+    inLesson: number
+    online: number
+    idle: number
+  }
 }
 
 export async function fetchWayfinderDashboard(): Promise<WayfinderDashboard> {
@@ -317,6 +358,8 @@ export interface WayfinderLiveSession {
   elapsedSeconds: number
   durationMinutes: number
   isLive: boolean
+  presenceStatus?: "IN_LESSON" | "ONLINE" | "IDLE"
+  presenceLabel?: string
 }
 
 export interface WayfinderLiveSessionsResult {
@@ -445,6 +488,98 @@ export async function fetchWayfinderLiveSessionDetail(
   return data.data
 }
 
+export interface AnalyticsLightPoint {
+  date: string
+  value: number
+}
+
+export interface AnalyticsLightStudentRow {
+  childId: number
+  name: string
+  grade: string | null
+  masteryPasses: number
+  masteryTrendLabel: "Improving" | "Steady" | "Declining" | "—"
+  reteachCount: number
+  engagementMinutes: number
+  selFlag: "GREEN" | "AMBER" | "RED"
+  selAmberSignals: number
+  selRedSignals: number
+}
+
+export interface WayfinderAnalyticsLight {
+  rangeDays: number
+  generatedAt: string
+  summary: {
+    masteryPasses: number
+    reteachSessions: number
+    engagementMinutes: number
+    selGreen: number
+    selAmber: number
+    selRed: number
+  }
+  masteryTrend: AnalyticsLightPoint[]
+  reteachFrequency: AnalyticsLightPoint[]
+  engagementTime: AnalyticsLightPoint[]
+  selFlagCounts: { green: number; amber: number; red: number }
+  students: AnalyticsLightStudentRow[]
+}
+
+export async function fetchWayfinderAnalyticsLight(
+  days = 14,
+): Promise<WayfinderAnalyticsLight> {
+  const { data } = await api.get<ApiResponse<WayfinderAnalyticsLight>>(
+    "/wayfinder/analytics-light",
+    { params: { days } },
+  )
+  return data.data
+}
+
+async function parseBlobErrorMessage(blob: Blob): Promise<string> {
+  try {
+    const text = await blob.text()
+    const parsed = JSON.parse(text) as { message?: string }
+    return parsed.message?.trim() || "Download failed"
+  } catch {
+    return "Download failed"
+  }
+}
+
+export async function downloadAnalyticsLightCsv(
+  days = 14,
+): Promise<{ blob: Blob; filename: string }> {
+  const response = await api.get<Blob>("/wayfinder/analytics-light/export.csv", {
+    params: { days },
+    responseType: "blob",
+  })
+  if (response.data.type?.includes("application/json")) {
+    throw new Error(await parseBlobErrorMessage(response.data))
+  }
+  const disposition = String(response.headers["content-disposition"] ?? "")
+  const match = /filename="?([^"]+)"?/i.exec(disposition)
+  return {
+    blob: response.data,
+    filename: match?.[1] ?? `thaylo-analytics-light.csv`,
+  }
+}
+
+export async function downloadAnalyticsLightPdf(
+  days = 14,
+): Promise<{ blob: Blob; filename: string }> {
+  const response = await api.get<Blob>("/wayfinder/analytics-light/export.pdf", {
+    params: { days },
+    responseType: "blob",
+  })
+  if (response.data.type?.includes("application/json")) {
+    throw new Error(await parseBlobErrorMessage(response.data))
+  }
+  const disposition = String(response.headers["content-disposition"] ?? "")
+  const match = /filename="?([^"]+)"?/i.exec(disposition)
+  return {
+    blob: response.data,
+    filename: match?.[1] ?? `thaylo-analytics-light.pdf`,
+  }
+}
+
 export const wayfinderQueryKeys = {
   dashboard: () => ["wayfinder", "dashboard"] as const,
   students: (params: WayfinderStudentsParams) => ["wayfinder", "students", params] as const,
@@ -458,6 +593,10 @@ export const wayfinderQueryKeys = {
     ["wayfinder", "live-sessions", "detail", sessionId] as const,
   alerts: (params: WayfinderAlertsParams) => ["wayfinder", "alerts", params] as const,
   alertCount: () => ["wayfinder", "alerts", "count"] as const,
+  analyticsLight: (days: number) => ["wayfinder", "analytics-light", days] as const,
+  notifications: (params: Record<string, unknown>) =>
+    ["wayfinder", "notifications", params] as const,
+  notificationCount: () => ["wayfinder", "notifications", "count"] as const,
 };
 
 export async function fetchWayfinderWeeklyGuidance(

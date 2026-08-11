@@ -1,7 +1,7 @@
 import { isAxiosError } from "axios";
 import { api } from "@/lib/api";
 import type { ApiResponse } from "@/types/api";
-import type { WayfinderLessonAlert } from "@/lib/wayfinder-alerts";
+import type { WayfinderLessonAlert, WayfinderSelAlert } from "@/lib/wayfinder-alerts";
 import type { WeeklyGuidance } from "@/lib/weekly-guidance";
 
 export interface ParentDashboardMasteryBar {
@@ -20,6 +20,8 @@ export interface ParentDashboardChildSel {
   happyCount: number;
   confusedCount: number;
   sadCount: number;
+  wellnessFlag?: "GREEN" | "AMBER" | "RED";
+  wellnessReason?: string | null;
 }
 
 export interface ParentDashboardWeeklyTime {
@@ -111,12 +113,30 @@ export interface ParentSubscriptionStatus {
   childrenCount: number;
   monthlyPlan: SubscriptionPlan | null;
   annualPlan: SubscriptionPlan | null;
+  foundingPlan?: SubscriptionPlan | null;
   betaMessage?: string;
   currentInterval?: "month" | "year" | null;
   canSwitchToMonthly?: boolean;
   canSwitchToAnnual?: boolean;
   paymentMethod?: ParentPaymentMethodPreview | null;
   canCollectCard?: boolean;
+  trialDays?: number;
+  trialEndsAt?: string | null;
+  foundingOffer?: {
+    label: string;
+    amount: number;
+    currency: string;
+    available: boolean;
+    description: string;
+  } | null;
+  siblingOffer?: {
+    label: string;
+    percentOff: number;
+    eligible: boolean;
+    childrenCount: number;
+    description: string;
+    applied: boolean;
+  } | null;
 }
 
 export async function fetchParentSubscription() {
@@ -153,7 +173,7 @@ export async function changeParentSubscriptionPlan(
 
 export async function createParentSubscriptionCheckout(options?: {
   priceId?: string;
-  planType?: "monthly" | "annual";
+  planType?: "monthly" | "annual" | "founding";
 }) {
   const { data } = await api.post<ApiResponse<{ url: string }>>(
     "/parent/subscription/checkout",
@@ -181,6 +201,33 @@ export interface ParentChildDetail {
   /** Note written by the child for the parent (read-only on parent side). */
   notesForParent: string | null;
   createdAt: string;
+  curricularProgress?: Array<{
+    label: string;
+    value: number;
+    mastered: number;
+    total: number;
+    minutes?: number;
+    averageScorePercent?: number | null;
+    lessons?: Array<{
+      lessonOrder: number;
+      lessonKey: string;
+      title: string;
+      status: "mastered" | "attempted" | "not_started";
+      minutes: number;
+      averageScorePercent: number | null;
+      lastAttemptAt: string | null;
+    }>;
+  }>;
+  learningSummary?: {
+    currentFocus: string;
+    confidence: string;
+    engagement: "High" | "Medium" | "Low" | "Building";
+  };
+  wellbeing?: {
+    positive: number;
+    neutral: number;
+    lowMood: number;
+  };
 }
 
 export interface UpdateParentChildPayload {
@@ -370,6 +417,7 @@ export async function fetchParentAlerts(params: ParentAlertsParams = {}) {
     ApiResponse<{
       items: WayfinderLessonAlert[];
       meta: ParentAlertsMeta;
+      selAlerts?: WayfinderSelAlert[];
     }>
   >("/parent/alerts", {
     params: {
@@ -384,6 +432,7 @@ export async function fetchParentAlerts(params: ParentAlertsParams = {}) {
 
   return {
     items: data.data.items ?? [],
+    selAlerts: data.data.selAlerts ?? [],
     meta: data.data.meta ?? {
       total: 0,
       lastPage: 1,

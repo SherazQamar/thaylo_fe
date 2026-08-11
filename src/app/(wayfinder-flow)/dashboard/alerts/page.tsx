@@ -1,13 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import UserDropdown from "@/components/wayfinder/UserDropdown";
 import AlertDetailDrawer from "@/components/wayfinder/AlertDetailDrawer";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
+import InfoTooltip from "@/components/shared/InfoTooltip";
 import ListPagination from "@/components/shared/ListPagination";
 import { notify } from "@/lib/notify";
+import { ALERTS_CENTER_HINTS } from "@/lib/portal-help-text";
 import { formatStudentGrade } from "@/lib/wayfinder-student";
 import {
   flagMeta,
@@ -272,9 +275,24 @@ export default function AlertsCenterPage() {
       />
 
       <div className="mt-6 space-y-2">
-        <h2 className="text-white text-2xl md:text-3xl font-bold tracking-tight">Alerts Center</h2>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-white text-2xl md:text-3xl font-bold tracking-tight inline-flex items-center gap-2">
+            Alerts Center
+            <InfoTooltip
+              content={ALERTS_CENTER_HINTS.wayfinder}
+              align="left"
+              label="What are alerts?"
+            />
+          </h2>
+          <Link
+            href="/dashboard/alerts/insights"
+            className="rounded-full bg-[#00CED1] px-4 py-2 text-sm font-semibold text-[#111023] hover:bg-[#00B8BB]"
+          >
+            Analytics Light
+          </Link>
+        </div>
         <p className="text-white/50 text-sm">
-          Organized by student. Red flags first. Flags: red / yellow / orange / blue (parent request).
+          Your action list by student. Red flags first. Use Notifications for a simple “what happened” inbox.
           {meta.activeCount > 0 && (
             <span className="text-[#00CED1] ml-2">{meta.activeCount} active lesson alerts</span>
           )}

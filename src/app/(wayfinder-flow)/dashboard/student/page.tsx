@@ -153,10 +153,20 @@ export default function StudentDetailsPage() {
               avatarUrl={snapshot.avatarUrl}
               messagesHref={`/dashboard/message?childId=${snapshot.childId}`}
               showRiskBadge
+              riskLabel={snapshot.risk ?? "Clear"}
+              riskReason={snapshot.riskReason}
               progressLabel={snapshot.progressLabel}
+              confidenceLabel={
+                snapshot.learningSummary?.confidence ??
+                snapshot.confidence ??
+                "Medium"
+              }
               gardenMessage={`${displayName}'s plant · ${snapshot.masteryLabel}`}
               badgeCount={snapshot.badgesEarned}
               badgePreviews={snapshot.badgePreviews}
+              curricularProgress={snapshot.curricularProgress}
+              learningSummary={snapshot.learningSummary}
+              wellbeing={snapshot.wellbeing}
               onWayfinderNotesClick={() => setNotesOpen(true)}
               wayfinderNotesSubtitle={notesSubtitle}
               onReportClick={() => reportMutation.mutate()}
@@ -186,6 +196,8 @@ export default function StudentDetailsPage() {
             }
             source={guidanceQuery.data?.recommendedNextStep.source ?? "fallback"}
             sessions={guidanceQuery.data?.sessionsThisWeek ?? []}
+            nextStep={guidanceQuery.data?.recommendedNextStep}
+            modulesHref="/child-dashboard/modules"
             onClose={() => setNextStepModalOpen(false)}
           />
         </>

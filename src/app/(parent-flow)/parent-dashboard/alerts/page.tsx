@@ -5,13 +5,16 @@ import { useRouter } from "next/navigation";
 import ParentUserDropdown from "@/components/parent/ParentUserDropdown";
 import AlertDetailDrawer from "@/components/wayfinder/AlertDetailDrawer";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
+import InfoTooltip from "@/components/shared/InfoTooltip";
 import ListPagination from "@/components/shared/ListPagination";
 import { notify } from "@/lib/notify";
+import { ALERTS_CENTER_HINTS } from "@/lib/portal-help-text";
 import { formatStudentGrade } from "@/lib/wayfinder-student";
 import {
   flagMeta,
   groupAlertsByStudent,
   mapLessonAlertToCard,
+  mapSelAlertToCard,
   type WayfinderAlertCard,
   type WayfinderFlagKind,
   type WayfinderStudentAlertGroup,
@@ -159,7 +162,9 @@ export default function ParentAlertsPage() {
     setIsLoading(true);
     try {
       const result = await fetchParentAlerts(queryParams);
-      setCards(result.items.map(mapLessonAlertToCard));
+      const lessonCards = result.items.map(mapLessonAlertToCard);
+      const selCards = (result.selAlerts ?? []).map(mapSelAlertToCard);
+      setCards([...lessonCards, ...selCards]);
       setMeta({
         total: result.meta.total,
         lastPage: result.meta.lastPage,
@@ -214,11 +219,16 @@ export default function ParentAlertsPage() {
       />
 
       <div className="mt-6 space-y-2">
-        <h2 className="text-white text-2xl md:text-3xl font-bold tracking-tight">
+        <h2 className="text-white text-2xl md:text-3xl font-bold tracking-tight inline-flex items-center gap-2">
           Alerts
+          <InfoTooltip
+            content={ALERTS_CENTER_HINTS.parent}
+            align="left"
+            label="What are alerts?"
+          />
         </h2>
         <p className="text-white/50 text-sm">
-          Lesson alerts for your children — the same notices your Wayfinder receives.
+          Your action list when a child may need support. Use Notifications for a simple “what happened” inbox.
           {meta.activeCount > 0 && (
             <span className="text-[#00CED1] ml-2">
               {meta.activeCount} active

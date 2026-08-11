@@ -17,6 +17,15 @@ export interface WeeklyGuidanceSession {
   skillFamily: string | null;
 }
 
+export interface WeeklyGuidanceNextStep {
+  text: string;
+  why: string;
+  skillFamily: string | null;
+  lessonKey: string | null;
+  lessonTitle: string | null;
+  source: "ai" | "fallback";
+}
+
 export interface WeeklyGuidance {
   weekStart: string;
   weekEnd: string;
@@ -27,9 +36,6 @@ export interface WeeklyGuidance {
     text: string;
     kind: "reteach" | "on_track" | "no_lessons";
   };
-  recommendedNextStep: {
-    text: string;
-    source: "ai" | "fallback";
-  };
+  recommendedNextStep: WeeklyGuidanceNextStep;
   sessionsThisWeek: WeeklyGuidanceSession[];
 }

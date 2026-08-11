@@ -68,6 +68,16 @@ function LiveSessionRow({
     ? Math.max(0, Math.floor((nowMs - startedMs) / 1000))
     : session.elapsedSeconds;
   const stillLive = isSessionStillLive(session, nowMs);
+  const presence = session.presenceStatus ?? (stillLive ? "IN_LESSON" : "IDLE");
+  const presenceLabel =
+    session.presenceLabel ??
+    (presence === "IN_LESSON" ? "In lesson" : presence === "ONLINE" ? "Online" : "Idle");
+  const presenceDot =
+    presence === "IN_LESSON"
+      ? "bg-[#00CED1] animate-pulse"
+      : presence === "ONLINE"
+        ? "bg-[#60D624]"
+        : "bg-white/30";
 
   const openLiveView = () => {
     if (!stillLive || session.sessionId == null) {
@@ -138,11 +148,11 @@ function LiveSessionRow({
         <div className="min-w-0">
           <div className="flex items-start gap-2.5 mb-1">
             <span
-              className={`w-2.5 h-2.5 rounded-full mt-1.5 flex-shrink-0 ${stillLive ? "bg-[#00CED1] animate-pulse" : "bg-white/30"}`}
+              className={`w-2.5 h-2.5 rounded-full mt-1.5 flex-shrink-0 ${presenceDot}`}
             />
             <div className="min-w-0">
               <p style={{ ...inter, fontWeight: 500, fontSize: "11px", lineHeight: "14px", color: "rgba(255,255,255,0.5)" }}>
-                {stillLive ? "In lesson" : "Not in live lesson"}
+                {presenceLabel}
               </p>
               <p
                 style={{ ...inter, fontWeight: 600, fontSize: "14px", lineHeight: "18px", color: "#FFFFFF" }}

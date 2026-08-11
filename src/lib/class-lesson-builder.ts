@@ -7,6 +7,7 @@ import type { ChildClassLessonScript } from "@/lib/curriculum-api";
 import {
   buildBlackboardStepsFromRuntimePlan,
   isLessonRuntimePlan,
+  tagBlackboardCheckKinds,
 } from "@/lib/class-runtime-plan";
 import { shuffleArray } from "@/lib/shuffle";
 
@@ -273,7 +274,7 @@ export function buildBlackboardStepsFromLessonScript(
     steps[0] = { ...steps[0], title: lessonTitle.trim() };
   }
 
-  return steps;
+  return tagBlackboardCheckKinds(steps);
 }
 
 export function buildBlackboardSteps(input?: {

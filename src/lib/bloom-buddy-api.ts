@@ -3,10 +3,17 @@ import type { ApiResponse } from "@/types/api";
 
 export type SelMood = "HAPPY" | "OKAY" | "WORRIED" | "SAD" | "ANGRY" | "TIRED";
 
-export type SelCheckInTiming = "BEFORE_LESSON" | "AFTER_LESSON" | "DASHBOARD";
+/** Blueprint 3-tap moods children can select. */
+export type SelCheckInMood = "HAPPY" | "OKAY" | "WORRIED";
+
+export type SelCheckInTiming =
+  | "BEFORE_LESSON"
+  | "AFTER_LESSON"
+  | "MID_SESSION"
+  | "DASHBOARD";
 
 export interface MoodOption {
-  value: SelMood;
+  value: SelCheckInMood | SelMood;
   label: string;
   emoji: string;
   isLow: boolean;
@@ -59,8 +66,9 @@ export async function fetchBloomBuddyStatus(timing: SelCheckInTiming = "BEFORE_L
 }
 
 export async function submitBloomBuddyCheckIn(payload: {
-  mood: SelMood;
+  mood: SelCheckInMood;
   note?: string;
+  voiceNoteUrl?: string;
   timing?: SelCheckInTiming;
 }) {
   const { data } = await api.post<ApiResponse<BloomBuddyCheckInResult>>(
@@ -69,6 +77,25 @@ export async function submitBloomBuddyCheckIn(payload: {
     { authMode: "child" },
   );
   return data.data;
+}
+
+export async function uploadBloomBuddyVoiceNote(blob: Blob): Promise<string> {
+  const formData = new FormData();
+  const ext = blob.type.includes("ogg")
+    ? "ogg"
+    : blob.type.includes("mp4")
+      ? "m4a"
+      : "webm";
+  formData.append("file", blob, `bloom-voice.${ext}`);
+  const { data } = await api.post<ApiResponse<{ url: string }>>(
+    "/child/bloom-buddy/voice-note",
+    formData,
+    {
+      authMode: "child",
+      headers: { "Content-Type": "multipart/form-data" },
+    },
+  );
+  return data.data.url;
 }
 
 export async function fetchBloomBuddyTrends(days = 7) {

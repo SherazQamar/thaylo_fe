@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
 import BadgePreviewStrip, {
   type BadgePreviewItem,
 } from "@/components/shared/BadgePreviewStrip";
@@ -11,36 +12,13 @@ import { SHARED_PROGRESS_HINTS } from "@/lib/portal-help-text";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
-const curricularProgress = [
-  { label: "Word & Language Logic", value: 52 },
-  { label: "Reading & Observation", value: 40 },
-  { label: "Writing", value: 34 },
-  { label: "Communication", value: 28 },
-  { label: "Research", value: 22 },
-  { label: "Perspective", value: 18 },
-];
-
-const learningSummary = [
-  { label: "Current Focus", value: "Word & Language Logic" },
-  { label: "Confidence Level", value: "Medium" },
-  { label: "Engagement", value: "High" },
-];
-
-const alerts = [
-  {
-    tone: "teal" as const,
-    text: "Needed reteach twice in inference this week",
-  },
-  {
-    tone: "coral" as const,
-    text: "Recommended next step: 10-min evidence practice",
-  },
-];
-
-const wellbeing = [
-  { label: "Positive", count: 3, emoji: "😊" },
-  { label: "Neutral", count: 1, emoji: "😐" },
-  { label: "Low Mood", count: 0, emoji: "😔" },
+const FALLBACK_CURRICULAR: CurricularProgressRow[] = [
+  { label: "Word & Language Logic", value: 0, mastered: 0, total: 0 },
+  { label: "Reading & Observation", value: 0, mastered: 0, total: 0 },
+  { label: "Writing", value: 0, mastered: 0, total: 0 },
+  { label: "Communication", value: 0, mastered: 0, total: 0 },
+  { label: "Research", value: 0, mastered: 0, total: 0 },
+  { label: "Perspective", value: 0, mastered: 0, total: 0 },
 ];
 
 export type GuidanceAlertTone = "teal" | "coral" | "amber";
@@ -52,29 +30,84 @@ export type GuidanceAlertItem = {
   onClick?: () => void;
 };
 
+export type CurricularProgressRow = {
+  label: string;
+  value: number;
+  mastered?: number;
+  total?: number;
+  minutes?: number;
+  averageScorePercent?: number | null;
+  lessons?: Array<{
+    lessonOrder: number;
+    lessonKey: string;
+    title: string;
+    status: "mastered" | "attempted" | "not_started";
+    minutes: number;
+    averageScorePercent: number | null;
+    lastAttemptAt: string | null;
+  }>;
+};
+
+export type LearningSummaryData = {
+  currentFocus: string;
+  confidence: string;
+  engagement: string;
+};
+
+export type WellbeingSnapshotData = {
+  positive: number;
+  neutral: number;
+  lowMood: number;
+};
+
 export interface StudentProgressOverviewProps {
   displayName: string;
   gradeLabel: string;
-  /** Prefer `avatarUrl`; `avatarSrc` kept for older call sites. */
   avatarUrl?: string | null;
   avatarSrc?: string;
   messagesHref: string;
   showRiskBadge?: boolean;
+  riskLabel?: "Clear" | "Amber" | "Orange" | "Red";
+  riskReason?: string | null;
   progressLabel?: string;
   confidenceLabel?: string;
   gardenStage?: number;
   gardenMessage?: string;
   badgeCount?: number;
   badgePreviews?: BadgePreviewItem[];
-  /** Opens Wayfinder notes drawer from Messages → Wayfinder sent note. */
+  curricularProgress?: CurricularProgressRow[];
+  learningSummary?: LearningSummaryData;
+  wellbeing?: WellbeingSnapshotData;
   onWayfinderNotesClick?: () => void;
   wayfinderNotesSubtitle?: string;
   onReportClick?: () => void;
   reportBusy?: boolean;
-  /** Dynamic Alerts & Guidance cards. Falls back to static demo copy when omitted. */
   guidanceAlerts?: GuidanceAlertItem[];
   guidanceLoading?: boolean;
 }
+
+const RISK_STYLES: Record<
+  "Clear" | "Amber" | "Orange" | "Red",
+  { color: string; border: string }
+> = {
+  Clear: { color: "#00DCAB", border: "#00DCAB" },
+  Amber: { color: "#F59E0B", border: "#F59E0B" },
+  Orange: { color: "#FB923C", border: "#FB923C" },
+  Red: { color: "#FF6F6F", border: "#FF6F6F" },
+};
+
+const FALLBACK_ALERTS: GuidanceAlertItem[] = [
+  {
+    id: "static-0",
+    tone: "teal",
+    text: "Needed reteach twice in inference this week",
+  },
+  {
+    id: "static-1",
+    tone: "coral",
+    text: "Recommended next step: 10-min evidence practice",
+  },
+];
 
 export default function StudentProgressOverview({
   displayName,
@@ -83,12 +116,17 @@ export default function StudentProgressOverview({
   avatarSrc,
   messagesHref,
   showRiskBadge = false,
+  riskLabel = "Clear",
+  riskReason = null,
   progressLabel = "Growing well",
   confidenceLabel = "Medium",
   gardenStage = 3,
   gardenMessage,
   badgeCount,
   badgePreviews = [],
+  curricularProgress,
+  learningSummary,
+  wellbeing,
   onWayfinderNotesClick,
   wayfinderNotesSubtitle = "Tap to view notes",
   onReportClick,
@@ -98,13 +136,31 @@ export default function StudentProgressOverview({
 }: StudentProgressOverviewProps) {
   const gardenText = gardenMessage ?? `${displayName}'s plant is thriving`;
   const resolvedAvatarUrl = avatarUrl ?? avatarSrc ?? null;
-  const resolvedAlerts: GuidanceAlertItem[] =
-    guidanceAlerts ??
-    alerts.map((item, index) => ({
-      id: `static-${index}`,
-      tone: item.tone,
-      text: item.text,
-    }));
+  const resolvedAlerts = guidanceAlerts ?? FALLBACK_ALERTS;
+  const riskStyle = RISK_STYLES[riskLabel] ?? RISK_STYLES.Clear;
+  const riskTooltip = riskReason?.trim()
+    ? `${riskReason} — Does not change grades.`
+    : SHARED_PROGRESS_HINTS.risk;
+
+  const skillRows = curricularProgress?.length
+    ? curricularProgress
+    : FALLBACK_CURRICULAR;
+  const summary = learningSummary ?? {
+    currentFocus: "Word & Language Logic",
+    confidence: confidenceLabel,
+    engagement: "Building",
+  };
+  const moodRows = [
+    { label: "Positive", count: wellbeing?.positive ?? 0, emoji: "😊" },
+    { label: "Neutral", count: wellbeing?.neutral ?? 0, emoji: "😐" },
+    { label: "Low Mood", count: wellbeing?.lowMood ?? 0, emoji: "😔" },
+  ];
+  const learningSummaryCards = [
+    { label: "Current Focus", value: summary.currentFocus },
+    { label: "Confidence Level", value: summary.confidence },
+    { label: "Engagement", value: summary.engagement },
+  ];
+  const [expandedFamily, setExpandedFamily] = useState<string | null>(null);
 
   return (
     <>
@@ -156,7 +212,7 @@ export default function StudentProgressOverview({
                     padding: "8px 14px",
                   }}
                 >
-                  Confidence: {confidenceLabel}
+                  Confidence: {summary.confidence || confidenceLabel}
                   <InfoTooltip content={SHARED_PROGRESS_HINTS.confidence} align="left" />
                 </span>
                 <button
@@ -187,18 +243,19 @@ export default function StudentProgressOverview({
           </div>
           {showRiskBadge && (
             <span
-              className="rounded-[30px] border border-[#F59E0B] flex-shrink-0 self-center md:self-auto inline-flex items-center gap-1.5"
+              className="rounded-[30px] border flex-shrink-0 self-center md:self-auto inline-flex items-center gap-1.5"
               style={{
                 ...inter,
                 fontWeight: 500,
                 fontSize: "14px",
                 lineHeight: "20px",
-                color: "#F59E0B",
+                color: riskStyle.color,
+                borderColor: riskStyle.border,
                 padding: "8px 18px",
               }}
             >
-              Risk: Amber
-              <InfoTooltip content={SHARED_PROGRESS_HINTS.risk} align="right" />
+              Risk: {riskLabel}
+              <InfoTooltip content={riskTooltip} align="right" />
             </span>
           )}
         </div>
@@ -207,34 +264,136 @@ export default function StudentProgressOverview({
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4">
         <div className="flex flex-col gap-4">
           <div className="rounded-[12px] p-5 md:p-6" style={{ backgroundColor: "#313044" }}>
-            <h3 style={{ ...inter, fontWeight: 700, fontSize: "20px", lineHeight: "28px", color: "#FFFFFF", marginBottom: "20px" }}>
+            <h3
+              className="flex items-center gap-2"
+              style={{ ...inter, fontWeight: 700, fontSize: "20px", lineHeight: "28px", color: "#FFFFFF", marginBottom: "20px" }}
+            >
               Curricular Progress
+              <InfoTooltip content={SHARED_PROGRESS_HINTS.curricularProgress} align="left" />
             </h3>
             <div className="flex flex-col gap-5">
-              {curricularProgress.map((skill) => (
-                <div key={skill.label}>
-                  <div className="flex items-center justify-between mb-2">
-                    <span style={{ ...inter, fontWeight: 500, fontSize: "14px", lineHeight: "20px", color: "rgba(255,255,255,0.7)" }}>
-                      {skill.label}
-                    </span>
-                    <span style={{ ...inter, fontWeight: 600, fontSize: "14px", lineHeight: "20px", color: "#00CED1" }}>
-                      {skill.value}%
-                    </span>
+              {skillRows.map((skill) => {
+                const expanded = expandedFamily === skill.label;
+                const hasLessons = (skill.lessons?.length ?? 0) > 0;
+                const minutes = Math.round(skill.minutes ?? 0);
+                const avg =
+                  skill.averageScorePercent != null
+                    ? `${skill.averageScorePercent}% avg`
+                    : "No scores yet";
+                return (
+                  <div key={skill.label}>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setExpandedFamily(expanded ? null : skill.label)
+                      }
+                      className="w-full text-left cursor-pointer"
+                      disabled={!hasLessons}
+                    >
+                      <div className="flex items-center justify-between mb-1 gap-2">
+                        <span style={{ ...inter, fontWeight: 500, fontSize: "14px", lineHeight: "20px", color: "rgba(255,255,255,0.7)" }}>
+                          {skill.label}
+                          {hasLessons ? (
+                            <span className="ml-2 text-[11px] text-white/35">
+                              {expanded ? "▾" : "▸"} standards
+                            </span>
+                          ) : null}
+                        </span>
+                        <span
+                          style={{ ...inter, fontWeight: 600, fontSize: "14px", lineHeight: "20px", color: "#00CED1" }}
+                          title={
+                            skill.total
+                              ? `${skill.mastered ?? 0} of ${skill.total} lessons mastered`
+                              : undefined
+                          }
+                        >
+                          {skill.value}%
+                        </span>
+                      </div>
+                      <p
+                        style={{
+                          ...inter,
+                          fontWeight: 400,
+                          fontSize: "11px",
+                          color: "rgba(255,255,255,0.45)",
+                          marginBottom: "8px",
+                        }}
+                      >
+                        {minutes}m in lessons · {avg}
+                        {skill.total
+                          ? ` · ${skill.mastered ?? 0}/${skill.total} mastered`
+                          : ""}
+                      </p>
+                      <div className="w-full h-2 rounded-full bg-[#525162]">
+                        <div
+                          className="h-full rounded-full bg-[#00CED1] transition-[width]"
+                          style={{ width: `${Math.max(0, Math.min(100, skill.value))}%` }}
+                        />
+                      </div>
+                    </button>
+                    {expanded && hasLessons ? (
+                      <ul className="mt-3 space-y-2 border-l border-white/10 pl-3">
+                        {skill.lessons!.map((lesson) => (
+                          <li
+                            key={lesson.lessonKey}
+                            className="flex items-start justify-between gap-2"
+                          >
+                            <div>
+                              <p style={{ ...inter, fontSize: "12px", fontWeight: 600, color: "#FFFFFF" }}>
+                                L{lesson.lessonOrder}. {lesson.title}
+                              </p>
+                              <p style={{ ...inter, fontSize: "11px", color: "rgba(255,255,255,0.45)" }}>
+                                {lesson.status === "mastered"
+                                  ? "Mastered"
+                                  : lesson.status === "attempted"
+                                    ? "In progress"
+                                    : "Not started"}
+                                {" · "}
+                                {Math.round(lesson.minutes)}m
+                                {lesson.averageScorePercent != null
+                                  ? ` · ${lesson.averageScorePercent}% avg`
+                                  : ""}
+                              </p>
+                            </div>
+                            <span
+                              className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold"
+                              style={{
+                                ...inter,
+                                color:
+                                  lesson.status === "mastered"
+                                    ? "#60D624"
+                                    : lesson.status === "attempted"
+                                      ? "#F59E0B"
+                                      : "rgba(255,255,255,0.4)",
+                                backgroundColor: "rgba(255,255,255,0.06)",
+                              }}
+                            >
+                              {lesson.status === "mastered"
+                                ? "Done"
+                                : lesson.status === "attempted"
+                                  ? "Active"
+                                  : "Locked"}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
                   </div>
-                  <div className="w-full h-2 rounded-full bg-[#525162]">
-                    <div className="h-full rounded-full bg-[#00CED1]" style={{ width: `${skill.value}%` }} />
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
           <div>
-            <h3 style={{ ...inter, fontWeight: 700, fontSize: "20px", lineHeight: "28px", color: "#FFFFFF", marginBottom: "12px" }}>
+            <h3
+              className="flex items-center gap-2"
+              style={{ ...inter, fontWeight: 700, fontSize: "20px", lineHeight: "28px", color: "#FFFFFF", marginBottom: "12px" }}
+            >
               Learning Summary
+              <InfoTooltip content={SHARED_PROGRESS_HINTS.learningSummary} align="left" />
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {learningSummary.map((item) => (
+              {learningSummaryCards.map((item) => (
                 <div key={item.label} className="rounded-[12px] p-4" style={{ backgroundColor: "#313044" }}>
                   <p style={{ ...inter, fontWeight: 500, fontSize: "13px", lineHeight: "20px", color: "rgba(255,255,255,0.5)" }}>
                     {item.label}
@@ -324,11 +483,7 @@ export default function StudentProgressOverview({
                   }
 
                   return (
-                    <div
-                      key={alert.id}
-                      className="flex items-center gap-3 flex-1"
-                      style={style}
-                    >
+                    <div key={alert.id} className="flex items-center gap-3 flex-1" style={style}>
                       {content}
                     </div>
                   );
@@ -338,12 +493,15 @@ export default function StudentProgressOverview({
           </div>
 
           <div className="rounded-[12px] p-4 md:p-5" style={{ backgroundColor: "#313044" }}>
-            <h3 style={{ ...inter, fontWeight: 600, fontSize: "18px", lineHeight: "28px", color: "#FFFFFF", marginBottom: "12px" }}>
+            <h3
+              className="flex items-center gap-2"
+              style={{ ...inter, fontWeight: 600, fontSize: "18px", lineHeight: "28px", color: "#FFFFFF", marginBottom: "12px" }}
+            >
               Wellbeing Snapshot
+              <InfoTooltip content={SHARED_PROGRESS_HINTS.wellbeingSnapshot} align="left" />
             </h3>
-            {/* Figma mobile Children: mood tiles stack full-width; desktop keeps 3-up row */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              {wellbeing.map((item) => (
+              {moodRows.map((item) => (
                 <div
                   key={item.label}
                   className="rounded-[12px] px-3 py-3 flex items-center gap-3 min-h-[68px] md:min-h-0 md:gap-2 md:p-3"
@@ -394,10 +552,7 @@ export default function StudentProgressOverview({
               {gardenText}
             </p>
             <div className="mt-3">
-              <BadgePreviewStrip
-                previews={badgePreviews}
-                totalEarned={badgeCount}
-              />
+              <BadgePreviewStrip previews={badgePreviews} totalEarned={badgeCount} />
             </div>
           </div>
 

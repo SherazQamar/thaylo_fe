@@ -1,7 +1,7 @@
 export type WayfinderAlertSeverity = "YELLOW" | "ORANGE" | "RED";
 export type WayfinderAlertStatus = "ACTIVE" | "RESOLVED" | "DISMISSED";
 
-export type WayfinderFlagKind = "RED" | "ORANGE" | "YELLOW" | "BLUE";
+export type WayfinderFlagKind = "RED" | "ORANGE" | "AMBER" | "YELLOW" | "BLUE";
 
 export interface WayfinderLessonAlert {
   id: number;
@@ -26,12 +26,14 @@ export interface WayfinderLessonAlert {
 }
 
 export interface WayfinderSelAlert {
-  type: "SEL_RED_FLAG";
+  type: "SEL_RED_FLAG" | "SEL_AMBER_FLAG";
+  level?: "AMBER" | "RED";
   childId: number;
   childName: string;
   grade: string | null;
   consecutiveLowDays: number;
   message: string;
+  reasonCode?: string;
   createdAt: string;
 }
 
@@ -90,6 +92,7 @@ const FLAG_META: Record<
 > = {
   RED: { label: "Red flag", accent: "#FF6F6F" },
   ORANGE: { label: "Orange flag", accent: "#FB923C" },
+  AMBER: { label: "Amber flag", accent: "#F59E0B" },
   YELLOW: { label: "Yellow flag", accent: "#FBBF24" },
   BLUE: { label: "Blue flag", accent: "#3B82F6" },
 };
@@ -97,8 +100,9 @@ const FLAG_META: Record<
 const FLAG_SORT_RANK: Record<WayfinderFlagKind, number> = {
   RED: 0,
   ORANGE: 1,
-  YELLOW: 2,
-  BLUE: 3,
+  AMBER: 2,
+  YELLOW: 3,
+  BLUE: 4,
 };
 
 const SEVERITY_LABELS: Record<WayfinderAlertSeverity, string> = {
@@ -164,13 +168,13 @@ export function cardDate(card: WayfinderAlertCard): string {
 
 export function cardAccent(card: WayfinderAlertCard): string {
   if (card.kind === "lesson") return lessonAlertAccent(card.alert.severity);
-  if (card.kind === "sel") return FLAG_META.RED.accent;
+  if (card.kind === "sel") return flagMeta(selFlagKind(card.alert)).accent;
   return FLAG_META.BLUE.accent;
 }
 
 export function cardPriority(card: WayfinderAlertCard): string | null {
   if (card.kind === "lesson") return lessonAlertPriority(card.alert.severity);
-  if (card.kind === "sel") return "Red flag";
+  if (card.kind === "sel") return flagMeta(selFlagKind(card.alert)).label;
   return "Blue flag";
 }
 
@@ -178,9 +182,14 @@ export function cardChildId(card: WayfinderAlertCard): number | undefined {
   return card.alert.childId;
 }
 
+export function selFlagKind(alert: WayfinderSelAlert): "AMBER" | "RED" {
+  if (alert.level === "AMBER" || alert.type === "SEL_AMBER_FLAG") return "AMBER";
+  return "RED";
+}
+
 function flagsFromCard(card: WayfinderAlertCard): WayfinderFlagKind[] {
   if (card.kind === "lesson") return [card.alert.severity];
-  if (card.kind === "sel") return ["RED"];
+  if (card.kind === "sel") return [selFlagKind(card.alert)];
   return ["BLUE"];
 }
 

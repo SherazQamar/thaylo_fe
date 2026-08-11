@@ -51,7 +51,11 @@ export default function AlertDetailDrawer({
     ? card.kind === "lesson"
       ? flagMeta(card.alert.severity).accent
       : card.kind === "sel"
-        ? flagMeta("RED").accent
+        ? flagMeta(
+            card.alert.level === "AMBER" || card.alert.type === "SEL_AMBER_FLAG"
+              ? "AMBER"
+              : "RED",
+          ).accent
         : flagMeta("BLUE").accent
     : "#00CED1";
 

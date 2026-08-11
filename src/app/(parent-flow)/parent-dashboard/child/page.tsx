@@ -587,6 +587,7 @@ function ChildDetailContent() {
             avatarSrc={child.avatarUrl || undefined}
             messagesHref="/parent-dashboard/message"
             progressLabel={badgesQuery.data?.plantStatus}
+            confidenceLabel={child.learningSummary?.confidence}
             gardenStage={badgesQuery.data?.plantStage}
             gardenMessage={
               badgesQuery.data
@@ -604,6 +605,9 @@ function ChildDetailContent() {
                   count: b.count,
                 })) ?? []
             }
+            curricularProgress={child.curricularProgress}
+            learningSummary={child.learningSummary}
+            wellbeing={child.wellbeing}
             onWayfinderNotesClick={() => setNotesOpen(true)}
             wayfinderNotesSubtitle={
               (wayfinderNotesQuery.data?.length ?? 0) === 0
@@ -644,6 +648,8 @@ function ChildDetailContent() {
               weeklyGuidanceQuery.data?.recommendedNextStep.source ?? "fallback"
             }
             sessions={weeklyGuidanceQuery.data?.sessionsThisWeek ?? []}
+            nextStep={weeklyGuidanceQuery.data?.recommendedNextStep}
+            modulesHref="/child-dashboard/modules"
             onClose={() => setNextStepModalOpen(false)}
           />
 

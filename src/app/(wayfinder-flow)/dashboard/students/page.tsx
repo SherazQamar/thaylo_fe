@@ -24,6 +24,7 @@ export default function StudentsPage() {
   const studentsQuery = useQuery({
     queryKey: wayfinderQueryKeys.students({ page, search: debouncedSearch || undefined }),
     queryFn: () => fetchWayfinderStudents({ page, search: debouncedSearch || undefined }),
+    refetchInterval: 30_000,
   });
 
   const students = studentsQuery.data?.items ?? [];

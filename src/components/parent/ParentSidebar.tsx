@@ -9,6 +9,7 @@ import NavCountBadge from "@/components/shared/NavCountBadge";
 import ParentUserDropdown from "@/components/parent/ParentUserDropdown";
 import { useChatUnreadCount } from "@/hooks/use-chat-unread-count";
 import { useParentAlertCount } from "@/hooks/use-parent-alert-count";
+import { usePortalNotificationCount } from "@/hooks/use-portal-notification-count";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
@@ -16,6 +17,7 @@ type NavIconId =
   | "home"
   | "children"
   | "alerts"
+  | "notifications"
   | "reports"
   | "billing"
   | "message"
@@ -73,9 +75,19 @@ function NavIcon({
         </svg>
       );
     case "alerts":
+      // Same triangle as Wayfinder Alerts Center
       return (
         <svg {...common}>
-          <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
+          <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+          <line x1="12" y1="9" x2="12" y2="13" />
+          <line x1="12" y1="17" x2="12.01" y2="17" />
+        </svg>
+      );
+    case "notifications":
+      // Same bell as Wayfinder Notifications
+      return (
+        <svg {...common}>
+          <path d="M18 8a6 6 0 10-12 0c0 7-3 7-3 7h18s-3 0-3-7" />
           <path d="M13.73 21a2 2 0 01-3.46 0" />
         </svg>
       );
@@ -144,6 +156,12 @@ const navItems: NavItem[] = [
     icon: "alerts",
   },
   {
+    label: "NOTIFICATIONS",
+    href: "/parent-dashboard/notifications",
+    matchPaths: ["/parent-dashboard/notifications"],
+    icon: "notifications",
+  },
+  {
     label: "REPORTS",
     href: "/parent-dashboard/reports",
     matchPaths: ["/parent-dashboard/reports"],
@@ -207,6 +225,7 @@ export default function ParentSidebar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const { unreadTotal } = useChatUnreadCount("parent");
   const { alertCount } = useParentAlertCount();
+  const { count: notificationCount } = usePortalNotificationCount("parent");
 
   return (
     <>
@@ -249,6 +268,7 @@ export default function ParentSidebar() {
           {navItems.map((item) => {
             const isActive = activeHref === item.href;
             const alertUnread = item.label === "ALERTS" ? alertCount : 0;
+            const notifUnread = item.label === "NOTIFICATIONS" ? notificationCount : 0;
             return (
               <Link
                 key={item.label}
@@ -277,6 +297,13 @@ export default function ParentSidebar() {
                     count={alertUnread}
                     collapsed={collapsed}
                     ariaLabel={`${alertUnread} active alerts`}
+                  />
+                ) : null}
+                {item.label === "NOTIFICATIONS" ? (
+                  <NavCountBadge
+                    count={notifUnread}
+                    collapsed={collapsed}
+                    ariaLabel={`${notifUnread} unread notifications`}
                   />
                 ) : null}
               </Link>
@@ -388,6 +415,7 @@ export default function ParentSidebar() {
               {navItems.map((item) => {
                 const isActive = activeHref === item.href;
                 const alertUnread = item.label === "ALERTS" ? alertCount : 0;
+                const notifUnread = item.label === "NOTIFICATIONS" ? notificationCount : 0;
                 return (
                   <Link
                     key={item.label}
@@ -413,6 +441,13 @@ export default function ParentSidebar() {
                         count={alertUnread}
                         collapsed={false}
                         ariaLabel={`${alertUnread} active alerts`}
+                      />
+                    ) : null}
+                    {item.label === "NOTIFICATIONS" ? (
+                      <NavCountBadge
+                        count={notifUnread}
+                        collapsed={false}
+                        ariaLabel={`${notifUnread} unread notifications`}
                       />
                     ) : null}
                   </Link>

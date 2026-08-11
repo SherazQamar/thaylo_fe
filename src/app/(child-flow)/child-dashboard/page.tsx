@@ -44,8 +44,10 @@ export default function ChildPathwayPage() {
   const { primaryClass, hasAssignedClass, isLoading: classesLoading } = useChildAssignedClasses();
   const [isStarting, setIsStarting] = useState(false);
   const [latestMoodLabel, setLatestMoodLabel] = useState<string | null>(null);
+  const [tipsOpen, setTipsOpen] = useState(false);
   const canStartClass = hasAssignedClass && !classesLoading;
   const focusArea = primaryClass?.focusArea?.trim() || null;
+  const tutorBrain = primaryClass?.tutorBrain ?? null;
 
   const badgesQuery = useQuery({
     queryKey: ["child", "badges"],
@@ -336,26 +338,165 @@ export default function ChildPathwayPage() {
           )}
         </div>
 
-        {/* Focus — current lesson skill family */}
+        {/* Next Step — Tutor Brain explainability (Blueprint C2) */}
         <div className="rounded-[12px] p-4" style={{ backgroundColor: "#313044" }}>
-          <h3 style={{ ...inter, fontWeight: 700, fontSize: "14px", color: "#FFFFFF", marginBottom: "10px" }}>Focus</h3>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-[8px] bg-[#2d5a3e] flex items-center justify-center flex-shrink-0 text-lg">
-              📗
-            </div>
-            <div>
-              <p style={{ ...inter, fontWeight: 500, fontSize: "13px", color: "#FFFFFF" }}>
-                {focusArea ?? (hasAssignedClass ? "Loading focus…" : "No lesson assigned yet")}
-              </p>
-              {primaryClass?.nextLessonTitle && (
-                <p style={{ ...inter, fontWeight: 400, fontSize: "12px", color: "rgba(255,255,255,0.5)" }}>
-                  {primaryClass.needsRetake ? "Retake · " : ""}
-                  {primaryClass.nextLessonTitle}
-                </p>
-              )}
-            </div>
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <h3 style={{ ...inter, fontWeight: 700, fontSize: "14px", color: "#FFFFFF" }}>
+              Next Step
+            </h3>
+            {tutorBrain?.whyKind === "retake" || primaryClass?.needsRetake ? (
+              <span
+                className="rounded-full px-2 py-0.5 text-[10px] font-semibold"
+                style={{ backgroundColor: "rgba(245,158,11,0.15)", color: "#F59E0B" }}
+              >
+                Retake
+              </span>
+            ) : tutorBrain?.interestPersonalized ? (
+              <span
+                className="rounded-full px-2 py-0.5 text-[10px] font-semibold"
+                style={{ backgroundColor: "rgba(0,206,209,0.15)", color: "#00CED1" }}
+              >
+                Personalized
+              </span>
+            ) : null}
+          </div>
+
+          <p style={{ ...inter, fontWeight: 600, fontSize: "13px", color: "#FFFFFF" }}>
+            {primaryClass?.nextLessonTitle ??
+              focusArea ??
+              (hasAssignedClass ? "Loading next step…" : "No lesson assigned yet")}
+          </p>
+          {focusArea ? (
+            <p style={{ ...inter, fontWeight: 400, fontSize: "11px", color: "#00CED1", marginTop: 4 }}>
+              {focusArea}
+            </p>
+          ) : null}
+
+          <div
+            className="mt-3 rounded-xl border border-[#00CED1]/25 bg-[#00CED1]/5 px-3 py-2.5"
+          >
+            <p
+              style={{
+                ...inter,
+                fontSize: "10px",
+                fontWeight: 600,
+                color: "#00CED1",
+                textTransform: "uppercase",
+                letterSpacing: "0.06em",
+              }}
+            >
+              Why this next step
+            </p>
+            <p
+              style={{
+                ...inter,
+                fontSize: "12px",
+                lineHeight: "17px",
+                color: "rgba(255,255,255,0.8)",
+                marginTop: 6,
+              }}
+            >
+              {tutorBrain?.summary ??
+                (primaryClass?.needsRetake
+                  ? "Your Tutor Brain wants a short retake to lock in this skill before the next lesson."
+                  : hasAssignedClass
+                    ? "Your Tutor Brain chose the next unmastered lesson on your pathway."
+                    : "Ask a parent or Wayfinder to assign a class to get started.")}
+            </p>
+            {(tutorBrain?.reasons?.length ?? 0) > 0 ? (
+              <ul className="mt-2 space-y-1">
+                {tutorBrain!.reasons.slice(0, 3).map((reason) => (
+                  <li
+                    key={reason}
+                    style={{
+                      ...inter,
+                      fontSize: "11px",
+                      color: "rgba(255,255,255,0.55)",
+                      lineHeight: "15px",
+                    }}
+                  >
+                    • {reason}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              disabled={!canStartClass || isStarting}
+              onClick={() => void handleStartClass()}
+              className="rounded-full px-3.5 py-1.5 text-xs font-semibold disabled:opacity-50 cursor-pointer"
+              style={{ backgroundColor: "#00CED1", color: "#111023", ...inter }}
+            >
+              {isStarting ? "Starting…" : "Start"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setTipsOpen(true)}
+              className="rounded-full px-3.5 py-1.5 text-xs font-semibold border border-white/20 text-white/80 cursor-pointer"
+              style={inter}
+            >
+              Review tips
+            </button>
+            <Link
+              href="/child-dashboard/modules"
+              className="rounded-full px-3.5 py-1.5 text-xs font-semibold border border-[#00CED1]/40 text-[#00CED1]"
+              style={inter}
+            >
+              Pick module
+            </Link>
           </div>
         </div>
+
+        {tipsOpen ? (
+          <div className="fixed inset-0 z-[70] flex items-center justify-center px-4">
+            <button
+              type="button"
+              className="absolute inset-0 bg-black/70 cursor-pointer"
+              aria-label="Close tips"
+              onClick={() => setTipsOpen(false)}
+            />
+            <div
+              role="dialog"
+              aria-modal="true"
+              className="relative w-full max-w-md rounded-[16px] border border-white/10 bg-[#313044] p-5 shadow-xl"
+              style={inter}
+            >
+              <h3 className="text-white text-base font-semibold">Review tips</h3>
+              <p className="text-white/55 text-sm mt-1">
+                From your Tutor Brain for{" "}
+                {primaryClass?.nextLessonTitle ?? "today's lesson"}
+              </p>
+              <ul className="mt-4 space-y-2">
+                {(tutorBrain?.reasons?.length
+                  ? tutorBrain.reasons
+                  : [
+                      "Take your time on practice before Quick Check.",
+                      "Use Need a hint? if a question feels tricky.",
+                      "A short reteach helps more than rushing ahead.",
+                    ]
+                ).map((tip) => (
+                  <li
+                    key={tip}
+                    className="rounded-xl bg-white/[0.04] border border-white/10 px-3 py-2 text-sm text-white/80"
+                  >
+                    {tip}
+                  </li>
+                ))}
+              </ul>
+              <button
+                type="button"
+                onClick={() => setTipsOpen(false)}
+                className="mt-4 w-full rounded-full py-2 text-sm font-semibold cursor-pointer"
+                style={{ backgroundColor: "#00CED1", color: "#111023" }}
+              >
+                Got it
+              </button>
+            </div>
+          </div>
+        ) : null}
 
         {/* Daily Message from Wayfinder */}
         <div className="rounded-[12px] p-4" style={{ backgroundColor: "#313044" }}>

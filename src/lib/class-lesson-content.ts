@@ -1,5 +1,7 @@
 export type ClassPhase = "teach" | "practice" | "quick_check";
 
+export type CheckKind = "formative" | "summative";
+
 export type BlackboardOption = {
   id: string;
   label: string;
@@ -30,6 +32,10 @@ export type BlackboardStep = {
   interaction?: BlackboardInteraction;
   /** Full AI-generated teaching script — spoken as paragraphs when present. */
   narrationScript?: string;
+  /** Formative = reteach path; summative = mastery gate (Blueprint T4). */
+  checkKind?: CheckKind;
+  /** Demo rubric dimensions this check targets (Blueprint M3). */
+  rubricDimensionIds?: string[];
 };
 
 export type ClassProgressStep = {

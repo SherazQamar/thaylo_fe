@@ -1,6 +1,7 @@
 "use client";
 
-import type { WeeklyGuidanceSession } from "@/lib/weekly-guidance";
+import Link from "next/link";
+import type { WeeklyGuidanceNextStep, WeeklyGuidanceSession } from "@/lib/weekly-guidance";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
@@ -10,6 +11,9 @@ interface RecommendedNextStepModalProps {
   recommendation: string;
   source: "ai" | "fallback";
   sessions: WeeklyGuidanceSession[];
+  nextStep?: WeeklyGuidanceNextStep | null;
+  /** Parent vs student deep-links */
+  modulesHref?: string;
   onClose: () => void;
 }
 
@@ -19,6 +23,8 @@ export default function RecommendedNextStepModal({
   recommendation,
   source,
   sessions,
+  nextStep,
+  modulesHref = "/child-dashboard/modules",
   onClose,
 }: RecommendedNextStepModalProps) {
   if (!open) return null;
@@ -27,6 +33,11 @@ export default function RecommendedNextStepModal({
   const failed = sessions.filter((s) => s.passed === false).length;
   const retakes = sessions.filter((s) => s.attemptNumber > 1).length;
   const hasSessions = sessions.length > 0;
+  const why =
+    nextStep?.why?.trim() ||
+    "This tip is based on this week's lesson activity and the related Grade 4 ELA standard.";
+  const skillFamily = nextStep?.skillFamily;
+  const lessonTitle = nextStep?.lessonTitle;
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center px-4">
@@ -69,7 +80,7 @@ export default function RecommendedNextStepModal({
               backgroundColor: "rgba(255,111,111,0.08)",
             }}
           >
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
               <span
                 className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
                 style={{
@@ -79,10 +90,58 @@ export default function RecommendedNextStepModal({
               >
                 {source === "ai" ? "AI guidance" : "Suggested tip"}
               </span>
+              {skillFamily ? (
+                <span
+                  className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
+                  style={{
+                    color: "#00CED1",
+                    backgroundColor: "rgba(0,206,209,0.12)",
+                  }}
+                >
+                  {skillFamily}
+                </span>
+              ) : null}
             </div>
             <p className="text-white text-sm leading-relaxed whitespace-pre-wrap">
               {recommendation}
             </p>
+            {lessonTitle ? (
+              <p className="text-white/55 text-xs mt-2">
+                Standards-linked lesson: <span className="text-white/80">{lessonTitle}</span>
+              </p>
+            ) : null}
+          </div>
+
+          <div className="rounded-xl border border-[#00CED1]/25 bg-[#00CED1]/5 p-4">
+            <p className="text-[#00CED1] text-xs font-semibold uppercase tracking-wide mb-2">
+              Why this next step
+            </p>
+            <p className="text-white/80 text-sm leading-relaxed">{why}</p>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href="/child-dashboard"
+              onClick={onClose}
+              className="rounded-full px-3.5 py-2 text-xs font-semibold"
+              style={{ backgroundColor: "#00CED1", color: "#111023" }}
+            >
+              Start next lesson
+            </Link>
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-full px-3.5 py-2 text-xs font-semibold border border-white/20 text-white/80 cursor-pointer"
+            >
+              Review tips
+            </button>
+            <Link
+              href={modulesHref}
+              onClick={onClose}
+              className="rounded-full px-3.5 py-2 text-xs font-semibold border border-[#00CED1]/40 text-[#00CED1]"
+            >
+              Pick module
+            </Link>
           </div>
 
           {!hasSessions ? (

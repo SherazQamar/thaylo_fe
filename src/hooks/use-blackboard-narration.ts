@@ -39,7 +39,7 @@ type UseBlackboardNarrationOptions = {
   paused?: boolean;
   voiceEnabled: boolean;
   speakProgress: SpeakProgressFn;
-  onCaption: (text: string) => void;
+  onCaption?: (text: string) => void;
   onCaptionWords?: (visibleWords: number) => void;
   onNarrationComplete?: () => void;
   pacing?: PacingConfig;
@@ -177,7 +177,7 @@ export function useBlackboardNarration({
 
       try {
         if (aiScript) {
-          onCaptionRef.current(aiScript);
+          onCaptionRef.current?.(aiScript);
           onCaptionWordsRef.current?.(0);
           setReveal({
             completedLines: currentStep.lines.length,
@@ -211,7 +211,7 @@ export function useBlackboardNarration({
 
         if (!isCompactPracticeStep) {
           const intro = `Let's look at ${currentStep.title}.`;
-          onCaptionRef.current(intro);
+          onCaptionRef.current?.(intro);
           onCaptionWordsRef.current?.(0);
           if (isRunStale()) return;
 
@@ -222,7 +222,7 @@ export function useBlackboardNarration({
 
         for (let i = 0; i < currentStep.lines.length; i += 1) {
           const line = currentStep.lines[i];
-          onCaptionRef.current(line);
+          onCaptionRef.current?.(line);
           onCaptionWordsRef.current?.(0);
           setReveal((prev) => ({
             ...prev,
@@ -246,7 +246,7 @@ export function useBlackboardNarration({
 
         for (let i = 0; i < bullets.length; i += 1) {
           const bullet = bullets[i];
-          onCaptionRef.current(bullet);
+          onCaptionRef.current?.(bullet);
           onCaptionWordsRef.current?.(0);
           setReveal((prev) => ({
             ...prev,
@@ -281,7 +281,7 @@ export function useBlackboardNarration({
 
         if (currentStep.interaction && bullets.length === 0) {
           const prompt = currentStep.interaction.prompt;
-          onCaptionRef.current(prompt);
+          onCaptionRef.current?.(prompt);
           onCaptionWordsRef.current?.(0);
           setReveal((prev) => ({
             ...prev,
@@ -295,7 +295,7 @@ export function useBlackboardNarration({
           if (isRunStale()) return;
         } else if (currentStep.interaction && bullets.length > 0) {
           const prompt = currentStep.interaction.prompt;
-          onCaptionRef.current(prompt);
+          onCaptionRef.current?.(prompt);
           onCaptionWordsRef.current?.(0);
           if (voiceEnabled) {
             void speakProgressRef.current(prompt, {

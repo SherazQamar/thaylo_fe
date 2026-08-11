@@ -23,7 +23,7 @@ const BETA_FEATURES = [
 ];
 
 const BILLING_POLICY_NOTES = [
-  "There is no cancelling after the 7-day trial. Once enrolled for an academic year, tuition is owed for that year.",
+  "Once enrolled for an academic year after the free trial, tuition is owed for that year.",
   "You can switch from monthly to annual at any time; the discount is prorated.",
   "You cannot switch from annual to monthly once you have paid academic-year tuition.",
   "Even on a monthly plan (paid over 12 months), if your student finishes early you are still charged monthly until tuition is paid in full, and you cannot start the next academic year until the current year is paid in full.",
@@ -39,6 +39,13 @@ function formatMoney(amountCents: number, currency: string) {
   } catch {
     return `$${(amountCents / 100).toFixed(2)}`;
   }
+}
+
+function trialDaysLeft(trialEndsAt: string | null | undefined): number | null {
+  if (!trialEndsAt) return null;
+  const ms = new Date(trialEndsAt).getTime() - Date.now();
+  if (!Number.isFinite(ms)) return null;
+  return Math.max(0, Math.ceil(ms / (1000 * 60 * 60 * 24)));
 }
 
 export default function BillingPage() {
@@ -105,6 +112,24 @@ export default function BillingPage() {
     }
   }
 
+  async function handleStartFounding() {
+    setActionPending(true);
+    try {
+      const { url } = await createParentSubscriptionCheckout({
+        planType: "founding",
+      });
+      window.location.href = url;
+    } catch (err) {
+      notify.error(err, "Could not start Founding Family checkout");
+    } finally {
+      setActionPending(false);
+    }
+  }
+
+  const trialLeft = trialDaysLeft(subscription?.trialEndsAt);
+  const isTrialing = subscription?.status === "trialing";
+  const trialDays = subscription?.trialDays ?? 7;
+
   return (
     <div className="p-4 md:p-6 lg:p-10">
       <div className="flex items-center justify-between mb-2 md:mb-3">
@@ -158,7 +183,7 @@ export default function BillingPage() {
         >
           {isBeta
             ? "Your family is enrolled in the Thaylo beta at no cost. You can still add a card for when paid billing begins."
-            : "Manage your plan and payment method. Clear, simple, and secure."}
+            : "Manage your plan, free trial, and family discounts. Clear, simple, and secure."}
         </p>
       </div>
 
@@ -266,7 +291,7 @@ export default function BillingPage() {
                     marginBottom: "8px",
                   }}
                 >
-                  {isBeta ? "Children enrolled" : "Next billing"}
+                  {isBeta ? "Children enrolled" : isTrialing ? "Trial ends" : "Next billing"}
                 </p>
                 <p
                   style={{
@@ -295,10 +320,108 @@ export default function BillingPage() {
                     marginTop: "4px",
                   }}
                 >
-                  {isBeta ? "Included in beta access" : "Billing date"}
+                  {isBeta
+                    ? "Included in beta access"
+                    : isTrialing && trialLeft != null
+                      ? `${trialLeft} day${trialLeft === 1 ? "" : "s"} left in free trial`
+                      : "Billing date"}
                 </p>
               </div>
             </div>
+
+            {(subscription.trialDays || subscription.foundingOffer || subscription.siblingOffer) ? (
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div
+                  className="rounded-[12px] p-4"
+                  style={{
+                    backgroundColor: "rgba(0,206,209,0.08)",
+                    border: "1px solid rgba(0,206,209,0.35)",
+                  }}
+                >
+                  <p style={{ ...inter, fontSize: "12px", color: "#00CED1", fontWeight: 600 }}>
+                    Free trial
+                  </p>
+                  <p style={{ ...inter, fontSize: "18px", fontWeight: 700, color: "#FFFFFF", marginTop: 4 }}>
+                    {trialDays} days
+                  </p>
+                  <p style={{ ...inter, fontSize: "12px", color: "rgba(255,255,255,0.5)", marginTop: 4 }}>
+                    {isBeta
+                      ? "Included with paid plans when beta ends."
+                      : isTrialing
+                        ? "Your trial is active — card charged after it ends."
+                        : "Every new checkout includes a free trial before tuition begins."}
+                  </p>
+                </div>
+
+                {subscription.foundingOffer ? (
+                  <div
+                    className="rounded-[12px] p-4"
+                    style={{
+                      backgroundColor: "rgba(245,158,11,0.08)",
+                      border: "1px solid rgba(245,158,11,0.35)",
+                    }}
+                  >
+                    <p style={{ ...inter, fontSize: "12px", color: "#F59E0B", fontWeight: 600 }}>
+                      {subscription.foundingOffer.label}
+                    </p>
+                    <p style={{ ...inter, fontSize: "18px", fontWeight: 700, color: "#FFFFFF", marginTop: 4 }}>
+                      {formatMoney(
+                        subscription.foundingOffer.amount,
+                        subscription.foundingOffer.currency,
+                      )}
+                      <span style={{ fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.5)" }}>
+                        {" "}/ year
+                      </span>
+                    </p>
+                    <p style={{ ...inter, fontSize: "12px", color: "rgba(255,255,255,0.5)", marginTop: 4 }}>
+                      {subscription.foundingOffer.description}
+                    </p>
+                    {subscription.foundingOffer.available && !isBeta && !subscription.isActive ? (
+                      <button
+                        type="button"
+                        disabled={actionPending}
+                        onClick={() => void handleStartFounding()}
+                        className="mt-3 rounded-full px-3 py-1.5 text-xs font-semibold cursor-pointer disabled:opacity-50"
+                        style={{ backgroundColor: "#F59E0B", color: "#111023", ...inter }}
+                      >
+                        Start Founding trial
+                      </button>
+                    ) : null}
+                  </div>
+                ) : null}
+
+                {subscription.siblingOffer ? (
+                  <div
+                    className="rounded-[12px] p-4"
+                    style={{
+                      backgroundColor: subscription.siblingOffer.eligible
+                        ? "rgba(96,214,36,0.08)"
+                        : "rgba(255,255,255,0.04)",
+                      border: subscription.siblingOffer.eligible
+                        ? "1px solid rgba(96,214,36,0.35)"
+                        : "1px solid rgba(255,255,255,0.08)",
+                    }}
+                  >
+                    <p
+                      style={{
+                        ...inter,
+                        fontSize: "12px",
+                        color: subscription.siblingOffer.eligible ? "#60D624" : "rgba(255,255,255,0.55)",
+                        fontWeight: 600,
+                      }}
+                    >
+                      {subscription.siblingOffer.label}
+                    </p>
+                    <p style={{ ...inter, fontSize: "18px", fontWeight: 700, color: "#FFFFFF", marginTop: 4 }}>
+                      {subscription.siblingOffer.percentOff}% off
+                    </p>
+                    <p style={{ ...inter, fontSize: "12px", color: "rgba(255,255,255,0.5)", marginTop: 4 }}>
+                      {subscription.siblingOffer.description}
+                    </p>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
           </div>
 
           <PaymentMethodCardSection
@@ -326,7 +449,10 @@ export default function BillingPage() {
               Important billing notes
             </h3>
             <ul className="space-y-3">
-              {BILLING_POLICY_NOTES.map((note) => (
+              {[
+                `New subscriptions include a ${trialDays}-day free trial before tuition begins.`,
+                ...BILLING_POLICY_NOTES,
+              ].map((note) => (
                 <li key={note} className="flex items-start gap-2.5">
                   <span className="text-[#00CED1] mt-0.5 shrink-0">●</span>
                   <span

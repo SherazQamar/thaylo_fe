@@ -5,8 +5,8 @@ import Link from "next/link";
 import BadgePreviewStrip from "@/components/shared/BadgePreviewStrip";
 import PortalAvatar from "@/components/shared/PortalAvatar";
 import type { WayfinderStudent } from "@/lib/wayfinder-api";
+import { WAYFINDER_DASHBOARD_HINTS } from "@/lib/portal-help-text";
 import {
-  formatLastActiveAt,
   formatStudentGrade,
   formatWayfinderStudentName,
 } from "@/lib/wayfinder-student";
@@ -36,31 +36,50 @@ export default function WayfinderStudentCard({ student }: WayfinderStudentCardPr
   const badgesEarned = student.badgesEarned ?? 0;
   const badgePreviews = student.badgePreviews ?? [];
   const plantStatus = student.plantStatus || "Not started yet";
-  const lastActiveLabel = formatLastActiveAt(student.lastActiveAt);
+  const presence = student.presenceStatus ?? "IDLE";
+  const presenceLabel = student.presenceLabel ?? "Idle";
+  const presenceColor =
+    presence === "IN_LESSON"
+      ? "#00CED1"
+      : presence === "ONLINE"
+        ? "#60D624"
+        : "rgba(255,255,255,0.12)";
+  const presenceTextColor =
+    presence === "IDLE" ? "rgba(255,255,255,0.75)" : "#111023";
+  const href =
+    presence === "IN_LESSON" && student.liveSessionId
+      ? `/dashboard/live-sessions/${student.liveSessionId}`
+      : `/dashboard/student?id=${student.id}`;
 
   return (
     <Link
-      href={`/dashboard/student?id=${student.id}`}
+      href={href}
       className="relative rounded-[12px] p-6 flex flex-col items-center hover:bg-[#3a3954] transition-colors"
       style={{ backgroundColor: "#313044" }}
     >
       <span
-        className="absolute top-3 right-3 max-w-[46%] truncate rounded-full px-2.5 py-1"
+        className="absolute top-3 right-3 inline-flex max-w-[52%] items-center gap-1.5 truncate rounded-full px-2.5 py-1"
         style={{
           ...inter,
-          fontWeight: 500,
+          fontWeight: 600,
           fontSize: "10px",
           lineHeight: "14px",
-          color: student.lastActiveAt ? "#111023" : "rgba(255,255,255,0.55)",
-          backgroundColor: student.lastActiveAt ? "#00CED1" : "rgba(255,255,255,0.08)",
+          letterSpacing: "0.3px",
+          color: presenceTextColor,
+          backgroundColor: presenceColor,
         }}
-        title={
-          student.lastActiveAt
-            ? `Last active: ${new Date(student.lastActiveAt).toLocaleString()}`
-            : "Last active: Not yet active"
-        }
+        title={WAYFINDER_DASHBOARD_HINTS.presenceStudent}
       >
-        {student.lastActiveAt ? lastActiveLabel : "Not yet active"}
+        <span
+          className={`inline-block h-1.5 w-1.5 shrink-0 rounded-full ${
+            presence === "IN_LESSON" ? "animate-pulse" : ""
+          }`}
+          style={{
+            backgroundColor:
+              presence === "IDLE" ? "rgba(255,255,255,0.5)" : "#111023",
+          }}
+        />
+        {presenceLabel}
       </span>
 
       <p
@@ -72,6 +91,8 @@ export default function WayfinderStudentCard({ student }: WayfinderStudentCardPr
           color: "#FFFFFF",
           marginBottom: "16px",
           paddingRight: "72px",
+          alignSelf: "flex-start",
+          width: "100%",
         }}
       >
         {displayName}

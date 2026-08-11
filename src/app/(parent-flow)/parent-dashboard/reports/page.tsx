@@ -454,8 +454,8 @@ export default function ParentReportsPage() {
             />
           </p>
           <p style={{ ...inter, fontSize: "14px", color: "#444", marginBottom: "18px" }}>
-            Happy {preview.selHappy} · Uncertain {preview.selConfused} · Low
-            mood {preview.selSad}
+            Happy {preview.selHappy} · Okay {preview.selConfused} · Worried{" "}
+            {preview.selSad}
           </p>
 
           <p style={{ ...inter, fontWeight: 700, fontSize: "15px", marginBottom: "10px" }}>
