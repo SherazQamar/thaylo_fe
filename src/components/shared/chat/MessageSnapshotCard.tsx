@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useNotifyError } from "@/hooks/use-notify-error";
 import BadgePreviewStrip, {
   type BadgePreviewItem,
 } from "@/components/shared/BadgePreviewStrip";
@@ -82,6 +83,8 @@ export default function MessageSnapshotCard({
   error,
   className = "",
 }: MessageSnapshotCardProps) {
+  useNotifyError(error, Boolean(error));
+
   return (
     <aside
       className={`rounded-[12px] p-3 w-full min-w-0 overflow-hidden ${className}`}
@@ -94,13 +97,7 @@ export default function MessageSnapshotCard({
         </p>
       )}
 
-      {error && (
-        <p style={{ ...inter, fontWeight: 400, fontSize: "12px", color: "#FF7B7B" }} role="alert">
-          {error}
-        </p>
-      )}
-
-      {data && !isLoading && !error ? <SnapshotBody data={data} /> : null}
+      {data && !isLoading ? <SnapshotBody data={data} /> : null}
     </aside>
   );
 }

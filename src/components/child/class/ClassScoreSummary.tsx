@@ -12,6 +12,8 @@ type ClassScoreSummaryProps = {
   passed?: boolean;
   passThreshold?: number;
   wayfinderBlocked?: boolean;
+  /** When set, show camera-absence end state instead of pass/fail score. */
+  endedReason?: "camera_absence" | null;
   onContinue: () => void;
   onRetake?: () => void | Promise<void>;
 };
@@ -24,9 +26,47 @@ export default function ClassScoreSummary({
   passed = true,
   passThreshold = PASS_THRESHOLD,
   wayfinderBlocked = false,
+  endedReason = null,
   onContinue,
 }: ClassScoreSummaryProps) {
   const percent = scoreTotal > 0 ? Math.round((scoreCorrect / scoreTotal) * 100) : 0;
+
+  if (endedReason === "camera_absence") {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center px-3 py-4 sm:px-4 bg-black/70">
+        <div
+          className="w-full max-w-md rounded-2xl p-5 sm:p-8 border text-center max-h-[calc(100dvh-2rem)] overflow-y-auto"
+          style={{
+            backgroundColor: "#313044",
+            borderColor: "rgba(255,111,111,0.35)",
+          }}
+        >
+          <p
+            className="text-[10px] sm:text-xs uppercase tracking-widest mb-1.5 sm:mb-2"
+            style={{ ...inter, color: "#FF6F6F" }}
+          >
+            Class ended
+          </p>
+          <h2 className="text-white text-lg sm:text-xl font-semibold mb-1" style={inter}>
+            {lessonTitle}
+          </h2>
+          <p className="text-white/55 text-[13px] sm:text-sm mb-4 sm:mb-6" style={inter}>
+            Your class ended because you were not in camera view for 30 seconds.
+            Your parent and Wayfinder have been notified. Stay in the camera frame
+            next time so {instructorName} can keep teaching.
+          </p>
+          <button
+            type="button"
+            onClick={onContinue}
+            className="w-full py-3.5 rounded-xl bg-[#00CED1] text-[#111023] text-sm font-semibold uppercase tracking-wide hover:opacity-90 transition-opacity"
+            style={inter}
+          >
+            Back to Pathway
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-3 py-4 sm:px-4 bg-black/70">

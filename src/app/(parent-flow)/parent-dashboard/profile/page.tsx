@@ -4,10 +4,8 @@ import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { US_TIMEZONES } from "@/constants/us-timezones";
-import {
-  getApiErrorMessage,
-  updateParentProfile,
-} from "@/lib/auth-api";
+import { updateParentProfile } from "@/lib/auth-api";
+import { notify } from "@/lib/notify";
 import { fetchParentChildren } from "@/lib/parent-api";
 import ParentUserDropdown from "@/components/parent/ParentUserDropdown";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
@@ -87,7 +85,6 @@ export default function ParentProfilePage() {
     country: "",
     timeZone: "",
   });
-  const [saveError, setSaveError] = useState<string | null>(null);
 
   const { data: children = [], isLoading: childrenLoading } = useQuery({
     queryKey: ["parent-children"],
@@ -105,12 +102,11 @@ export default function ParentProfilePage() {
         timeZone: form.timeZone.trim(),
       }),
     onSuccess: () => {
-      setSaveError(null);
       setShowEdit(false);
       void queryClient.invalidateQueries({ queryKey: ["parent-children"] });
     },
     onError: (err) => {
-      setSaveError(getApiErrorMessage(err));
+      notify.error(err);
     },
   });
 
@@ -121,34 +117,31 @@ export default function ParentProfilePage() {
       country: user?.country ?? "USA",
       timeZone: user?.timeZone ?? "",
     });
-    setSaveError(null);
     setShowEdit(true);
   }
 
   function closeEdit() {
     if (saveMutation.isPending) return;
     setShowEdit(false);
-    setSaveError(null);
   }
 
   function handleSave(e: FormEvent) {
     e.preventDefault();
-    setSaveError(null);
 
     if (!form.name.trim()) {
-      setSaveError("Full name is required");
+      notify.error("Full name is required");
       return;
     }
     if (!isValidPhoneDigits(form.phone)) {
-      setSaveError(PHONE_VALIDATION_MESSAGE);
+      notify.error(PHONE_VALIDATION_MESSAGE);
       return;
     }
     if (!form.country.trim()) {
-      setSaveError("Country is required");
+      notify.error("Country is required");
       return;
     }
     if (!form.timeZone.trim()) {
-      setSaveError("Timezone is required");
+      notify.error("Timezone is required");
       return;
     }
 
@@ -706,16 +699,6 @@ export default function ParentProfilePage() {
                   ))}
                 </select>
               </div>
-
-              {saveError && (
-                <p
-                  className="text-sm text-red-400 text-center"
-                  role="alert"
-                  style={inter}
-                >
-                  {saveError}
-                </p>
-              )}
 
               <button
                 type="submit"

@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import ChildAuthGuard from "@/components/child/ChildAuthGuard";
 import ChildSidebar from "@/components/child/ChildSidebar";
+import ChildPresenceHeartbeat from "@/components/child/ChildPresenceHeartbeat";
 import OnboardingGate from "@/components/onboarding/OnboardingGate";
 
 export default function ChildDashboardLayout({ children }: { children: React.ReactNode }) {
@@ -15,6 +16,7 @@ export default function ChildDashboardLayout({ children }: { children: React.Rea
   return (
     <ChildAuthGuard>
       <OnboardingGate portal="child" onboardingPath="/child-onboarding">
+        <ChildPresenceHeartbeat />
         <div className="h-screen flex overflow-hidden bg-[#111023]">
           {!isImmersiveRoute && <ChildSidebar />}
           <main

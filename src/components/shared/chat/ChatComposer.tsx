@@ -1,6 +1,8 @@
 "use client";
 import { useRef, useState } from "react";
 
+import { notify } from "@/lib/notify";
+
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
 type ChatComposerProps = {
@@ -59,7 +61,6 @@ export default function ChatComposer({
 }: ChatComposerProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [file, setFile] = useState<File | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const canSend = !disabled && (value.trim().length > 0 || !!file);
 
   const allowedTypes = new Set([
@@ -90,7 +91,6 @@ export default function ChatComposer({
         if (!canSend) return;
         onSend(file);
         setFile(null);
-        setError(null);
         if (inputRef.current) inputRef.current.value = "";
       }}
     >
@@ -114,12 +114,11 @@ export default function ChatComposer({
           if (!nextFile) return;
           const validation = validateFile(nextFile);
           if (validation) {
-            setError(validation);
+            notify.error(validation);
             setFile(null);
             event.target.value = "";
             return;
           }
-          setError(null);
           setFile(nextFile);
         }}
       />
@@ -148,11 +147,6 @@ export default function ChatComposer({
       {file ? (
         <div className="absolute -top-7 left-16 text-[11px] text-[#00CED1]" style={inter}>
           {file.name}
-        </div>
-      ) : null}
-      {error ? (
-        <div className="absolute -top-7 left-16 text-[11px] text-red-400" style={inter}>
-          {error}
         </div>
       ) : null}
     </form>

@@ -13,6 +13,7 @@ import {
   createParentPaymentMethodSetup,
   type ParentPaymentMethodPreview,
 } from "@/lib/parent-api";
+import { notify } from "@/lib/notify";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
@@ -55,7 +56,6 @@ function SaveCardForm({
   const stripe = useStripe();
   const elements = useElements();
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -63,12 +63,11 @@ function SaveCardForm({
 
     const card = elements.getElement(CardElement);
     if (!card) {
-      setError("Card form is not ready. Please try again.");
+      notify.error("Card form is not ready. Please try again.");
       return;
     }
 
     setSubmitting(true);
-    setError(null);
 
     try {
       // CardElement only — no Direct Debit / bank methods.
@@ -77,7 +76,7 @@ function SaveCardForm({
       });
 
       if (result.error) {
-        setError(result.error.message ?? "Could not save card");
+        notify.error(result.error.message ?? "Could not save card");
         return;
       }
 
@@ -87,14 +86,14 @@ function SaveCardForm({
           : result.setupIntent?.payment_method?.id;
 
       if (!paymentMethodId) {
-        setError("Card was not attached. Please try again.");
+        notify.error("Card was not attached. Please try again.");
         return;
       }
 
       const preview = await confirmParentPaymentMethod(paymentMethodId);
       onSaved(preview);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not save card");
+      notify.error(err, "Could not save card");
     } finally {
       setSubmitting(false);
     }
@@ -108,11 +107,6 @@ function SaveCardForm({
       >
         <CardElement options={CARD_ELEMENT_OPTIONS} />
       </div>
-      {error && (
-        <p style={{ ...inter, color: "#FF7B7B", fontSize: "13px" }} role="alert">
-          {error}
-        </p>
-      )}
       <div className="flex flex-wrap gap-3">
         <button
           type="submit"
@@ -163,7 +157,6 @@ export default function PaymentMethodCardSection({
   const [stripePromise, setStripePromise] =
     useState<Promise<Stripe | null> | null>(null);
   const [loadingSetup, setLoadingSetup] = useState(false);
-  const [setupError, setSetupError] = useState<string | null>(null);
 
   const elementsOptions = useMemo(
     () => ({
@@ -181,12 +174,11 @@ export default function PaymentMethodCardSection({
   );
 
   async function startAddCard() {
-    setSetupError(null);
     setLoadingSetup(true);
     try {
       const setup = await createParentPaymentMethodSetup();
       if (!setup.publishableKey) {
-        setSetupError(
+        notify.error(
           "Stripe publishable key is not configured. Add STRIPE_PUBLISHABLE_KEY on the API.",
         );
         return;
@@ -196,9 +188,7 @@ export default function PaymentMethodCardSection({
       setStripePromise(loadStripe(setup.publishableKey));
       setEditing(true);
     } catch (err) {
-      setSetupError(
-        err instanceof Error ? err.message : "Could not start card setup",
-      );
+      notify.error(err, "Could not start card setup");
     } finally {
       setLoadingSetup(false);
     }
@@ -324,16 +314,6 @@ export default function PaymentMethodCardSection({
             </p>
           )}
         </div>
-      )}
-
-      {setupError && (
-        <p
-          className="mb-3"
-          style={{ ...inter, color: "#FF7B7B", fontSize: "13px" }}
-          role="alert"
-        >
-          {setupError}
-        </p>
       )}
 
       {editing && clientSecret && stripePromise && (

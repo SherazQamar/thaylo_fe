@@ -8,6 +8,9 @@ import { useChildAuthStore } from "@/stores/child-auth.store";
 import ClassBlackboard from "@/components/child/class/ClassBlackboard";
 import ClassChildVideo from "@/components/child/class/ClassChildVideo";
 import ClassLessonHeader from "@/components/child/class/ClassLessonHeader";
+import ClassLessonRail, {
+  type LessonConfidence,
+} from "@/components/child/class/ClassLessonRail";
 import ClassMediaControls from "@/components/child/class/ClassMediaControls";
 import ClassMediaSetupGate from "@/components/child/class/ClassMediaSetupGate";
 import ClassScoreSummary from "@/components/child/class/ClassScoreSummary";
@@ -20,12 +23,16 @@ import { useClassMedia } from "@/hooks/use-class-media";
 import { useInstructorSpeech } from "@/hooks/use-instructor-speech";
 import { useSpeechRecognition } from "@/hooks/use-speech-recognition";
 import ClassLiveAvatar from "@/components/child/class/ClassLiveAvatar";
+import BloomBuddyCheckIn from "@/components/child/bloom-buddy/BloomBuddyCheckIn";
 import {
   phaseForStepIndex,
+  type BlackboardInteraction,
+  type BlackboardStep,
   type ClassPhase,
 } from "@/lib/class-lesson-content";
 import { buildBlackboardSteps } from "@/lib/class-lesson-builder";
 import {
+  abandonClassSession,
   completeClassSession,
   fetchChildClassSession,
   submitClassAnswer,
@@ -39,7 +46,6 @@ import { computeTeachUntilMinute } from "@/lib/class-duration";
 import { FACE_MONITOR_DEFAULTS, type FaceMonitorStatus } from "@/lib/face-monitor/types";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
-const NOOP_CAPTION = () => undefined;
 
 type ClassLiveRoomProps = {
   session: ChildClassSession | null;
@@ -54,13 +60,28 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
   const [answeredCorrectly, setAnsweredCorrectly] = useState<boolean | null>(null);
   const [answerLocked, setAnswerLocked] = useState(false);
+  const [answerFlowMode, setAnswerFlowMode] = useState<"idle" | "reteaching" | "recheck">("idle");
+  const [revealCorrectAnswer, setRevealCorrectAnswer] = useState(false);
+  const [forceShowHints, setForceShowHints] = useState(false);
+  const [summativeUnlocked, setSummativeUnlocked] = useState(true);
+  const [lastRubricScore, setLastRubricScore] = useState<
+    ClassSessionScore["rubricScore"] | null
+  >(null);
+  const [consecutiveCorrect, setConsecutiveCorrect] = useState(0);
+  const recheckUsedForStepRef = useRef<string | null>(null);
   const [classScore, setClassScore] = useState<ClassSessionScore | null>(null);
+  const [endedReason, setEndedReason] = useState<"camera_absence" | null>(null);
+  const cameraAbsenceEndingRef = useRef(false);
   const [retakeBlocked, setRetakeBlocked] = useState(false);
   const [chatInitialized, setChatInitialized] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [greetingDone, setGreetingDone] = useState(false);
   const [isGreeting, setIsGreeting] = useState(false);
   const [teachingPaused, setTeachingPaused] = useState(false);
+  const [showMidSessionCheckIn, setShowMidSessionCheckIn] = useState(false);
+  const consecutiveWrongRef = useRef(0);
+  const midSessionOfferedRef = useRef(false);
+  const midSessionResumeRef = useRef<(() => void) | null>(null);
   const [pushToTalkActive, setPushToTalkActive] = useState(false);
   const [pttStatus, setPttStatus] = useState<string | null>(null);
   const [faceStatus, setFaceStatus] = useState<FaceMonitorStatus | null>(null);
@@ -237,6 +258,10 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
   const faceMissingLong =
     faceStatus != null &&
     faceStatus.faceMissingSeconds * 1000 >= FACE_MONITOR_DEFAULTS.missingThresholdMs;
+  const faceMissingEndClass =
+    faceStatus != null &&
+    faceStatus.ready &&
+    faceStatus.faceMissingSeconds * 1000 >= FACE_MONITOR_DEFAULTS.absenceEndClassMs;
   const showLookAtScreenNudge =
     classJoined &&
     cameraEnabled &&
@@ -267,12 +292,14 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
       provider: aiSettings.avatar?.provider ?? "none",
       heygenAvatarId: aiSettings.avatar?.heygenAvatarId ?? "",
       heygenVoiceId: aiSettings.avatar?.heygenVoiceId ?? "",
+      useElevenLabsVoice: Boolean(aiSettings.avatar?.useElevenLabsVoice),
     };
   }, [
     avatarRequested,
     aiSettings.avatar?.provider,
     aiSettings.avatar?.heygenAvatarId,
     aiSettings.avatar?.heygenVoiceId,
+    aiSettings.avatar?.useElevenLabsVoice,
   ]);
 
   const {
@@ -322,8 +349,28 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
     setSelectedOptionId(null);
     setAnsweredCorrectly(null);
     setAnswerLocked(false);
+    setAnswerFlowMode("idle");
+    setRevealCorrectAnswer(false);
+    setForceShowHints(false);
+    setLastRubricScore(null);
+    recheckUsedForStepRef.current = null;
     setStepIndex((prev) => Math.min(prev + 1, blackboardSteps.length - 1));
   }, [blackboardSteps.length]);
+
+  const buildReteachScript = useCallback(
+    (step: BlackboardStep, interaction: BlackboardInteraction, chosenLabel: string) => {
+      const repair =
+        interaction.incorrectFeedback?.trim() ||
+        `Not quite — ${chosenLabel} isn't the strongest choice here.`;
+      const tip =
+        interaction.options.find((option) => option.correct)?.hint?.trim() ||
+        step.lines?.[0]?.trim() ||
+        step.narrationScript?.split(/[.!?]/)[0]?.trim() ||
+        "Focus on the meaning and strength of each word.";
+      return `${repair} Here's a quick reteach: ${tip}. Now try the same question again.`;
+    },
+    [],
+  );
 
   const finishClass = useCallback(async () => {
     if (!session) return;
@@ -345,10 +392,46 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
     }
   }, [session]);
 
+  const endClassForCameraAbsence = useCallback(async () => {
+    if (!session || cameraAbsenceEndingRef.current || classScore || endedReason) return;
+    cameraAbsenceEndingRef.current = true;
+    stopSpeaking();
+    try {
+      await abandonClassSession(session.sessionId, "CAMERA_ABSENCE");
+    } catch {
+      // Still end the local session so the student cannot continue.
+    }
+    setEndedReason("camera_absence");
+    setClassScore({
+      sessionId: session.sessionId,
+      scoreCorrect: 0,
+      scoreTotal: 0,
+      scorePercent: 0,
+      passed: false,
+      passThreshold: 85,
+      needsRetake: true,
+      answers: [],
+    });
+    stopStream();
+  }, [session, classScore, endedReason, stopSpeaking, stopStream]);
+
   const finishClassRef = useRef(finishClass);
   useEffect(() => {
     finishClassRef.current = finishClass;
   }, [finishClass]);
+
+  useEffect(() => {
+    if (!classJoined || !cameraEnabled || classScore || endedReason) return;
+    if (!faceMissingEndClass) return;
+    void endClassForCameraAbsence();
+  }, [
+    classJoined,
+    cameraEnabled,
+    classScore,
+    endedReason,
+    faceMissingEndClass,
+    endClassForCameraAbsence,
+  ]);
 
   useEffect(() => {
     if (!sessionClock.isTeachWindowOver || classScore) return;
@@ -359,6 +442,10 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
     setSelectedOptionId(null);
     setAnsweredCorrectly(null);
     setAnswerLocked(false);
+    setAnswerFlowMode("idle");
+    setRevealCorrectAnswer(false);
+    setForceShowHints(false);
+    recheckUsedForStepRef.current = null;
     setStepIndex(firstAssessmentStepIndex);
   }, [sessionClock.isTeachWindowOver, firstAssessmentStepIndex, classScore, stopSpeaking]);
 
@@ -398,7 +485,6 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
     paused: teachingPaused,
     voiceEnabled: true,
     speakProgress,
-    onCaption: NOOP_CAPTION,
     onNarrationComplete: handleNarrationComplete,
     // Child lesson pace: breath between lines without making class feel stuck.
     pacing: {
@@ -409,6 +495,79 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
   });
 
   const interactionActive = Boolean(reveal.interactionVisible && currentStep?.interaction);
+  const summativeLocked =
+    interactionActive &&
+    currentStep?.checkKind === "summative" &&
+    !summativeUnlocked;
+
+  const applyAnswerScore = useCallback((score: ClassSessionScore | null | undefined) => {
+    if (!score) return;
+    if (typeof score.summativeUnlocked === "boolean") {
+      setSummativeUnlocked(score.summativeUnlocked);
+    }
+    if (score.rubricScore) {
+      setLastRubricScore(score.rubricScore);
+    }
+  }, []);
+
+  const submitStepAnswer = useCallback(
+    async (input: {
+      stepId: string;
+      interactionId: string;
+      optionId: string;
+      optionLabel: string;
+      isCorrect: boolean;
+      phase: ClassPhase;
+      checkKind?: BlackboardStep["checkKind"];
+    }) => {
+      if (!session) return null;
+      try {
+        const score = await submitClassAnswer(session.sessionId, {
+          stepId: input.stepId,
+          interactionId: input.interactionId,
+          optionId: input.optionId,
+          optionLabel: input.optionLabel,
+          isCorrect: input.isCorrect,
+          phase: input.phase,
+          checkKind: input.checkKind,
+        });
+        applyAnswerScore(score);
+        return score;
+      } catch {
+        return null;
+      }
+    },
+    [applyAnswerScore, session],
+  );
+
+  const whyThisLesson = useMemo(() => {
+    const brain = session?.tutorBrain;
+    if (brain?.summary?.trim()) {
+      const reasons = brain.reasons?.filter(Boolean).slice(0, 2) ?? [];
+      if (reasons.length > 0) {
+        return `${brain.summary} ${reasons.map((r) => `• ${r}`).join(" ")}`;
+      }
+      return brain.summary;
+    }
+    const focus = currentStep?.title?.trim() || lessonTitle;
+    const skillHint =
+      currentPhase === "quick_check"
+        ? "This Quick Check confirms the skill before mastery."
+        : currentPhase === "practice"
+          ? "Practice builds confidence before the scored check."
+          : "Today's teach block targets this standard skill.";
+    return `You're working on “${focus}”. ${skillHint}`;
+  }, [session?.tutorBrain, currentStep?.title, lessonTitle, currentPhase]);
+
+  const lessonConfidence: LessonConfidence = useMemo(() => {
+    if (answerFlowMode === "reteaching" || consecutiveWrongRef.current >= 2) {
+      return "Low";
+    }
+    if (consecutiveCorrect >= 2 && consecutiveWrongRef.current === 0) {
+      return "High";
+    }
+    return "Medium";
+  }, [answerFlowMode, consecutiveCorrect, stepIndex]);
 
   const { messages, isTyping, sendMessage, pushCalyxMessage } = useClassChat({
     sessionId: session?.sessionId,
@@ -421,6 +580,23 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
     voiceEnabled: true,
     onQuestionFlow: handleQuestionFlow,
   });
+
+  const handleNeedHint = useCallback(async () => {
+    const interaction = currentStep?.interaction;
+    if (!interaction || answerFlowMode === "reteaching") return;
+    setForceShowHints(true);
+    const tip =
+      interaction.options.find((o) => o.hint?.trim())?.hint?.trim() ||
+      interaction.options.find((o) => o.correct)?.hint?.trim() ||
+      "Look for the strongest meaning — use the clues beside each choice.";
+    const line = `Here's a hint: ${tip}`;
+    pushCalyxMessage(line, { speak: false });
+    try {
+      await speak(line);
+    } catch {
+      // ignore TTS failures
+    }
+  }, [answerFlowMode, currentStep?.interaction, pushCalyxMessage, speak]);
 
   const handlePushToTalkStart = useCallback(async () => {
     if (!classJoined || pttBusyRef.current || isTyping || isGreeting) return;
@@ -555,11 +731,41 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
     void navigateAfterChildClass(router);
   };
 
+  const finishMidSessionCheckIn = useCallback(() => {
+    setShowMidSessionCheckIn(false);
+    setTeachingPaused(false);
+    const resume = midSessionResumeRef.current;
+    midSessionResumeRef.current = null;
+    resume?.();
+  }, []);
+
+  const maybeOfferMidSessionCheckIn = useCallback((isCorrect: boolean) => {
+    return new Promise<void>((resolve) => {
+      if (isCorrect) {
+        consecutiveWrongRef.current = 0;
+        setConsecutiveCorrect((n) => n + 1);
+        resolve();
+        return;
+      }
+      consecutiveWrongRef.current += 1;
+      setConsecutiveCorrect(0);
+      if (consecutiveWrongRef.current >= 2 && !midSessionOfferedRef.current) {
+        midSessionOfferedRef.current = true;
+        midSessionResumeRef.current = resolve;
+        setTeachingPaused(true);
+        setShowMidSessionCheckIn(true);
+        return;
+      }
+      resolve();
+    });
+  }, []);
+
   const advanceAfterFeedback = useCallback(
-    async (feedback: string, answeredStepIndex: number) => {
+    async (feedback: string, answeredStepIndex: number, isCorrect: boolean) => {
       pushCalyxMessage(feedback, { speak: false });
       await speak(feedback);
       await delay(600);
+      await maybeOfferMidSessionCheckIn(isCorrect);
 
       if (stepIndexRef.current !== answeredStepIndex) {
         return;
@@ -573,49 +779,129 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
 
       advanceStep();
     },
-    [advanceStep, blackboardSteps.length, finishClass, pushCalyxMessage, speak],
+    [
+      advanceStep,
+      blackboardSteps.length,
+      finishClass,
+      maybeOfferMidSessionCheckIn,
+      pushCalyxMessage,
+      speak,
+    ],
+  );
+
+  const runReteachThenRecheck = useCallback(
+    async (
+      feedback: string,
+      answeredStepIndex: number,
+      step: BlackboardStep,
+      interaction: BlackboardInteraction,
+      chosenLabel: string,
+    ) => {
+      setRevealCorrectAnswer(true);
+      setAnswerFlowMode("reteaching");
+      pushCalyxMessage(feedback, { speak: false });
+      await speak(feedback);
+      await delay(400);
+      await maybeOfferMidSessionCheckIn(false);
+
+      if (stepIndexRef.current !== answeredStepIndex) {
+        return;
+      }
+
+      const reteach = buildReteachScript(step, interaction, chosenLabel);
+      pushCalyxMessage(reteach, { speak: false });
+      await speak(reteach);
+      await delay(350);
+
+      if (stepIndexRef.current !== answeredStepIndex) {
+        return;
+      }
+
+      recheckUsedForStepRef.current = step.id;
+      setSelectedOptionId(null);
+      setAnsweredCorrectly(null);
+      setAnswerLocked(false);
+      setRevealCorrectAnswer(false);
+      setAnswerFlowMode("recheck");
+    },
+    [buildReteachScript, maybeOfferMidSessionCheckIn, pushCalyxMessage, speak],
   );
 
   const handleBlackboardSelect = async (optionId: string) => {
     const interaction = currentStep?.interaction;
     if (!interaction || selectedOptionId || answerLocked || !session || !currentStep) return;
+    if (answerFlowMode === "reteaching") return;
+    if (summativeLocked) return;
 
     const option = interaction.options.find((o) => o.id === optionId);
     if (!option) return;
 
     const isCorrect = option.correct === true;
     const answeredStepIndex = stepIndexRef.current;
+    const isRecheck = answerFlowMode === "recheck";
+    const stepId = isRecheck ? `${currentStep.id}::recheck` : currentStep.id;
 
     setAnswerLocked(true);
     setSelectedOptionId(optionId);
     setAnsweredCorrectly(isCorrect);
 
-    try {
-      await submitClassAnswer(session.sessionId, {
-        stepId: currentStep.id,
-        interactionId: interaction.id,
-        optionId: option.id,
-        optionLabel: option.label,
-        isCorrect,
-      });
-    } catch {
-      // Keep local flow even if persistence fails temporarily.
-    }
+    const score = await submitStepAnswer({
+      stepId,
+      interactionId: interaction.id,
+      optionId: option.id,
+      optionLabel: option.label,
+      isCorrect,
+      phase: currentStep.phase,
+      checkKind: currentStep.checkKind,
+    });
 
     const feedback = isCorrect
       ? (interaction.correctFeedback?.trim() ||
           `Yes! ${option.label} is a strong choice. Great work!`)
       : (interaction.incorrectFeedback?.trim() ||
-          `You picked ${option.label}. Let's keep going — you've got this.`);
+          `You picked ${option.label}. Let's look at this together.`);
 
-    void advanceAfterFeedback(feedback, answeredStepIndex);
+    const decision =
+      score?.decision ??
+      (!isCorrect &&
+      !isRecheck &&
+      (currentStep.phase === "practice" || currentStep.phase === "quick_check")
+        ? "SHORT_RETEACH"
+        : "ADVANCE");
+
+    const canReteach =
+      decision === "SHORT_RETEACH" &&
+      recheckUsedForStepRef.current !== currentStep.id;
+
+    if (canReteach) {
+      void runReteachThenRecheck(
+        feedback,
+        answeredStepIndex,
+        currentStep,
+        interaction,
+        option.label,
+      );
+      return;
+    }
+
+    setRevealCorrectAnswer(!isCorrect);
+    void advanceAfterFeedback(feedback, answeredStepIndex, isCorrect);
   };
 
   const handleWordLadderSubmit = async (orderedIds: string[]) => {
     const interaction = currentStep?.interaction;
-    if (!interaction || interaction.type !== "word_ladder" || selectedOptionId || answerLocked || !session || !currentStep) {
+    if (
+      !interaction ||
+      interaction.type !== "word_ladder" ||
+      selectedOptionId ||
+      answerLocked ||
+      !session ||
+      !currentStep
+    ) {
       return;
     }
+    if (answerFlowMode === "reteaching") return;
+    if (summativeLocked) return;
 
     const correctOrder = interaction.correctOrder ?? [];
     const isCorrect =
@@ -626,36 +912,73 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
       (id) => interaction.options.find((option) => option.id === id)?.label ?? id,
     );
     const answeredStepIndex = stepIndexRef.current;
+    const isRecheck = answerFlowMode === "recheck";
+    const stepId = isRecheck ? `${currentStep.id}::recheck` : currentStep.id;
 
     setAnswerLocked(true);
     setSelectedOptionId("word-ladder-submitted");
     setAnsweredCorrectly(isCorrect);
 
-    try {
-      await submitClassAnswer(session.sessionId, {
-        stepId: currentStep.id,
-        interactionId: interaction.id,
-        optionId: "word-ladder-order",
-        optionLabel: labels.join(" → "),
-        isCorrect,
-      });
-    } catch {
-      // Keep local flow even if persistence fails temporarily.
-    }
+    const score = await submitStepAnswer({
+      stepId,
+      interactionId: interaction.id,
+      optionId: "word-ladder-order",
+      optionLabel: labels.join(" → "),
+      isCorrect,
+      phase: currentStep.phase,
+      checkKind: currentStep.checkKind,
+    });
 
     const feedback = isCorrect
       ? (interaction.correctFeedback?.trim() ||
           "Perfect! You put the Word Ladder in the right order. Excellent work!")
       : (interaction.incorrectFeedback?.trim() ||
-          "Good try on the Word Ladder. Let's keep practicing this skill.");
+          "Good try on the Word Ladder. Let's look at the order together.");
 
-    void advanceAfterFeedback(feedback, answeredStepIndex);
+    const decision =
+      score?.decision ??
+      (!isCorrect &&
+      !isRecheck &&
+      (currentStep.phase === "practice" || currentStep.phase === "quick_check")
+        ? "SHORT_RETEACH"
+        : "ADVANCE");
+
+    const canReteach =
+      decision === "SHORT_RETEACH" &&
+      recheckUsedForStepRef.current !== currentStep.id;
+
+    if (canReteach) {
+      void runReteachThenRecheck(
+        feedback,
+        answeredStepIndex,
+        currentStep,
+        interaction,
+        labels.join(" → "),
+      );
+      return;
+    }
+
+    setRevealCorrectAnswer(!isCorrect);
+    void advanceAfterFeedback(feedback, answeredStepIndex, isCorrect);
   };
+
+  const handleSkipLockedSummative = useCallback(() => {
+    if (!summativeLocked) return;
+    setAnswerLocked(true);
+    const answeredStepIndex = stepIndexRef.current;
+    void advanceAfterFeedback(
+      "We'll unlock this mastery check once practice feels secure. Moving on for now.",
+      answeredStepIndex,
+      false,
+    );
+  }, [advanceAfterFeedback, summativeLocked]);
 
   if (loadError) {
     return (
       <div className="flex flex-col items-center justify-center h-full px-6 text-center gap-4">
-        <p className="text-[#FF7B7B] text-sm" style={inter}>{loadError}</p>
+        <p className="text-white/60 text-sm" style={inter}>
+          We couldn&apos;t load your class session.
+        </p>
         <Link href="/child-dashboard" className="text-[#00CED1] text-sm font-semibold underline">
           Back to Pathway
         </Link>
@@ -736,6 +1059,7 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
             moduleLabel={isLoading ? "Loading…" : moduleLabel}
             lessonTitle={isLoading ? "Starting class…" : lessonTitle}
             subtitle={subtitle}
+            whyThisLesson={whyThisLesson}
             currentPhase={currentPhase}
             quickCheckLabel={
               currentPhase === "quick_check"
@@ -766,6 +1090,7 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
             }
           />
 
+          <div className="flex min-h-0 flex-1 gap-2">
           {/* Blackboard fills all remaining height — no page footer under it. */}
           <div className="relative min-h-0 flex-1 overflow-hidden rounded-[16px]">
             {currentStep ? (
@@ -787,6 +1112,10 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
                   onSubmitWordLadder={handleWordLadderSubmit}
                   avatarPresent={Boolean(liveAvatar?.enabled)}
                   avatarCompact={interactionActive}
+                  revealCorrectAnswer={revealCorrectAnswer}
+                  answerFlowMode={answerFlowMode}
+                  forceShowHints={forceShowHints}
+                  interactionLocked={summativeLocked}
                 />
                 {liveAvatar?.enabled ? (
                   <ClassLiveAvatar
@@ -835,6 +1164,63 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
                   </div>
                 )}
 
+                {interactionActive && answerFlowMode !== "reteaching" && !answerLocked && !summativeLocked ? (
+                  <button
+                    type="button"
+                    onClick={() => void handleNeedHint()}
+                    className="absolute left-3 bottom-3 z-30 rounded-full border border-[#F59E0B]/50 bg-[rgba(17,16,35,0.92)] px-3.5 py-2 text-xs font-semibold text-[#F59E0B] shadow-lg hover:bg-[rgba(245,158,11,0.12)] cursor-pointer"
+                    style={inter}
+                  >
+                    Need a hint?
+                  </button>
+                ) : null}
+
+                {summativeLocked ? (
+                  <div
+                    className="absolute left-1/2 top-16 z-40 w-[min(92%,440px)] -translate-x-1/2 rounded-[12px] border border-[#00CED1]/35 px-4 py-3 shadow-lg md:top-[4.5rem]"
+                    style={{ backgroundColor: "rgba(17,16,35,0.94)" }}
+                  >
+                    <p className="text-center text-xs font-semibold text-[#00CED1]" style={inter}>
+                      Mastery check locked
+                    </p>
+                    <p className="mt-1 text-center text-xs leading-snug text-white/75" style={inter}>
+                      Secure the practice checks first — then this summative unlocks.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleSkipLockedSummative}
+                      className="mt-3 w-full rounded-lg bg-[#00CED1]/15 px-3 py-2 text-xs font-semibold text-[#00CED1] hover:bg-[#00CED1]/25 cursor-pointer"
+                      style={inter}
+                    >
+                      Continue for now
+                    </button>
+                  </div>
+                ) : null}
+
+                {answerLocked && lastRubricScore && !summativeLocked ? (
+                  <div
+                    className="absolute right-3 top-16 z-30 rounded-[10px] border border-white/10 bg-[rgba(17,16,35,0.9)] px-3 py-2 shadow-lg md:top-[4.5rem]"
+                    style={inter}
+                  >
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-white/50">
+                      Rubric
+                    </p>
+                    <p className="mt-0.5 text-xs font-semibold text-white">
+                      {lastRubricScore.percent}% · {lastRubricScore.total}/{lastRubricScore.maxTotal}
+                    </p>
+                    <div className="mt-1 flex flex-wrap gap-1.5">
+                      {lastRubricScore.dimensions.map((dim) => (
+                        <span
+                          key={dim.id}
+                          className="rounded bg-white/8 px-1.5 py-0.5 text-[10px] text-white/70"
+                        >
+                          {dim.label} {dim.score}/{dim.max}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+
                 {(pttStatus || (pushToTalkActive && displayTranscript)) && (
                   <div
                     className="absolute left-1/2 bottom-16 z-30 w-[min(92%,420px)] -translate-x-1/2 rounded-[10px] border border-[#00CED1]/35 px-3 py-2 shadow-lg"
@@ -872,6 +1258,17 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
                 )}
               </div>
             ) : null}
+          </div>
+
+          <ClassLessonRail
+            currentPhase={currentPhase}
+            answerFlowMode={answerFlowMode}
+            confidence={lessonConfidence}
+            lessonComplete={Boolean(classScore)}
+            whyThisLesson={session?.tutorBrain?.summary ?? whyThisLesson}
+            tutorReasons={session?.tutorBrain?.reasons}
+            interestPersonalized={session?.tutorBrain?.interestPersonalized}
+          />
           </div>
         </div>
 
@@ -949,6 +1346,7 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
           passed={classScore.passed}
           passThreshold={classScore.passThreshold}
           wayfinderBlocked={retakeBlocked}
+          endedReason={endedReason}
           onContinue={handleEndCall}
           onRetake={async () => {
             stopSpeaking();
@@ -966,6 +1364,19 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
           }}
         />
       )}
+
+      {showMidSessionCheckIn ? (
+        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/65 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-md">
+            <BloomBuddyCheckIn
+              timing="MID_SESSION"
+              compact
+              onComplete={finishMidSessionCheckIn}
+              onSkip={finishMidSessionCheckIn}
+            />
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -1,15 +1,16 @@
 "use client";
 
-import React, { FormEvent, Suspense, useEffect, useState } from "react";
+import React, { FormEvent, Suspense, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
-  getApiErrorMessage,
   resetPassword,
   validateResetToken,
 } from "@/lib/auth-api";
+import { useNotifyError } from "@/hooks/use-notify-error";
+import { notify } from "@/lib/notify";
 import { getSignInPathForRole } from "@/lib/portal-auth";
 import ThayloBrandLink from "@/components/shared/ThayloBrandLink";
 import PasswordInput from "@/components/shared/PasswordInput";
@@ -23,7 +24,6 @@ function ResetPasswordContent() {
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [formError, setFormError] = useState<string | null>(null);
 
   const tokenQuery = useQuery({
     queryKey: ["validate-reset-token", token],
@@ -51,17 +51,12 @@ function ResetPasswordContent() {
       router.push(`${getSignInPathForRole(role)}?reset=1`);
     },
     onError: (err) => {
-      setFormError(getApiErrorMessage(err));
+      notify.error(err);
     },
   });
 
-  useEffect(() => {
-    setFormError(null);
-  }, [newPassword, confirmPassword]);
-
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    setFormError(null);
     resetMutation.mutate();
   }
 
@@ -72,6 +67,8 @@ function ResetPasswordContent() {
     !tokenMissing && !tokenQuery.isLoading && tokenQuery.isError;
   const tokenReady =
     !tokenMissing && !tokenQuery.isLoading && tokenQuery.isSuccess;
+
+  useNotifyError(tokenQuery.error, tokenInvalid);
 
   return (
     <div className="h-screen flex flex-col lg:flex-row overflow-hidden bg-[#111023]">
@@ -158,8 +155,8 @@ function ResetPasswordContent() {
                 >
                   Link Expired
                 </h2>
-                <p className="text-white/50 text-sm" role="alert" style={inter}>
-                  {getApiErrorMessage(tokenQuery.error)}
+                <p className="text-white/50 text-sm" style={inter}>
+                  This reset link is no longer valid.
                 </p>
                 <p className="text-white/40 text-xs" style={inter}>
                   Reset links expire after 15 minutes. Request a new one from
@@ -234,16 +231,6 @@ function ResetPasswordContent() {
                       style={inter}
                     />
                   </div>
-
-                  {formError && (
-                    <p
-                      className="text-sm text-red-400 text-center"
-                      role="alert"
-                      style={inter}
-                    >
-                      {formError}
-                    </p>
-                  )}
 
                   <button
                     type="submit"

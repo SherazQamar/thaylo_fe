@@ -8,6 +8,7 @@ import { fetchChildPretest } from "@/lib/badge-api";
 import { startChildClass } from "@/lib/curriculum-api";
 import { getStartClassErrorMessage } from "@/lib/child-class-messages";
 import { useChildAssignedClasses } from "@/hooks/use-child-assigned-classes";
+import { notify } from "@/lib/notify";
 
 /**
  * Instant landing after Pathway "Start".
@@ -16,7 +17,7 @@ import { useChildAssignedClasses } from "@/hooks/use-child-assigned-classes";
 export default function ChildClassLaunchPage() {
   const router = useRouter();
   const { hasAssignedClass, isLoading: classesLoading } = useChildAssignedClasses();
-  const [error, setError] = useState<string | null>(null);
+  const [hasFailed, setHasFailed] = useState(false);
 
   useEffect(() => {
     if (classesLoading) return;
@@ -72,7 +73,8 @@ export default function ChildClassLaunchPage() {
         router.replace(`/child-dashboard/lesson?sessionId=${session.sessionId}`);
       } catch (err) {
         if (cancelled) return;
-        setError(getStartClassErrorMessage(err));
+        notify.error(err, getStartClassErrorMessage(err));
+        setHasFailed(true);
       }
     }
 
@@ -85,9 +87,9 @@ export default function ChildClassLaunchPage() {
   return (
     <div className="relative flex h-full w-full items-center justify-center overflow-hidden bg-[#111023] px-4">
       <div className="flex max-w-sm flex-col items-center gap-3 text-center">
-        {error ? (
+        {hasFailed ? (
           <>
-            <p className="text-sm text-[#FF7B7B]">{error}</p>
+            <p className="text-sm text-white/60">We couldn&apos;t start your lesson.</p>
             <button
               type="button"
               onClick={() => router.replace("/child-dashboard")}

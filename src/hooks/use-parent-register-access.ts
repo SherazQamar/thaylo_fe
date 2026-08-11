@@ -1,10 +1,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  getApiErrorMessage,
-  refreshParentSession,
-} from "@/lib/auth-api";
+import { getApiErrorMessage, refreshParentSession } from "@/lib/auth-api";
 import { getUserToken } from "@/lib/auth-cookies";
+import { notify } from "@/lib/notify";
 import { hasCompletedFamilyRegistration } from "@/lib/parent-registration";
 import { logoutParent } from "@/lib/auth-session";
 import { isParentAccessTokenValid } from "@/lib/jwt";
@@ -15,7 +13,6 @@ type AccessStatus = "loading" | "ready" | "error";
 export function useParentRegisterAccess(redirectIfRegistered = false) {
   const router = useRouter();
   const [status, setStatus] = useState<AccessStatus>("loading");
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -68,7 +65,7 @@ export function useParentRegisterAccess(redirectIfRegistered = false) {
         setStatus("ready");
       } catch (err) {
         if (cancelled) return;
-        setError(getApiErrorMessage(err));
+        notify.error(err, getApiErrorMessage(err));
         setStatus("error");
       }
     }
@@ -78,7 +75,7 @@ export function useParentRegisterAccess(redirectIfRegistered = false) {
     return () => {
       cancelled = true;
     };
-  }, [redirectIfRegistered]);
+  }, [redirectIfRegistered, router]);
 
-  return { status, error };
+  return { status };
 }

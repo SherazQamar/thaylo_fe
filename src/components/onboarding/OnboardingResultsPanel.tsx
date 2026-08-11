@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useNotifyError } from "@/hooks/use-notify-error";
 import { formatOnboardingAnswerValue } from "@/lib/format-onboarding-answer";
 import {
   fetchChildOnboardingResultsForParent,
@@ -94,8 +95,10 @@ export default function OnboardingResultsPanel({
   title = "Assessment results",
   emptyMessage = "No completed assessments yet.",
 }: OnboardingResultsPanelProps) {
-  const { data, isLoading, isError } = useOnboardingResults(mode);
+  const { data, isLoading, isError, error } = useOnboardingResults(mode);
   const results = data?.results ?? [];
+
+  useNotifyError(error, isError);
 
   return (
     <div className="space-y-4">
@@ -117,13 +120,7 @@ export default function OnboardingResultsPanel({
         </p>
       )}
 
-      {isError && (
-        <p className="text-red-400 text-sm" style={inter}>
-          Could not load assessment results.
-        </p>
-      )}
-
-      {!isLoading && !isError && results.length === 0 && (
+      {!isLoading && results.length === 0 && (
         <div
           className="rounded-[16px] px-5 py-8 text-center"
           style={{ backgroundColor: "#313044" }}

@@ -9,6 +9,7 @@ import NavUnreadBadge from "@/components/shared/chat/NavUnreadBadge";
 import UserDropdown from "@/components/wayfinder/UserDropdown";
 import { useChatUnreadCount } from "@/hooks/use-chat-unread-count";
 import { useWayfinderAlertCount } from "@/hooks/use-wayfinder-alert-count";
+import { usePortalNotificationCount } from "@/hooks/use-portal-notification-count";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
@@ -18,7 +19,9 @@ type NavIconId =
   | "live"
   | "alert"
   | "message"
-  | "profile";
+  | "profile"
+  | "notifications"
+  | "insights";
 
 type NavItem = {
   label: string;
@@ -101,6 +104,23 @@ function NavIcon({
           <path d="M6.5 18.5a6 6 0 0111 0" />
         </svg>
       );
+    case "notifications":
+      return (
+        <svg {...common}>
+          <path d="M18 8a6 6 0 10-12 0c0 7-3 7-3 7h18s-3 0-3-7" />
+          <path d="M13.73 21a2 2 0 01-3.46 0" />
+        </svg>
+      );
+    case "insights":
+      return (
+        <svg {...common}>
+          <path d="M4 19V5" />
+          <path d="M4 19h16" />
+          <path d="M8 15v-4" />
+          <path d="M12 15V8" />
+          <path d="M16 15v-6" />
+        </svg>
+      );
     default:
       return null;
   }
@@ -134,6 +154,18 @@ const navItems: NavItem[] = [
     matchPaths: ["/dashboard/alerts"],
     icon: "alert",
     mobileBottom: true,
+  },
+  {
+    label: "ANALYTICS",
+    href: "/dashboard/alerts/insights",
+    matchPaths: ["/dashboard/alerts/insights"],
+    icon: "insights",
+  },
+  {
+    label: "NOTIFICATIONS",
+    href: "/dashboard/notifications",
+    matchPaths: ["/dashboard/notifications"],
+    icon: "notifications",
   },
   {
     label: "MESSAGE",
@@ -180,6 +212,7 @@ export default function Sidebar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const { unreadTotal } = useChatUnreadCount("wayfinder");
   const { alertCount } = useWayfinderAlertCount();
+  const { count: notificationCount } = usePortalNotificationCount("wayfinder");
 
   return (
     <>
@@ -223,6 +256,7 @@ export default function Sidebar() {
             const isActive = activeHref === item.href;
             const messageUnread = item.label === "MESSAGE" ? unreadTotal : 0;
             const alertUnread = item.label === "ALERTS CENTER" ? alertCount : 0;
+            const notifUnread = item.label === "NOTIFICATIONS" ? notificationCount : 0;
             return (
               <Link
                 key={item.label}
@@ -251,6 +285,13 @@ export default function Sidebar() {
                     count={alertUnread}
                     collapsed={collapsed}
                     ariaLabel={`${alertUnread} active alerts`}
+                  />
+                ) : null}
+                {item.label === "NOTIFICATIONS" ? (
+                  <NavCountBadge
+                    count={notifUnread}
+                    collapsed={collapsed}
+                    ariaLabel={`${notifUnread} unread notifications`}
                   />
                 ) : null}
                 {item.label === "MESSAGE" ? (
@@ -366,6 +407,7 @@ export default function Sidebar() {
                 const isActive = activeHref === item.href;
                 const messageUnread = item.label === "MESSAGE" ? unreadTotal : 0;
                 const alertUnread = item.label === "ALERTS CENTER" ? alertCount : 0;
+                const notifUnread = item.label === "NOTIFICATIONS" ? notificationCount : 0;
                 return (
                   <Link
                     key={item.label}
@@ -388,6 +430,13 @@ export default function Sidebar() {
                         count={alertUnread}
                         collapsed={false}
                         ariaLabel={`${alertUnread} active alerts`}
+                      />
+                    ) : null}
+                    {item.label === "NOTIFICATIONS" ? (
+                      <NavCountBadge
+                        count={notifUnread}
+                        collapsed={false}
+                        ariaLabel={`${notifUnread} unread notifications`}
                       />
                     ) : null}
                     {item.label === "MESSAGE" ? (

@@ -12,6 +12,7 @@ import {
   resendVerificationEmail,
   verifyParentEmail,
 } from "@/lib/auth-api";
+import { notify } from "@/lib/notify";
 import {
   clearPendingVerification,
   formatCooldown,
@@ -38,7 +39,6 @@ function VerifyEmailContent() {
   const [userId, setUserId] = useState<number | null>(null);
   const [email, setEmail] = useState("");
   const [digits, setDigits] = useState<string[]>(["", "", "", "", "", ""]);
-  const [error, setError] = useState<string | null>(null);
   const [codeExpired, setCodeExpired] = useState(false);
   const [resendMessage, setResendMessage] = useState<string | null>(null);
   const autoResendTriggeredRef = useRef(false);
@@ -79,14 +79,13 @@ function VerifyEmailContent() {
     },
     onSuccess: () => {
       setCodeExpired(false);
-      setError(null);
       setDigits(["", "", "", "", "", ""]);
       setResendMessage("A new verification code has been sent to your email.");
       restartCooldown();
     },
     onError: (err) => {
       setResendMessage(null);
-      setError(getApiErrorMessage(err));
+      notify.error(err);
     },
   });
 
@@ -97,14 +96,13 @@ function VerifyEmailContent() {
     void resendVerificationEmail(email.trim())
       .then(() => {
         setCodeExpired(false);
-        setError(null);
         setDigits(["", "", "", "", "", ""]);
         setResendMessage("A new verification code has been sent to your email.");
         restartCooldown();
       })
       .catch((err) => {
         setResendMessage(null);
-        setError(getApiErrorMessage(err));
+        notify.error(err);
       });
   }, [email, fromLogin, restartCooldown]);
 
@@ -130,22 +128,21 @@ function VerifyEmailContent() {
       const message = getApiErrorMessage(err);
       if (isVerificationCodeExpiredMessage(message)) {
         setCodeExpired(true);
-        setError(
+        notify.error(
           "Your verification code has expired. Request a new code below.",
         );
       } else if (isInvalidVerificationCodeMessage(message)) {
         setCodeExpired(false);
-        setError("That code is incorrect. Please check your email and try again.");
+        notify.error("That code is incorrect. Please check your email and try again.");
       } else {
         setCodeExpired(false);
-        setError(message);
+        notify.error(err);
       }
     },
   });
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    setError(null);
     setResendMessage(null);
     verifyMutation.mutate();
   }
@@ -153,7 +150,6 @@ function VerifyEmailContent() {
   function handleResend() {
     if (!showResendAction || resendMutation.isPending || !email.trim()) return;
     setResendMessage(null);
-    setError(null);
     resendMutation.mutate();
   }
 
@@ -261,12 +257,6 @@ function VerifyEmailContent() {
               {resendMessage && (
                 <p className="text-sm text-[#00CED1] text-center" role="status">
                   {resendMessage}
-                </p>
-              )}
-
-              {error && (
-                <p className="text-sm text-red-400 text-center" role="alert">
-                  {error}
                 </p>
               )}
 

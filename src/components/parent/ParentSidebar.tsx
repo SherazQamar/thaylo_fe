@@ -5,14 +5,19 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import NavUnreadBadge from "@/components/shared/chat/NavUnreadBadge";
+import NavCountBadge from "@/components/shared/NavCountBadge";
 import ParentUserDropdown from "@/components/parent/ParentUserDropdown";
 import { useChatUnreadCount } from "@/hooks/use-chat-unread-count";
+import { useParentAlertCount } from "@/hooks/use-parent-alert-count";
+import { usePortalNotificationCount } from "@/hooks/use-portal-notification-count";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
 type NavIconId =
   | "home"
   | "children"
+  | "alerts"
+  | "notifications"
   | "reports"
   | "billing"
   | "message"
@@ -67,6 +72,23 @@ function NavIcon({
           <circle cx="14.8" cy="11.2" r="1" fill={color} stroke="none" />
           <path d="M9.2 14.8c.9 1.3 2 1.9 2.8 1.9s1.9-.6 2.8-1.9" />
           <path d="M12.2 4.2c.5-1.3 1.8-1.7 2.6-1" />
+        </svg>
+      );
+    case "alerts":
+      // Same triangle as Wayfinder Alerts Center
+      return (
+        <svg {...common}>
+          <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+          <line x1="12" y1="9" x2="12" y2="13" />
+          <line x1="12" y1="17" x2="12.01" y2="17" />
+        </svg>
+      );
+    case "notifications":
+      // Same bell as Wayfinder Notifications
+      return (
+        <svg {...common}>
+          <path d="M18 8a6 6 0 10-12 0c0 7-3 7-3 7h18s-3 0-3-7" />
+          <path d="M13.73 21a2 2 0 01-3.46 0" />
         </svg>
       );
     case "billing":
@@ -126,6 +148,18 @@ const navItems: NavItem[] = [
     matchPaths: ["/parent-dashboard/children", "/parent-dashboard/child"],
     icon: "children",
     mobileBottom: true,
+  },
+  {
+    label: "ALERTS",
+    href: "/parent-dashboard/alerts",
+    matchPaths: ["/parent-dashboard/alerts"],
+    icon: "alerts",
+  },
+  {
+    label: "NOTIFICATIONS",
+    href: "/parent-dashboard/notifications",
+    matchPaths: ["/parent-dashboard/notifications"],
+    icon: "notifications",
   },
   {
     label: "REPORTS",
@@ -190,6 +224,8 @@ export default function ParentSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const { unreadTotal } = useChatUnreadCount("parent");
+  const { alertCount } = useParentAlertCount();
+  const { count: notificationCount } = usePortalNotificationCount("parent");
 
   return (
     <>
@@ -231,6 +267,8 @@ export default function ParentSidebar() {
         <nav className="flex-1 flex flex-col gap-1 px-3">
           {navItems.map((item) => {
             const isActive = activeHref === item.href;
+            const alertUnread = item.label === "ALERTS" ? alertCount : 0;
+            const notifUnread = item.label === "NOTIFICATIONS" ? notificationCount : 0;
             return (
               <Link
                 key={item.label}
@@ -253,6 +291,20 @@ export default function ParentSidebar() {
                 )}
                 {item.label === "MESSAGE" ? (
                   <NavUnreadBadge count={unreadTotal} collapsed={collapsed} />
+                ) : null}
+                {item.label === "ALERTS" ? (
+                  <NavCountBadge
+                    count={alertUnread}
+                    collapsed={collapsed}
+                    ariaLabel={`${alertUnread} active alerts`}
+                  />
+                ) : null}
+                {item.label === "NOTIFICATIONS" ? (
+                  <NavCountBadge
+                    count={notifUnread}
+                    collapsed={collapsed}
+                    ariaLabel={`${notifUnread} unread notifications`}
+                  />
                 ) : null}
               </Link>
             );
@@ -362,6 +414,8 @@ export default function ParentSidebar() {
             <nav className="flex flex-col gap-1 flex-1 overflow-y-auto min-h-0">
               {navItems.map((item) => {
                 const isActive = activeHref === item.href;
+                const alertUnread = item.label === "ALERTS" ? alertCount : 0;
+                const notifUnread = item.label === "NOTIFICATIONS" ? notificationCount : 0;
                 return (
                   <Link
                     key={item.label}
@@ -381,6 +435,20 @@ export default function ParentSidebar() {
                     </span>
                     {item.label === "MESSAGE" ? (
                       <NavUnreadBadge count={unreadTotal} collapsed={false} />
+                    ) : null}
+                    {item.label === "ALERTS" ? (
+                      <NavCountBadge
+                        count={alertUnread}
+                        collapsed={false}
+                        ariaLabel={`${alertUnread} active alerts`}
+                      />
+                    ) : null}
+                    {item.label === "NOTIFICATIONS" ? (
+                      <NavCountBadge
+                        count={notifUnread}
+                        collapsed={false}
+                        ariaLabel={`${notifUnread} unread notifications`}
+                      />
                     ) : null}
                   </Link>
                 );

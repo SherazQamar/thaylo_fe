@@ -43,6 +43,7 @@ const DEFAULT_SETTINGS: PublicAiSettings = {
     enabled: false,
     heygenAvatarId: "",
     heygenVoiceId: "",
+    useElevenLabsVoice: false,
   },
 };
 

@@ -6,7 +6,7 @@ import UserDropdown from "@/components/wayfinder/UserDropdown";
 import WayfinderStudentCard from "@/components/wayfinder/WayfinderStudentCard";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import ListPagination from "@/components/shared/ListPagination";
-import { getApiErrorMessage } from "@/lib/auth-api";
+import { useNotifyError } from "@/hooks/use-notify-error";
 import { fetchWayfinderStudents, wayfinderQueryKeys } from "@/lib/wayfinder-api";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
@@ -24,10 +24,13 @@ export default function StudentsPage() {
   const studentsQuery = useQuery({
     queryKey: wayfinderQueryKeys.students({ page, search: debouncedSearch || undefined }),
     queryFn: () => fetchWayfinderStudents({ page, search: debouncedSearch || undefined }),
+    refetchInterval: 30_000,
   });
 
   const students = studentsQuery.data?.items ?? [];
   const meta = studentsQuery.data?.meta ?? null;
+
+  useNotifyError(studentsQuery.error, studentsQuery.isError);
 
   return (
     <div className="p-4 md:p-6 lg:p-10">
@@ -87,12 +90,6 @@ export default function StudentsPage() {
       {studentsQuery.isLoading && (
         <p style={{ ...inter, fontWeight: 400, fontSize: "14px", color: "rgba(255,255,255,0.5)" }} className="py-12 text-center">
           Loading students…
-        </p>
-      )}
-
-      {studentsQuery.isError && (
-        <p style={{ ...inter, fontWeight: 400, fontSize: "14px", color: "#EF4444" }} className="py-12 text-center" role="alert">
-          {getApiErrorMessage(studentsQuery.error)}
         </p>
       )}
 

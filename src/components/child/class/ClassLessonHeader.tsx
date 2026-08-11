@@ -15,6 +15,7 @@ type ClassLessonHeaderProps = {
   subtitle?: string;
   currentPhase: ClassPhase;
   quickCheckLabel?: string;
+  whyThisLesson?: string;
   sessionTimer?: {
     elapsedLabel: string;
     phaseLabel: string;
@@ -36,11 +37,29 @@ export default function ClassLessonHeader({
   subtitle,
   currentPhase,
   quickCheckLabel = "Quick Check coming up",
+  whyThisLesson,
   sessionTimer,
   rightSlot,
 }: ClassLessonHeaderProps) {
   const activeIndex = phaseIndex(currentPhase);
   const showQuickCheckHint = currentPhase !== "quick_check";
+
+  const whyControl = whyThisLesson?.trim() ? (
+    <details className="group relative mt-1 inline-block text-left">
+      <summary
+        className="cursor-pointer list-none text-[11px] font-semibold text-[#00CED1] hover:underline [&::-webkit-details-marker]:hidden"
+        style={inter}
+      >
+        Why this lesson? · Tutor Brain
+      </summary>
+      <div
+        className="absolute left-0 z-40 mt-2 w-[min(92vw,300px)] rounded-xl border border-[#00CED1]/30 bg-[#111023] p-3 shadow-xl"
+        style={inter}
+      >
+        <p className="text-[12px] leading-relaxed text-white/80">{whyThisLesson}</p>
+      </div>
+    </details>
+  ) : null;
 
   return (
     <div
@@ -87,6 +106,7 @@ export default function ClassLessonHeader({
               {subtitle}
             </p>
           )}
+          {whyControl}
         </div>
 
         <div className="flex items-center gap-3">
@@ -194,6 +214,7 @@ export default function ClassLessonHeader({
               {subtitle}
             </p>
           )}
+          {whyControl}
         </div>
 
         <div className="flex shrink-0 items-center gap-3">

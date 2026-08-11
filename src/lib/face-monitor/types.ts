@@ -19,7 +19,10 @@ export type FaceMonitorStatus = {
 
 export const FACE_MONITOR_DEFAULTS = {
   sampleIntervalMs: 120,
+  /** Show stay-in-view nudge after this long without a face. */
   missingThresholdMs: 10_000,
+  /** End the live class after this long without a face. */
+  absenceEndClassMs: 30_000,
   engagementDebounceCount: 2,
   boxLerpFactor: 0.28,
 } as const;

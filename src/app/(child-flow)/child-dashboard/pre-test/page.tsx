@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import WordLadderDragDrop from "@/components/child/class/WordLadderDragDrop";
 import OptionHintButton from "@/components/child/class/OptionHintButton";
-import { getApiErrorMessage } from "@/lib/auth-api";
+import { notify } from "@/lib/notify";
+import { useNotifyError } from "@/hooks/use-notify-error";
 import {
   fetchChildPretest,
   submitChildPretest,
@@ -66,6 +67,7 @@ export default function ChildPretestPage() {
     staleTime: 0,
     refetchOnMount: "always",
   });
+  useNotifyError(pretestQuery.error, pretestQuery.isError);
 
   const questions = pretestQuery.data?.questions ?? [];
   const current = questions[index] as PretestQuestion | undefined;
@@ -94,6 +96,9 @@ export default function ChildPretestPage() {
     },
     onSuccess: (session) => {
       router.replace(`/child-dashboard/lesson?sessionId=${session.sessionId}`);
+    },
+    onError: (err) => {
+      notify.error(getStartClassErrorMessage(err));
     },
   });
 
@@ -131,6 +136,9 @@ export default function ChildPretestPage() {
       window.setTimeout(() => {
         startLessonMutation.mutate();
       }, 1600);
+    },
+    onError: (err) => {
+      notify.error(err);
     },
   });
 
@@ -189,8 +197,8 @@ export default function ChildPretestPage() {
   if (pretestQuery.isError) {
     return (
       <Shell>
-        <p style={{ ...inter, color: "#F87171", marginBottom: 12 }}>
-          {getApiErrorMessage(pretestQuery.error)}
+        <p style={{ ...inter, color: "rgba(255,255,255,0.65)", marginBottom: 12 }}>
+          Unable to load the pre-test right now.
         </p>
         <button
           type="button"
@@ -378,17 +386,15 @@ export default function ChildPretestPage() {
         </div>
       )}
 
-      {(localFeedback || submitMutation.isError) && (
+      {localFeedback && (
         <p
           className="mb-3 text-sm"
           style={{
             ...inter,
-            color: submitMutation.isError ? "#F87171" : "rgba(255,255,255,0.55)",
+            color: "rgba(255,255,255,0.55)",
           }}
         >
-          {submitMutation.isError
-            ? getApiErrorMessage(submitMutation.error)
-            : localFeedback}
+          {localFeedback}
         </p>
       )}
 

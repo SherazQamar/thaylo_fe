@@ -6,10 +6,8 @@ import {
   formatHiringRegionLabel,
   formatHiringTimezoneLabel,
 } from "@/constants/wayfinder-hiring-regions";
-import {
-  getApiErrorMessage,
-  updateParentProfile,
-} from "@/lib/auth-api";
+import { updateParentProfile } from "@/lib/auth-api";
+import { notify } from "@/lib/notify";
 import UserDropdown from "@/components/wayfinder/UserDropdown";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import AvatarPicker from "@/components/shared/AvatarPicker";
@@ -106,7 +104,6 @@ export default function ProfilePage() {
     phone: "",
     country: "",
   });
-  const [saveError, setSaveError] = useState<string | null>(null);
 
   const hiringRegionLabel = formatHiringRegionLabel(user?.region, user?.timeZone);
   const hiringTimezoneLabel = formatHiringTimezoneLabel(
@@ -142,11 +139,10 @@ export default function ProfilePage() {
         timeZone: user?.timeZone?.trim() || "America/Los_Angeles",
       }),
     onSuccess: () => {
-      setSaveError(null);
       setShowEdit(false);
     },
     onError: (err) => {
-      setSaveError(getApiErrorMessage(err));
+      notify.error(err);
     },
   });
 
@@ -156,30 +152,27 @@ export default function ProfilePage() {
       phone: formatPhoneInput(user?.phone ?? ""),
       country: user?.country ?? "USA",
     });
-    setSaveError(null);
     setShowEdit(true);
   }
 
   function closeEdit() {
     if (saveMutation.isPending) return;
     setShowEdit(false);
-    setSaveError(null);
   }
 
   function handleSave(e: FormEvent) {
     e.preventDefault();
-    setSaveError(null);
 
     if (!form.name.trim()) {
-      setSaveError("Full name is required");
+      notify.error("Full name is required");
       return;
     }
     if (!isValidPhoneDigits(form.phone)) {
-      setSaveError(PHONE_VALIDATION_MESSAGE);
+      notify.error(PHONE_VALIDATION_MESSAGE);
       return;
     }
     if (!form.country.trim()) {
-      setSaveError("Country is required");
+      notify.error("Country is required");
       return;
     }
 
@@ -684,12 +677,6 @@ export default function ProfilePage() {
                   {hiringTimezoneLabel}
                 </p>
               </div>
-
-              {saveError && (
-                <p className="text-sm text-red-400 text-center" role="alert" style={inter}>
-                  {saveError}
-                </p>
-              )}
 
               <button
                 type="submit"

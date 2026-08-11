@@ -1,14 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import ParentUserDropdown from "@/components/parent/ParentUserDropdown";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import InfoTooltip from "@/components/shared/InfoTooltip";
-import {
-  getApiErrorMessage,
-  isIgnorableRequestError,
-} from "@/lib/auth-api";
+import { isIgnorableRequestError } from "@/lib/auth-api";
+import { notify } from "@/lib/notify";
 import {
   downloadParentProgressReportPdf,
   fetchParentChildren,
@@ -60,13 +59,12 @@ function triggerBlobDownload(blob: Blob, filename: string) {
 }
 
 export default function ParentReportsPage() {
+  const searchParams = useSearchParams();
   const initial = useMemo(() => defaultRange(), []);
   const [childId, setChildId] = useState<number | "">("");
   const [from, setFrom] = useState(initial.from);
   const [until, setUntil] = useState(initial.until);
   const [preview, setPreview] = useState<ParentProgressReport | null>(null);
-  const [previewError, setPreviewError] = useState<string | null>(null);
-  const [downloadError, setDownloadError] = useState<string | null>(null);
   const downloadAbortRef = useRef<AbortController | null>(null);
   const downloadRequestIdRef = useRef(0);
 
@@ -76,9 +74,17 @@ export default function ParentReportsPage() {
   });
 
   useEffect(() => {
+    const fromQuery = Number(searchParams.get("childId"));
+    if (Number.isFinite(fromQuery) && fromQuery > 0) {
+      const match = childrenQuery.data?.find((c) => c.id === fromQuery);
+      if (match) {
+        setChildId(match.id);
+        return;
+      }
+    }
     if (childId !== "" || !childrenQuery.data?.length) return;
     setChildId(childrenQuery.data[0].id);
-  }, [childId, childrenQuery.data]);
+  }, [childId, childrenQuery.data, searchParams]);
 
   const previewMutation = useMutation({
     mutationFn: () => {
@@ -99,12 +105,10 @@ export default function ParentReportsPage() {
     },
     onSuccess: (data) => {
       setPreview(data);
-      setPreviewError(null);
-      setDownloadError(null);
     },
     onError: (err) => {
       setPreview(null);
-      setPreviewError(getApiErrorMessage(err));
+      notify.error(err);
     },
   });
 
@@ -115,7 +119,6 @@ export default function ParentReportsPage() {
       const controller = new AbortController();
       downloadAbortRef.current = controller;
       const requestId = ++downloadRequestIdRef.current;
-      setDownloadError(null);
       return { requestId, signal: controller.signal };
     },
     mutationFn: async () => {
@@ -143,25 +146,20 @@ export default function ParentReportsPage() {
     },
     onSuccess: (data) => {
       if (data.requestId !== downloadRequestIdRef.current) return;
-      setDownloadError(null);
-      setPreviewError(null);
       triggerBlobDownload(data.blob, data.filename);
     },
     onError: (err, _vars, context) => {
       if (isIgnorableRequestError(err)) return;
       if (context?.requestId !== downloadRequestIdRef.current) return;
-      const message = getApiErrorMessage(err);
-      if (message) setDownloadError(message);
+      notify.error(err);
     },
   });
 
   function handlePreview() {
-    setPreviewError(null);
     previewMutation.mutate();
   }
 
   function handleDownload() {
-    setDownloadError(null);
     downloadMutation.mutate();
   }
 
@@ -321,21 +319,6 @@ export default function ParentReportsPage() {
           </div>
         </div>
 
-        {(previewError || downloadError) && (
-          <div className="mb-4 space-y-2">
-            {previewError && (
-              <p className="text-sm text-red-400" role="alert" style={inter}>
-                Preview: {previewError}
-              </p>
-            )}
-            {downloadError && (
-              <p className="text-sm text-red-400" role="alert" style={inter}>
-                Download: {downloadError}
-              </p>
-            )}
-          </div>
-        )}
-
         <div className="flex flex-wrap gap-3">
           <button
             type="button"
@@ -471,8 +454,8 @@ export default function ParentReportsPage() {
             />
           </p>
           <p style={{ ...inter, fontSize: "14px", color: "#444", marginBottom: "18px" }}>
-            Happy {preview.selHappy} · Uncertain {preview.selConfused} · Low
-            mood {preview.selSad}
+            Happy {preview.selHappy} · Okay {preview.selConfused} · Worried{" "}
+            {preview.selSad}
           </p>
 
           <p style={{ ...inter, fontWeight: 700, fontSize: "15px", marginBottom: "10px" }}>

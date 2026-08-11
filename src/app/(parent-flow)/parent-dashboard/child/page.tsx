@@ -5,19 +5,26 @@ import { FormEvent, Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import ParentUserDropdown from "@/components/parent/ParentUserDropdown";
+import ParentWayfinderNotesDrawer from "@/components/parent/ParentWayfinderNotesDrawer";
 import OnboardingResultsPanel from "@/components/onboarding/OnboardingResultsPanel";
-import StudentProgressOverview from "@/components/shared/StudentProgressOverview";
+import StudentProgressOverview, {
+  type GuidanceAlertItem,
+} from "@/components/shared/StudentProgressOverview";
+import WeeklyGuidanceModal from "@/components/shared/WeeklyGuidanceModal";
+import RecommendedNextStepModal from "@/components/shared/RecommendedNextStepModal";
 import { CHILD_INTEREST_SUGGESTIONS } from "@/constants/child-interest-areas";
 import {
   archiveParentChild,
   fetchParentChild,
+  fetchParentWayfinderNotes,
+  fetchParentWeeklyGuidance,
   resetParentChildPin,
   updateParentChild,
 } from "@/lib/parent-api";
 import { fetchParentChildBadges } from "@/lib/badge-api";
 import { BadgeShield } from "@/components/shared/BadgeArtwork";
 import PasswordInput from "@/components/shared/PasswordInput";
-import { getApiErrorMessage } from "@/lib/auth-api";
+import { notify } from "@/lib/notify";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
@@ -43,14 +50,15 @@ function ChildDetailContent() {
   );
   const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
   const [showPinModal, setShowPinModal] = useState(false);
+  const [notesOpen, setNotesOpen] = useState(false);
+  const [weekModalOpen, setWeekModalOpen] = useState(false);
+  const [nextStepModalOpen, setNextStepModalOpen] = useState(false);
   const [newPin, setNewPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
-  const [actionError, setActionError] = useState<string | null>(null);
 
   const [editingInterests, setEditingInterests] = useState(false);
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [customInterest, setCustomInterest] = useState("");
-  const [interestError, setInterestError] = useState<string | null>(null);
   const [interestSaved, setInterestSaved] = useState(false);
 
   const { data: child, isLoading, isError } = useQuery({
@@ -65,11 +73,22 @@ function ChildDetailContent() {
     enabled: Number.isFinite(childId) && childId > 0,
   });
 
+  const wayfinderNotesQuery = useQuery({
+    queryKey: ["parent-child-wayfinder-notes", childId],
+    queryFn: () => fetchParentWayfinderNotes(childId),
+    enabled: Number.isFinite(childId) && childId > 0,
+  });
+
+  const weeklyGuidanceQuery = useQuery({
+    queryKey: ["parent-child-weekly-guidance", childId],
+    queryFn: () => fetchParentWeeklyGuidance(childId),
+    enabled: Number.isFinite(childId) && childId > 0,
+  });
+
   useEffect(() => {
     if (!child) return;
     setSelectedInterests(child.interestAreas ?? []);
     setEditingInterests(false);
-    setInterestError(null);
     setInterestSaved(false);
   }, [child]);
 
@@ -79,7 +98,7 @@ function ChildDetailContent() {
       await queryClient.invalidateQueries({ queryKey: ["parent-children"] });
       router.push(backHref);
     },
-    onError: (err) => setActionError(getApiErrorMessage(err)),
+    onError: (err) => notify.error(err),
   });
 
   const resetPinMutation = useMutation({
@@ -88,9 +107,8 @@ function ChildDetailContent() {
       setShowPinModal(false);
       setNewPin("");
       setConfirmPin("");
-      setActionError(null);
     },
-    onError: (err) => setActionError(getApiErrorMessage(err)),
+    onError: (err) => notify.error(err),
   });
 
   const interestsMutation = useMutation({
@@ -102,11 +120,10 @@ function ChildDetailContent() {
         queryClient.invalidateQueries({ queryKey: ["parent-children"] }),
       ]);
       setEditingInterests(false);
-      setInterestError(null);
       setInterestSaved(true);
       setTimeout(() => setInterestSaved(false), 2500);
     },
-    onError: (err) => setInterestError(getApiErrorMessage(err)),
+    onError: (err) => notify.error(err),
   });
 
   if (!Number.isFinite(childId) || childId <= 0) {
@@ -143,14 +160,30 @@ function ChildDetailContent() {
     [child.firstName, child.secondName].filter(Boolean).join(" ").trim() ||
     child.userName;
 
+  const guidanceAlerts: GuidanceAlertItem[] | undefined = weeklyGuidanceQuery.data
+    ? [
+        {
+          id: "week-alert",
+          tone: weeklyGuidanceQuery.data.weekAlert.tone,
+          text: weeklyGuidanceQuery.data.weekAlert.text,
+          onClick: () => setWeekModalOpen(true),
+        },
+        {
+          id: "next-step",
+          tone: "coral",
+          text: `Recommended next step: ${weeklyGuidanceQuery.data.recommendedNextStep.text}`,
+          onClick: () => setNextStepModalOpen(true),
+        },
+      ]
+    : undefined;
+
   function handleResetPin() {
-    setActionError(null);
     if (!/^\d{6}$/.test(newPin)) {
-      setActionError("PIN must be exactly 6 digits.");
+      notify.error("PIN must be exactly 6 digits.");
       return;
     }
     if (newPin !== confirmPin) {
-      setActionError("PINs do not match.");
+      notify.error("PINs do not match.");
       return;
     }
     resetPinMutation.mutate(newPin);
@@ -180,14 +213,12 @@ function ChildDetailContent() {
   }
 
   function handleSaveInterests() {
-    setInterestError(null);
     interestsMutation.mutate(selectedInterests);
   }
 
   function cancelEditInterests() {
     setSelectedInterests(child?.interestAreas ?? []);
     setEditingInterests(false);
-    setInterestError(null);
     setCustomInterest("");
   }
 
@@ -329,7 +360,6 @@ function ChildDetailContent() {
                   onClick={() => {
                     setEditingInterests(true);
                     setInterestSaved(false);
-                    setInterestError(null);
                   }}
                   className="shrink-0 rounded-full px-4 py-2 cursor-pointer hover:opacity-90"
                   style={{
@@ -456,16 +486,6 @@ function ChildDetailContent() {
                   </button>
                 </form>
 
-                {interestError && (
-                  <p
-                    className="text-sm text-red-400 mb-3"
-                    role="alert"
-                    style={inter}
-                  >
-                    {interestError}
-                  </p>
-                )}
-
                 <div className="flex flex-wrap gap-3">
                   <button
                     type="button"
@@ -567,6 +587,7 @@ function ChildDetailContent() {
             avatarSrc={child.avatarUrl || undefined}
             messagesHref="/parent-dashboard/message"
             progressLabel={badgesQuery.data?.plantStatus}
+            confidenceLabel={child.learningSummary?.confidence}
             gardenStage={badgesQuery.data?.plantStage}
             gardenMessage={
               badgesQuery.data
@@ -584,6 +605,52 @@ function ChildDetailContent() {
                   count: b.count,
                 })) ?? []
             }
+            curricularProgress={child.curricularProgress}
+            learningSummary={child.learningSummary}
+            wellbeing={child.wellbeing}
+            onWayfinderNotesClick={() => setNotesOpen(true)}
+            wayfinderNotesSubtitle={
+              (wayfinderNotesQuery.data?.length ?? 0) === 0
+                ? "No notes shared yet"
+                : `${wayfinderNotesQuery.data?.length} note${
+                    (wayfinderNotesQuery.data?.length ?? 0) === 1 ? "" : "s"
+                  } · tap to view`
+            }
+            onReportClick={() =>
+              router.push(`/parent-dashboard/reports?childId=${child.id}`)
+            }
+            guidanceAlerts={guidanceAlerts}
+            guidanceLoading={weeklyGuidanceQuery.isLoading}
+          />
+
+          <ParentWayfinderNotesDrawer
+            open={notesOpen}
+            childId={child.id}
+            onClose={() => setNotesOpen(false)}
+          />
+
+          <WeeklyGuidanceModal
+            open={weekModalOpen}
+            childName={displayName}
+            emptyMessage={weeklyGuidanceQuery.data?.emptyStateMessage ?? null}
+            sessions={weeklyGuidanceQuery.data?.sessionsThisWeek ?? []}
+            onClose={() => setWeekModalOpen(false)}
+          />
+
+          <RecommendedNextStepModal
+            open={nextStepModalOpen}
+            childName={displayName}
+            recommendation={
+              weeklyGuidanceQuery.data?.recommendedNextStep.text ??
+              "Keep encouraging steady practice this week."
+            }
+            source={
+              weeklyGuidanceQuery.data?.recommendedNextStep.source ?? "fallback"
+            }
+            sessions={weeklyGuidanceQuery.data?.sessionsThisWeek ?? []}
+            nextStep={weeklyGuidanceQuery.data?.recommendedNextStep}
+            modulesHref="/child-dashboard/modules"
+            onClose={() => setNextStepModalOpen(false)}
           />
 
           {badgesQuery.data && (
@@ -672,10 +739,7 @@ function ChildDetailContent() {
       <div className="flex flex-wrap items-center gap-3 mt-8 mb-2">
         <button
           type="button"
-          onClick={() => {
-            setActionError(null);
-            setShowPinModal(true);
-          }}
+          onClick={() => setShowPinModal(true)}
           className="rounded-[16px] px-5 py-2 cursor-pointer hover:opacity-90 transition-opacity"
           style={{
             backgroundColor: "#00CED1",
@@ -689,21 +753,13 @@ function ChildDetailContent() {
         </button>
         <button
           type="button"
-          onClick={() => {
-            setActionError(null);
-            setShowArchiveConfirm(true);
-          }}
+          onClick={() => setShowArchiveConfirm(true)}
           className="rounded-[16px] px-5 py-2 cursor-pointer hover:opacity-90 transition-opacity border border-red-400/40 text-red-300"
           style={{ ...inter, fontWeight: 600, fontSize: "14px" }}
         >
           Archive
         </button>
       </div>
-      {actionError && !showPinModal && !showArchiveConfirm && (
-        <p className="text-red-400 text-sm mt-2 mb-4" role="alert" style={inter}>
-          {actionError}
-        </p>
-      )}
 
       {showArchiveConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
@@ -721,11 +777,6 @@ function ChildDetailContent() {
               This removes {displayName} from your account. They will no longer
               be able to sign in.
             </p>
-            {actionError && (
-              <p className="text-red-400 text-sm mt-3" role="alert">
-                {actionError}
-              </p>
-            )}
             <div className="flex justify-end gap-3 mt-6">
               <button
                 type="button"
@@ -787,11 +838,6 @@ function ChildDetailContent() {
                 className="w-full rounded-full px-5 py-3 bg-[#111023] border border-white/10 text-white text-sm outline-none focus:border-[#00CED1]/40"
               />
             </div>
-            {actionError && (
-              <p className="text-red-400 text-sm mt-3" role="alert">
-                {actionError}
-              </p>
-            )}
             <div className="flex justify-end gap-3 mt-6">
               <button
                 type="button"

@@ -36,6 +36,7 @@ export interface PublicAiSettings {
     enabled: boolean;
     heygenAvatarId: string;
     heygenVoiceId: string;
+    useElevenLabsVoice: boolean;
   };
 }
 
@@ -75,6 +76,7 @@ function normalizePublicAiSettings(raw: PublicAiSettings & { persona?: AiPersona
       enabled: Boolean(raw.avatar?.enabled && raw.avatar?.provider === "heygen"),
       heygenAvatarId: raw.avatar?.heygenAvatarId ?? "",
       heygenVoiceId: raw.avatar?.heygenVoiceId ?? "",
+      useElevenLabsVoice: Boolean(raw.avatar?.useElevenLabsVoice),
     },
   };
 }
@@ -113,4 +115,22 @@ export async function synthesizeAiSpeech(text: string, authMode: SpeechAuthMode)
     responseType: "blob",
   });
   return response.data as Blob;
+}
+
+export async function synthesizeLiveAvatarPcm(text: string) {
+  const { data } = await api.post<
+    ApiResponse<{ audioBase64: string; durationMs?: number }>
+  >(
+    "/child/ai/tts/liveavatar-pcm",
+    { text },
+    { authMode: "child" },
+  );
+  const audioBase64 = data.data?.audioBase64 ?? "";
+  if (!audioBase64) {
+    throw new Error(data.message || "LiveAvatar PCM audio is empty");
+  }
+  return {
+    audioBase64,
+    durationMs: data.data?.durationMs,
+  };
 }

@@ -10,7 +10,7 @@ import {
   setUserAvatar,
   type AvatarPreset,
 } from "@/lib/avatar-api";
-import { getApiErrorMessage } from "@/lib/auth-api";
+import { useNotifyError } from "@/hooks/use-notify-error";
 import PortalAvatar from "@/components/shared/PortalAvatar";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
@@ -94,6 +94,9 @@ export default function AvatarPicker({
   const selectedKey = presets.find((p) => p.imageUrl === currentAvatarUrl)?.key;
   const showChangeText = size >= 64;
 
+  useNotifyError(presetsQuery.error, open && presetsQuery.isError);
+  useNotifyError(saveMutation.error, saveMutation.isError);
+
   return (
     <div className={className}>
       <div className={`flex items-center ${showLabel ? "gap-4" : ""}`}>
@@ -139,12 +142,6 @@ export default function AvatarPicker({
           </div>
         ) : null}
       </div>
-
-      {saveMutation.isError && !open ? (
-        <p className="mt-3" style={{ ...inter, fontSize: "13px", color: "#FF7B7B" }} role="alert">
-          {getApiErrorMessage(saveMutation.error)}
-        </p>
-      ) : null}
 
       {open ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
@@ -197,12 +194,6 @@ export default function AvatarPicker({
               </p>
             ) : null}
 
-            {presetsQuery.isError ? (
-              <p style={{ ...inter, fontSize: "13px", color: "#FF7B7B" }} role="alert">
-                {getApiErrorMessage(presetsQuery.error)}
-              </p>
-            ) : null}
-
             {presets.length > 0 ? (
               <div className="grid grid-cols-4 sm:grid-cols-5 gap-3 max-h-[50vh] overflow-y-auto pr-1">
                 {presets.map((preset) => {
@@ -243,16 +234,6 @@ export default function AvatarPicker({
                   );
                 })}
               </div>
-            ) : null}
-
-            {saveMutation.isError ? (
-              <p
-                className="mt-3"
-                style={{ ...inter, fontSize: "13px", color: "#FF7B7B" }}
-                role="alert"
-              >
-                {getApiErrorMessage(saveMutation.error)}
-              </p>
             ) : null}
           </div>
         </div>
