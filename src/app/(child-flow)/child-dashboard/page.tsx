@@ -138,7 +138,7 @@ export default function ChildPathwayPage() {
                 style={{ ...inter, fontWeight: 400, fontSize: "12px", color: "rgba(255,255,255,0.65)", marginTop: "6px" }}
               >
                 {primaryClass.needsRetake
-                  ? `Retake: ${primaryClass.nextLessonTitle ?? primaryClass.title}`
+                  ? `Keep building: ${primaryClass.nextLessonTitle ?? primaryClass.title}`
                   : `${primaryClass.subject} · ${primaryClass.gradeLevel}`}
               </p>
             )}
@@ -349,7 +349,7 @@ export default function ChildPathwayPage() {
                 className="rounded-full px-2 py-0.5 text-[10px] font-semibold"
                 style={{ backgroundColor: "rgba(245,158,11,0.15)", color: "#F59E0B" }}
               >
-                Retake
+                Skill boost
               </span>
             ) : tutorBrain?.interestPersonalized ? (
               <span
@@ -398,7 +398,7 @@ export default function ChildPathwayPage() {
             >
               {tutorBrain?.summary ??
                 (primaryClass?.needsRetake
-                  ? "Your Tutor Brain wants a short retake to lock in this skill before the next lesson."
+                  ? "Your Tutor Brain wants another session with a new picture to strengthen this skill before the next lesson."
                   : hasAssignedClass
                     ? "Your Tutor Brain chose the next unmastered lesson on your pathway."
                     : "Ask a parent or Wayfinder to assign a class to get started.")}

@@ -180,7 +180,7 @@ export default function ChildSidebar() {
                 </div>
                 <p className="text-white text-xs font-semibold text-center mb-1" style={inter}>
                   {primaryClass.needsRetake
-                    ? `Retake: ${primaryClass.nextLessonTitle ?? primaryClass.title}`
+                    ? `Keep building: ${primaryClass.nextLessonTitle ?? primaryClass.title}`
                     : primaryClass.nextLessonTitle ?? primaryClass.title}
                 </p>
                 <div className="flex items-center gap-1.5 text-white/50 text-[11px] mb-3">

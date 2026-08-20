@@ -627,6 +627,38 @@ export default function LiveSessionDetailPage() {
                 <SummaryRow label="Reteach Triggered" value={String(detail.summary.reteachTriggered)} />
                 <SummaryRow label="Engagement Level" value={detail.summary.engagementLevel} />
               </Card>
+
+              {detail.learningRecord ? (
+                <Card title="Student Learning Record">
+                  <SummaryRow label="Pathway" value={detail.learningRecord.instructionalPathway.replace(/_/g, " ")} />
+                  <SummaryRow label="Instructional model" value={detail.learningRecord.instructionalModel} />
+                  <SummaryRow label="Attempt" value={`#${detail.learningRecord.attemptNumber}`} />
+                  <SummaryRow
+                    label="Prompting"
+                    value={detail.learningRecord.promptingLevel.replace(/_/g, " ")}
+                  />
+                  <SummaryRow
+                    label="Independent mastery"
+                    value={detail.learningRecord.independentMastery ? "Yes" : "Not yet"}
+                  />
+                  <SummaryRow
+                    label="Next action"
+                    value={detail.learningRecord.recommendedNextAction.replace(/_/g, " ")}
+                  />
+                  {detail.learningRecord.likelyMisconception ? (
+                    <SummaryRow
+                      label="Likely misconception"
+                      value={detail.learningRecord.likelyMisconception}
+                    />
+                  ) : null}
+                  {detail.learningRecord.prerequisiteWeakness ? (
+                    <SummaryRow
+                      label="Prerequisite"
+                      value={detail.learningRecord.prerequisiteWeakness}
+                    />
+                  ) : null}
+                </Card>
+              ) : null}
             </div>
 
             {/* Right column — actions */}

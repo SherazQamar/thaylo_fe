@@ -141,6 +141,8 @@ export function useHeygenAgent(
           return;
         }
 
+        // Voice is applied at token mint (heygenVoiceId → LiveAvatar persona.voice_id).
+        // Avatar id / LITE flag are already baked into the session token + speak path.
         void avatarId;
         void voiceId;
         void useElevenLabsVoice;

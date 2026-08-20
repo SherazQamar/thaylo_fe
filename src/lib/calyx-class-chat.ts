@@ -85,5 +85,5 @@ export function buildRetakeClassGreeting(
   }
 
   const name = studentName.trim() || "there";
-  return `Welcome back, ${name}! Let's try ${lessonTitle} again with some fresh examples. You've got this.`;
+  return `Welcome back, ${name}! We'll strengthen ${lessonTitle} with a new picture. You've got this.`;
 }

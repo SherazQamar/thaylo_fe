@@ -127,11 +127,11 @@ export default function ClassMediaSetupGate({
             </svg>
           </div>
           <h2 className="text-lg sm:text-[22px]" style={{ ...inter, fontWeight: 700, color: "#FFFFFF" }}>
-            {isRetake ? "Get ready to retake" : "Get ready for class"}
+            {isRetake ? "Get ready to strengthen this skill" : "Get ready for class"}
           </h2>
           <p className="text-[13px] sm:text-sm mt-1.5 sm:mt-2" style={{ ...inter, fontWeight: 400, color: "rgba(255,255,255,0.55)" }}>
             {isRetake
-              ? `${instructorName} prepared new examples for ${lessonTitle}. Turn on your camera before joining.`
+              ? `${instructorName} prepared a new picture and new examples for ${lessonTitle}. Turn on your camera before joining.`
               : `Turn on your camera before joining ${lessonTitle}. You can ask questions with the mic after class starts.`}
           </p>
         </div>
@@ -287,7 +287,7 @@ export default function ClassMediaSetupGate({
                 className="w-full py-3.5 rounded-xl font-semibold text-sm transition-opacity hover:opacity-90"
                 style={{ backgroundColor: "#00CED1", color: "#111023", ...inter }}
               >
-                Join {isRetake ? "retake" : "class"}
+                Join class
               </button>
             ) : null
           )}

@@ -19,6 +19,11 @@ type SpeakProgressOptions = {
   onWord?: (index: number, word: string) => void;
   wordMs?: number;
   isCancelled?: () => boolean;
+  /**
+   * When engine is elevenlabs, never fall back to OS/browser TTS (different voice).
+   * Defaults to false so failed API calls stay silent/caption-only instead of a surprise voice.
+   */
+  allowBrowserFallback?: boolean;
 };
 
 function resolveBrowserVoice(voiceConfig: VoiceConfig) {
@@ -214,7 +219,13 @@ export function useSpeechSynthesis(
           });
           if (played && !isCancelled()) return;
 
-          if (browserSupported && !isCancelled()) {
+          // Do not silently switch to OS/browser voices mid-lesson — that sounds like a different person.
+          // Only allow when explicitly opted in (or when admin configured browser engine).
+          if (
+            options?.allowBrowserFallback === true &&
+            browserSupported &&
+            !isCancelled()
+          ) {
             stopMedia();
             const browserPlayed = await speakBrowser(spokenText, words, {
               ...options,

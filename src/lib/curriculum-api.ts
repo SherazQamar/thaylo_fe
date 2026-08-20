@@ -57,11 +57,23 @@ export interface ChildClassLessonScript {
       interaction?: {
         id: string;
         prompt: string;
-        type: "single_choice" | "word_pick" | "word_ladder";
+        type:
+          | "single_choice"
+          | "word_pick"
+          | "word_ladder"
+          | "sort"
+          | "diagnose"
+          | "repair"
+          | "short_response";
         options: Array<{ id: string; label: string; correct?: boolean; hint?: string }>;
         correctOrder?: string[];
         correctFeedback?: string;
         incorrectFeedback?: string;
+        stimulus?: string;
+        acceptedPhrases?: string[];
+        orderDirection?: string;
+        explanationPrompt?: string;
+        explanationAcceptedPhrases?: string[];
       };
     }>;
     generatedAt?: string;
@@ -110,6 +122,17 @@ export interface ClassSessionAnswerRecord {
     percent: number;
   };
   decision?: "ADVANCE" | "SHORT_RETEACH" | "FULL_RETEACH";
+  promptingLevel?:
+    | "none"
+    | "general_redirection"
+    | "restated_directions"
+    | "vocabulary_clarification"
+    | "structured_prompting"
+    | "choice_elimination"
+    | "answer_revealing_support";
+  responseText?: string;
+  orderedIds?: string[];
+  countsForIndependentMastery?: boolean;
 }
 
 export interface ClassSessionScore {
@@ -127,6 +150,36 @@ export interface ClassSessionScore {
   rubricScore?: ClassSessionAnswerRecord["rubricScore"];
   summativeUnlocked?: boolean;
   masterySource?: "summative" | "all";
+  independentMastery?: boolean;
+  learningRecord?: {
+    instructionalPathway: string;
+    instructionalModel: string;
+    attemptNumber: number;
+    likelyMisconception: string | null;
+    prerequisiteWeakness: string | null;
+    prompting: { highestLevel: string };
+    independentMastery: boolean;
+    recommendedNextAction: string;
+    examplesAndAssessmentsUsed: string[];
+  } | null;
+  masteryRecheck?: {
+    needed: boolean;
+    reason: string;
+    segment: {
+      id: string;
+      phase?: "teach" | "practice" | "quick_check";
+      title: string;
+      narrationScript?: string;
+      lines?: string[];
+      bulletPoints?: string[];
+      interaction?: NonNullable<
+        NonNullable<ChildClassLessonScript["runtimePlan"]>["segments"][number]["interaction"]
+      >;
+      checkKind?: "formative" | "summative";
+    };
+  } | null;
+  feedbackScript?: string;
+  needsExplanation?: boolean;
 }
 
 export type SubmitClassAnswerPayload = {
@@ -137,6 +190,9 @@ export type SubmitClassAnswerPayload = {
   isCorrect: boolean;
   phase?: "teach" | "practice" | "quick_check";
   checkKind?: "formative" | "summative";
+  promptingLevel?: ClassSessionAnswerRecord["promptingLevel"];
+  responseText?: string;
+  orderedIds?: string[];
 };
 
 export async function submitClassAnswer(
