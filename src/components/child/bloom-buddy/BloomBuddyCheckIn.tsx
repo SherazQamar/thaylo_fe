@@ -160,10 +160,11 @@ export default function BloomBuddyCheckIn({
 
   useEffect(() => {
     return () => {
+      stopSpeech();
       stopRecording();
       stopRecordingTracks();
     };
-  }, [stopRecording, stopRecordingTracks]);
+  }, [stopSpeech, stopRecording, stopRecordingTracks]);
 
   const speakResponse = useCallback(
     async (text: string) => {

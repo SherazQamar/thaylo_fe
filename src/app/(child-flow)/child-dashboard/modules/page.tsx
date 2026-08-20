@@ -216,7 +216,7 @@ export default function ChildModulesPage() {
               <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <p style={{ ...inter, fontWeight: 500, fontSize: "12px", color: "rgba(255,255,255,0.5)" }}>
-                    {data.needsRetake ? "Retake next" : "Continue with"}
+                    {data.needsRetake ? "Strengthen next" : "Continue with"}
                     {data.focusArea ? ` · ${data.focusArea}` : ""}
                   </p>
                   <p style={{ ...inter, fontWeight: 600, fontSize: "15px", color: "#FFFFFF", marginTop: 2 }}>
@@ -229,7 +229,7 @@ export default function ChildModulesPage() {
                   onClick={() => void handleContinue()}
                   className="rounded-full bg-[#00CED1] px-5 py-2.5 text-sm font-semibold text-[#111023] disabled:opacity-50"
                 >
-                  {starting ? "Starting…" : data.needsRetake ? "Retake lesson" : "Continue"}
+                  {starting ? "Starting…" : data.needsRetake ? "Strengthen skill" : "Continue"}
                 </button>
               </div>
             ) : (

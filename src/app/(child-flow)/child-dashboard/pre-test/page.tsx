@@ -219,7 +219,7 @@ export default function ChildPretestPage() {
         <p style={{ ...inter, color: "rgba(255,255,255,0.65)", marginBottom: 16 }}>
           No pre-test for this lesson
           {pretestQuery.data?.reason === "retake"
-            ? " (retake in progress)."
+            ? " (a new approach is ready)."
             : "."}{" "}
           You’ll go straight into class.
         </p>
@@ -340,6 +340,7 @@ export default function ChildPretestPage() {
 
             {current.type === "word_ladder" ? (
               <WordLadderDragDrop
+                key={current.id}
                 words={current.options}
                 showHints
                 submitted={Boolean(answers[current.id]?.locked)}
@@ -447,6 +448,8 @@ function Shell({ children }: { children: ReactNode }) {
     hasAudio,
     startMedia,
   } = useClassMedia(false);
+  const showEnableCameraButton =
+    !hasActiveMedia && !isRequesting && !permissionError;
 
   return (
     <div className="relative min-h-[100dvh] overflow-hidden bg-transparent px-2 py-4 sm:px-4 sm:py-8">
@@ -473,7 +476,7 @@ function Shell({ children }: { children: ReactNode }) {
         ) : null}
       </div>
 
-      {!hasActiveMedia && !isRequesting && !permissionError ? (
+      {showEnableCameraButton ? (
         <div className="absolute inset-x-0 top-2 z-10 flex justify-center px-3 sm:top-4 sm:px-4">
           <button
             type="button"
@@ -486,7 +489,13 @@ function Shell({ children }: { children: ReactNode }) {
         </div>
       ) : null}
 
-      <div className="relative z-10 max-w-2xl mx-auto overflow-y-auto max-h-[calc(100dvh-2rem)]">{children}</div>
+      <div
+        className={`relative z-10 max-w-2xl mx-auto overflow-y-auto max-h-[calc(100dvh-2rem)] ${
+          showEnableCameraButton ? "pt-12 sm:pt-14" : ""
+        }`}
+      >
+        {children}
+      </div>
     </div>
   );
 }

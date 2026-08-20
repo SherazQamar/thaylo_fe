@@ -81,15 +81,15 @@ export default function ClassScoreSummary({
           className="text-[10px] sm:text-xs uppercase tracking-widest mb-1.5 sm:mb-2"
           style={{ ...inter, color: passed ? "#00CED1" : "#FFC542" }}
         >
-          {passed ? "Lesson passed" : "Retake needed"}
+          {passed ? "Lesson complete" : "Keep building this skill"}
         </p>
         <h2 className="text-white text-lg sm:text-xl font-semibold mb-1" style={inter}>
           {lessonTitle}
         </h2>
         <p className="text-white/55 text-[13px] sm:text-sm mb-4 sm:mb-6" style={inter}>
           {passed
-            ? "You scored high enough to move on to the next lesson."
-            : `You need at least ${passThreshold}% to pass. ${instructorName} will prepare a fresh retake with new examples.`}
+            ? "You showed this skill independently. You're ready for the next lesson."
+            : `${instructorName} will try this skill again with a new picture and new examples. You need at least ${passThreshold}% to move on.`}
         </p>
 
         <div className="rounded-2xl bg-[#111023] border border-white/10 py-4 px-3 mb-4 sm:py-6 sm:px-4 sm:mb-6">
@@ -97,7 +97,7 @@ export default function ClassScoreSummary({
             {scoreCorrect}/{scoreTotal}
           </p>
           <p className="text-white/50 text-[13px] sm:text-sm mt-1.5 sm:mt-2" style={inter}>
-            {percent}% correct · need {passThreshold}% to pass
+            {percent}% correct · need {passThreshold}% to move on
           </p>
         </div>
 
@@ -124,7 +124,7 @@ export default function ClassScoreSummary({
                 className="rounded-xl px-4 py-3 text-sm text-left mb-1"
                 style={{ backgroundColor: "rgba(255,197,66,0.12)", color: "#FFC542" }}
               >
-                You did not pass this lesson yet. Return to your learning pathway and try again later.
+                This skill still needs strengthening. Return to your pathway and we'll try a new approach.
               </div>
             )}
             <button

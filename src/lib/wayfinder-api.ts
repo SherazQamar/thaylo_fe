@@ -477,6 +477,17 @@ export interface WayfinderLiveSessionDetail {
   }>
   plantStage: string
   masteredLabel: string
+  learningRecord: {
+    instructionalPathway: string
+    instructionalModel: string
+    attemptNumber: number
+    likelyMisconception: string | null
+    prerequisiteWeakness: string | null
+    promptingLevel: string
+    independentMastery: boolean
+    recommendedNextAction: string
+    examplesAndAssessmentsUsed: string[]
+  } | null
 }
 
 export async function fetchWayfinderLiveSessionDetail(

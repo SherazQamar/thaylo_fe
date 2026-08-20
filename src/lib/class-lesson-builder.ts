@@ -94,15 +94,16 @@ function buildPracticeSteps(examples: string[]): BlackboardStep[] {
 }
 
 function buildWordLadderInteraction(parsed: ParsedPracticeExample): BlackboardInteraction {
+  const ordered = parsed.words.map((word) => ({
+    id: slug(word),
+    label: word,
+  }));
   return {
     id: `word-ladder-${slug(parsed.category)}`,
     prompt: "Drag the words into order from weakest to strongest:",
     type: "word_ladder",
-    options: parsed.words.map((word) => ({
-      id: slug(word),
-      label: word,
-    })),
-    correctOrder: parsed.words.map((word) => slug(word)),
+    options: shuffleArray(ordered),
+    correctOrder: ordered.map((word) => word.id),
   };
 }
 

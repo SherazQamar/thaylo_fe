@@ -25,10 +25,13 @@ import { useSpeechRecognition } from "@/hooks/use-speech-recognition";
 import ClassLiveAvatar from "@/components/child/class/ClassLiveAvatar";
 import BloomBuddyCheckIn from "@/components/child/bloom-buddy/BloomBuddyCheckIn";
 import {
+  isOrderedInteraction,
+  maxPromptingLevel,
   phaseForStepIndex,
   type BlackboardInteraction,
   type BlackboardStep,
   type ClassPhase,
+  type PromptingLevel,
 } from "@/lib/class-lesson-content";
 import { buildBlackboardSteps } from "@/lib/class-lesson-builder";
 import {
@@ -63,6 +66,8 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
   const [answerFlowMode, setAnswerFlowMode] = useState<"idle" | "reteaching" | "recheck">("idle");
   const [revealCorrectAnswer, setRevealCorrectAnswer] = useState(false);
   const [forceShowHints, setForceShowHints] = useState(false);
+  const [extraSteps, setExtraSteps] = useState<BlackboardStep[]>([]);
+  const promptingLevelRef = useRef<PromptingLevel>("none");
   const [summativeUnlocked, setSummativeUnlocked] = useState(true);
   const [lastRubricScore, setLastRubricScore] = useState<
     ClassSessionScore["rubricScore"] | null
@@ -106,6 +111,8 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
   useEffect(() => {
     setLessonTitleState(session?.lessonTitle ?? "Live Class");
     setLessonScriptState(session?.lessonScript ?? null);
+    setExtraSteps([]);
+    promptingLevelRef.current = "none";
   }, [session?.lessonTitle, session?.lessonScript]);
 
   const [lessonContentReady, setLessonContentReady] = useState(true);
@@ -115,7 +122,7 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
   const isRetake = session?.isRetake ?? false;
   const moduleLabel = session
     ? isRetake
-      ? `Retake · Lesson ${session.lessonOrder}`
+      ? `New approach · Lesson ${session.lessonOrder}`
       : `Lesson ${session.lessonOrder}`
     : "Class";
   const subtitle = session
@@ -220,14 +227,13 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
     };
   }, [classJoined, session]);
 
-  const blackboardSteps = useMemo(
-    () =>
-      buildBlackboardSteps({
-        lessonTitle: lessonTitleState,
-        lessonScript: lessonScriptState,
-      }),
-    [lessonTitleState, lessonScriptState],
-  );
+  const blackboardSteps = useMemo(() => {
+    const base = buildBlackboardSteps({
+      lessonTitle: lessonTitleState,
+      lessonScript: lessonScriptState,
+    });
+    return extraSteps.length > 0 ? [...base, ...extraSteps] : base;
+  }, [lessonTitleState, lessonScriptState, extraSteps]);
   const firstAssessmentStepIndex = useMemo(
     () => blackboardSteps.findIndex((step) => step.phase === "quick_check"),
     [blackboardSteps],
@@ -353,6 +359,7 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
     setRevealCorrectAnswer(false);
     setForceShowHints(false);
     setLastRubricScore(null);
+    promptingLevelRef.current = "none";
     recheckUsedForStepRef.current = null;
     setStepIndex((prev) => Math.min(prev + 1, blackboardSteps.length - 1));
   }, [blackboardSteps.length]);
@@ -445,6 +452,7 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
     setAnswerFlowMode("idle");
     setRevealCorrectAnswer(false);
     setForceShowHints(false);
+    promptingLevelRef.current = "none";
     recheckUsedForStepRef.current = null;
     setStepIndex(firstAssessmentStepIndex);
   }, [sessionClock.isTeachWindowOver, firstAssessmentStepIndex, classScore, stopSpeaking]);
@@ -519,6 +527,8 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
       isCorrect: boolean;
       phase: ClassPhase;
       checkKind?: BlackboardStep["checkKind"];
+      responseText?: string;
+      orderedIds?: string[];
     }) => {
       if (!session) return null;
       try {
@@ -530,6 +540,9 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
           isCorrect: input.isCorrect,
           phase: input.phase,
           checkKind: input.checkKind,
+          promptingLevel: promptingLevelRef.current,
+          responseText: input.responseText,
+          orderedIds: input.orderedIds,
         });
         applyAnswerScore(score);
         return score;
@@ -581,9 +594,67 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
     onQuestionFlow: handleQuestionFlow,
   });
 
+  const queueMasteryRecheck = useCallback(
+    (score: ClassSessionScore | null | undefined, answeredStepIndex: number) => {
+      const recheck = score?.masteryRecheck;
+      if (!recheck?.needed || !recheck.segment) return false;
+      const segment = recheck.segment;
+      const step: BlackboardStep = {
+        id: String(segment.id),
+        phase: segment.phase ?? "quick_check",
+        title: segment.title,
+        lines: segment.lines ?? [segment.title],
+        bulletPoints: segment.bulletPoints,
+        interaction: segment.interaction,
+        narrationScript: segment.narrationScript ?? recheck.reason,
+        checkKind: "summative",
+      };
+      setExtraSteps((prev) => [...prev, step]);
+      void (async () => {
+        pushCalyxMessage(recheck.reason, { speak: false });
+        try {
+          await speak(recheck.reason);
+        } catch {
+          // ignore
+        }
+        promptingLevelRef.current = "none";
+        setSelectedOptionId(null);
+        setAnsweredCorrectly(null);
+        setAnswerLocked(false);
+        setAnswerFlowMode("idle");
+        setRevealCorrectAnswer(false);
+        setForceShowHints(false);
+        setStepIndex(answeredStepIndex + 1);
+      })();
+      return true;
+    },
+    [pushCalyxMessage, speak],
+  );
+
   const handleNeedHint = useCallback(async () => {
     const interaction = currentStep?.interaction;
     if (!interaction || answerFlowMode === "reteaching") return;
+    const isSummative = currentStep?.checkKind === "summative";
+    if (isSummative) {
+      promptingLevelRef.current = maxPromptingLevel(
+        promptingLevelRef.current,
+        promptingLevelRef.current === "none"
+          ? "restated_directions"
+          : "general_redirection",
+      );
+      const line = `Let me restate the task: ${interaction.prompt} Try this independently — I won't reveal the answer.`;
+      pushCalyxMessage(line, { speak: false });
+      try {
+        await speak(line);
+      } catch {
+        // ignore TTS failures
+      }
+      return;
+    }
+    promptingLevelRef.current = maxPromptingLevel(
+      promptingLevelRef.current,
+      forceShowHints ? "structured_prompting" : "general_redirection",
+    );
     setForceShowHints(true);
     const tip =
       interaction.options.find((o) => o.hint?.trim())?.hint?.trim() ||
@@ -596,7 +667,7 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
     } catch {
       // ignore TTS failures
     }
-  }, [answerFlowMode, currentStep?.interaction, pushCalyxMessage, speak]);
+  }, [answerFlowMode, currentStep, forceShowHints, pushCalyxMessage, speak]);
 
   const handlePushToTalkStart = useCallback(async () => {
     if (!classJoined || pttBusyRef.current || isTyping || isGreeting) return;
@@ -734,10 +805,12 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
   const finishMidSessionCheckIn = useCallback(() => {
     setShowMidSessionCheckIn(false);
     setTeachingPaused(false);
+    // Ensure Calyx / prior audio is fully cleared before teaching resumes.
+    stopSpeaking();
     const resume = midSessionResumeRef.current;
     midSessionResumeRef.current = null;
     resume?.();
-  }, []);
+  }, [stopSpeaking]);
 
   const maybeOfferMidSessionCheckIn = useCallback((isCorrect: boolean) => {
     return new Promise<void>((resolve) => {
@@ -752,13 +825,15 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
       if (consecutiveWrongRef.current >= 2 && !midSessionOfferedRef.current) {
         midSessionOfferedRef.current = true;
         midSessionResumeRef.current = resolve;
+        // Stop instructor audio before Calyx speaks — otherwise two voices overlap.
+        stopSpeaking();
         setTeachingPaused(true);
         setShowMidSessionCheckIn(true);
         return;
       }
       resolve();
     });
-  }, []);
+  }, [stopSpeaking]);
 
   const advanceAfterFeedback = useCallback(
     async (feedback: string, answeredStepIndex: number, isCorrect: boolean) => {
@@ -797,7 +872,18 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
       interaction: BlackboardInteraction,
       chosenLabel: string,
     ) => {
-      setRevealCorrectAnswer(true);
+      setRevealCorrectAnswer(step.checkKind !== "summative");
+      if (step.checkKind === "summative") {
+        promptingLevelRef.current = maxPromptingLevel(
+          promptingLevelRef.current,
+          "restated_directions",
+        );
+      } else {
+        promptingLevelRef.current = maxPromptingLevel(
+          promptingLevelRef.current,
+          "answer_revealing_support",
+        );
+      }
       setAnswerFlowMode("reteaching");
       pushCalyxMessage(feedback, { speak: false });
       await speak(feedback);
@@ -827,7 +913,7 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
     [buildReteachScript, maybeOfferMidSessionCheckIn, pushCalyxMessage, speak],
   );
 
-  const handleBlackboardSelect = async (optionId: string) => {
+  const handleBlackboardSelect = async (optionId: string, explanation?: string) => {
     const interaction = currentStep?.interaction;
     if (!interaction || selectedOptionId || answerLocked || !session || !currentStep) return;
     if (answerFlowMode === "reteaching") return;
@@ -853,12 +939,35 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
       isCorrect,
       phase: currentStep.phase,
       checkKind: currentStep.checkKind,
+      responseText: explanation,
     });
 
+    if (score?.needsExplanation) {
+      setAnswerLocked(false);
+      setSelectedOptionId(null);
+      const line =
+        score.feedbackScript?.trim() ||
+        interaction.explanationPrompt?.trim() ||
+        "Explain why this answer fits before we move on.";
+      pushCalyxMessage(line, { speak: false });
+      try {
+        await speak(line);
+      } catch {
+        // ignore
+      }
+      return;
+    }
+
+    if (queueMasteryRecheck(score, answeredStepIndex)) {
+      return;
+    }
+
     const feedback = isCorrect
-      ? (interaction.correctFeedback?.trim() ||
+      ? (score?.feedbackScript?.trim() ||
+          interaction.correctFeedback?.trim() ||
           `Yes! ${option.label} is a strong choice. Great work!`)
-      : (interaction.incorrectFeedback?.trim() ||
+      : (score?.feedbackScript?.trim() ||
+          interaction.incorrectFeedback?.trim() ||
           `You picked ${option.label}. Let's look at this together.`);
 
     const decision =
@@ -884,15 +993,15 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
       return;
     }
 
-    setRevealCorrectAnswer(!isCorrect);
+    setRevealCorrectAnswer(!isCorrect && currentStep.checkKind !== "summative");
     void advanceAfterFeedback(feedback, answeredStepIndex, isCorrect);
   };
 
-  const handleWordLadderSubmit = async (orderedIds: string[]) => {
+  const handleWordLadderSubmit = async (orderedIds: string[], explanation?: string) => {
     const interaction = currentStep?.interaction;
     if (
       !interaction ||
-      interaction.type !== "word_ladder" ||
+      !isOrderedInteraction(interaction.type) ||
       selectedOptionId ||
       answerLocked ||
       !session ||
@@ -927,12 +1036,36 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
       isCorrect,
       phase: currentStep.phase,
       checkKind: currentStep.checkKind,
+      orderedIds,
+      responseText: explanation,
     });
 
+    if (score?.needsExplanation) {
+      setAnswerLocked(false);
+      setSelectedOptionId(null);
+      const line =
+        score.feedbackScript?.trim() ||
+        interaction.explanationPrompt?.trim() ||
+        "Explain why this order fits before we move on.";
+      pushCalyxMessage(line, { speak: false });
+      try {
+        await speak(line);
+      } catch {
+        // ignore
+      }
+      return;
+    }
+
+    if (queueMasteryRecheck(score, answeredStepIndex)) {
+      return;
+    }
+
     const feedback = isCorrect
-      ? (interaction.correctFeedback?.trim() ||
+      ? (score?.feedbackScript?.trim() ||
+          interaction.correctFeedback?.trim() ||
           "Perfect! You put the Word Ladder in the right order. Excellent work!")
-      : (interaction.incorrectFeedback?.trim() ||
+      : (score?.feedbackScript?.trim() ||
+          interaction.incorrectFeedback?.trim() ||
           "Good try on the Word Ladder. Let's look at the order together.");
 
     const decision =
@@ -958,7 +1091,76 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
       return;
     }
 
-    setRevealCorrectAnswer(!isCorrect);
+    setRevealCorrectAnswer(!isCorrect && currentStep.checkKind !== "summative");
+    void advanceAfterFeedback(feedback, answeredStepIndex, isCorrect);
+  };
+
+  const handleShortResponseSubmit = async (text: string) => {
+    const interaction = currentStep?.interaction;
+    if (
+      !interaction ||
+      interaction.type !== "short_response" ||
+      selectedOptionId ||
+      answerLocked ||
+      !session ||
+      !currentStep
+    ) {
+      return;
+    }
+    if (answerFlowMode === "reteaching") return;
+    if (summativeLocked) return;
+
+    const answeredStepIndex = stepIndexRef.current;
+    const isRecheck = answerFlowMode === "recheck";
+    const stepId = isRecheck ? `${currentStep.id}::recheck` : currentStep.id;
+    setAnswerLocked(true);
+    setSelectedOptionId("short-response-submitted");
+
+    const score = await submitStepAnswer({
+      stepId,
+      interactionId: interaction.id,
+      optionId: "constructed-response",
+      optionLabel: text,
+      isCorrect: false,
+      phase: currentStep.phase,
+      checkKind: currentStep.checkKind,
+      responseText: text,
+    });
+    const isCorrect = score?.answers?.at(-1)?.isCorrect ?? false;
+    setAnsweredCorrectly(isCorrect);
+
+    if (queueMasteryRecheck(score, answeredStepIndex)) {
+      return;
+    }
+
+    const feedback = isCorrect
+      ? (interaction.correctFeedback?.trim() || "That's a complete, independent response.")
+      : (interaction.incorrectFeedback?.trim() ||
+        "Let's look at what this response still needs.");
+
+    const decision =
+      score?.decision ??
+      (!isCorrect &&
+      !isRecheck &&
+      (currentStep.phase === "practice" || currentStep.phase === "quick_check")
+        ? "SHORT_RETEACH"
+        : "ADVANCE");
+    const canReteach =
+      decision === "SHORT_RETEACH" &&
+      recheckUsedForStepRef.current !== currentStep.id;
+
+    if (canReteach) {
+      void runReteachThenRecheck(
+        feedback,
+        answeredStepIndex,
+        currentStep,
+        interaction,
+        text.slice(0, 80),
+      );
+      return;
+    }
+
+    setRevealCorrectAnswer(false);
     void advanceAfterFeedback(feedback, answeredStepIndex, isCorrect);
   };
 
@@ -1110,6 +1312,7 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
                   answeredCorrectly={answeredCorrectly}
                   onSelectOption={handleBlackboardSelect}
                   onSubmitWordLadder={handleWordLadderSubmit}
+                  onSubmitShortResponse={handleShortResponseSubmit}
                   avatarPresent={Boolean(liveAvatar?.enabled)}
                   avatarCompact={interactionActive}
                   revealCorrectAnswer={revealCorrectAnswer}

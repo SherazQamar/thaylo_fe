@@ -1,7 +1,11 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { BlackboardInteraction, BlackboardStep } from "@/lib/class-lesson-content";
+import {
+  isChoiceInteraction,
+  isOrderedInteraction,
+} from "@/lib/class-lesson-content";
 import type { BlackboardReveal } from "@/hooks/use-blackboard-narration";
 import { KaraokeText } from "@/components/child/class/ClassInstructorCaption";
 import WordLadderDragDrop from "@/components/child/class/WordLadderDragDrop";
@@ -23,8 +27,9 @@ type ClassBlackboardProps = {
   interaction?: BlackboardInteraction;
   selectedOptionId?: string | null;
   answeredCorrectly?: boolean | null;
-  onSelectOption?: (optionId: string) => void;
-  onSubmitWordLadder?: (orderedIds: string[]) => void;
+  onSelectOption?: (optionId: string, explanation?: string) => void;
+  onSubmitWordLadder?: (orderedIds: string[], explanation?: string) => void;
+  onSubmitShortResponse?: (text: string) => void;
   /** Keep board text/questions clear of the LiveAvatar stage. */
   avatarPresent?: boolean;
   /** Avatar is shrunk for quiz mode — still reserve a right lane. */
@@ -66,6 +71,7 @@ export default function ClassBlackboard({
   answeredCorrectly,
   onSelectOption,
   onSubmitWordLadder,
+  onSubmitShortResponse,
   avatarPresent = false,
   avatarCompact = false,
   revealCorrectAnswer = false,
@@ -85,24 +91,37 @@ export default function ClassBlackboard({
     reveal.activeBulletIndex != null ||
     hasInteraction;
 
-  const isWordLadder = interaction?.type === "word_ladder";
-  const showChoiceOptions = hasInteraction && !isWordLadder;
-  const showWordLadder = hasInteraction && isWordLadder;
-  const showOptionHints =
-    forceShowHints ||
-    step.phase === "quick_check" ||
-    answerFlowMode === "recheck" ||
-    (revealCorrectAnswer && answeredCorrectly === false);
+  const isOrdered = isOrderedInteraction(interaction?.type);
+  const isShortResponse = interaction?.type === "short_response";
+  const showChoiceOptions =
+    hasInteraction && isChoiceInteraction(interaction?.type);
+  const showWordLadder = hasInteraction && isOrdered;
+  const isSummative = step.checkKind === "summative";
+  const needsExplain = Boolean(interaction?.explanationPrompt?.trim()) && isSummative;
   const compact = hasInteraction || (step.bulletPoints?.length ?? 0) > 2;
   const interactionRemountKey = `${interaction?.id ?? "none"}:${answerFlowMode}`;
+  const [pendingOrder, setPendingOrder] = useState<string[] | null>(null);
+  const [pendingOptionId, setPendingOptionId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setPendingOrder(null);
+    setPendingOptionId(null);
+  }, [interactionRemountKey]);
+
+  const showOptionHints =
+    !isSummative &&
+    (forceShowHints ||
+      step.phase === "quick_check" ||
+      answerFlowMode === "recheck" ||
+      (revealCorrectAnswer && answeredCorrectly === false));
 
   // AI/curriculum often lists the correct answer last — shuffle once per question.
   const choiceOptionsKey =
-    interaction && !isWordLadder
+    interaction && showChoiceOptions
       ? `${interaction.id}:${interaction.options.map((o) => o.id).join(",")}:${answerFlowMode}`
       : "";
   const shuffledChoiceOptions = useMemo(() => {
-    if (!interaction || isWordLadder) return [];
+    if (!interaction || !showChoiceOptions) return [];
     return shuffleArray(interaction.options);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- reshuffle only when question identity changes
   }, [choiceOptionsKey]);
@@ -276,11 +295,33 @@ export default function ClassBlackboard({
                   )}
                 </p>
 
+                {interaction.stimulus?.trim() ? (
+                  <p
+                    className="mb-2 rounded-lg px-2.5 py-2 text-[12px]"
+                    style={{
+                      ...inter,
+                      color: "rgba(232,245,233,0.88)",
+                      backgroundColor: "rgba(255,255,255,0.06)",
+                      border: "1px solid rgba(255,255,255,0.12)",
+                      lineHeight: 1.4,
+                    }}
+                  >
+                    {interaction.stimulus.trim()}
+                  </p>
+                ) : null}
+
+                {interaction.type === "diagnose" ? (
+                  <p className="mb-2 text-[11px] font-semibold text-[#F59E0B]" style={inter}>
+                    Diagnose the problem, then choose the best repair.
+                  </p>
+                ) : null}
+
                 {showChoiceOptions && (
                   <>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-xl">
                       {shuffledChoiceOptions.map((option) => {
-                        const isSelected = selectedOptionId === option.id;
+                        const isSelected =
+                          selectedOptionId === option.id || pendingOptionId === option.id;
                         const showResult = selectedOptionId != null;
                         const isCorrectOption = option.correct === true;
                         let borderColor = "rgba(255,255,255,0.2)";
@@ -306,9 +347,17 @@ export default function ClassBlackboard({
                               disabled={
                                 interactionLocked ||
                                 selectedOptionId != null ||
+                                pendingOptionId != null ||
+                                pendingOrder != null ||
                                 answerFlowMode === "reteaching"
                               }
-                              onClick={() => onSelectOption?.(option.id)}
+                              onClick={() => {
+                                if (needsExplain && option.correct === true) {
+                                  setPendingOptionId(option.id);
+                                  return;
+                                }
+                                onSelectOption?.(option.id);
+                              }}
                               className="flex-1 rounded-xl px-3 py-2 text-left transition-transform hover:scale-[1.02] disabled:cursor-default"
                               style={{
                                 border: `2px solid ${borderColor}`,
@@ -336,7 +385,7 @@ export default function ClassBlackboard({
                         );
                       })}
                     </div>
-                    {selectedOptionId != null && (
+                    {selectedOptionId != null && pendingOptionId == null && (
                       <p
                         className="mt-2 text-xs"
                         style={{
@@ -369,10 +418,77 @@ export default function ClassBlackboard({
                     disabled={
                       interactionLocked || isNarrating || answerFlowMode === "reteaching"
                     }
-                    submitted={selectedOptionId != null}
+                    submitted={selectedOptionId != null || pendingOrder != null}
                     isCorrect={answeredCorrectly}
                     compact
-                    onSubmit={onSubmitWordLadder ?? (() => undefined)}
+                    orderHint={
+                      interaction.orderDirection ??
+                      (interaction.type === "repair"
+                        ? "Repair the order so the evidence holds."
+                        : interaction.type === "sort"
+                          ? "Sort these in the intended order."
+                          : undefined)
+                    }
+                    submitLabel={
+                      interaction.type === "repair" ? "Check my repair" : "Check my order"
+                    }
+                    onSubmit={(orderedIds) => {
+                      const correctOrder = interaction.correctOrder ?? [];
+                      const orderCorrect =
+                        orderedIds.length === correctOrder.length &&
+                        orderedIds.every((id, index) => id === correctOrder[index]);
+                      if (needsExplain && orderCorrect) {
+                        setPendingOrder(orderedIds);
+                        return;
+                      }
+                      onSubmitWordLadder?.(orderedIds);
+                    }}
+                  />
+                )}
+
+                {needsExplain && (pendingOrder || pendingOptionId) && selectedOptionId == null ? (
+                  <div className="mt-3 space-y-2">
+                    <p
+                      className="text-[12px] font-semibold"
+                      style={{ ...inter, color: "#00CED1" }}
+                    >
+                      {interaction.explanationPrompt}
+                    </p>
+                    <ShortResponseBox
+                      key={`${interactionRemountKey}-explain`}
+                      disabled={
+                        interactionLocked ||
+                        isNarrating ||
+                        answerFlowMode === "reteaching"
+                      }
+                      submitted={false}
+                      isCorrect={null}
+                      placeholder="Write why this answer fits…"
+                      onSubmit={(text) => {
+                        if (pendingOrder) {
+                          onSubmitWordLadder?.(pendingOrder, text);
+                          return;
+                        }
+                        if (pendingOptionId) {
+                          onSelectOption?.(pendingOptionId, text);
+                        }
+                      }}
+                    />
+                  </div>
+                ) : null}
+
+                {isShortResponse && (
+                  <ShortResponseBox
+                    key={interactionRemountKey}
+                    disabled={
+                      interactionLocked ||
+                      isNarrating ||
+                      answerFlowMode === "reteaching" ||
+                      selectedOptionId != null
+                    }
+                    submitted={selectedOptionId != null}
+                    isCorrect={answeredCorrectly}
+                    onSubmit={(text) => onSubmitShortResponse?.(text)}
                   />
                 )}
               </div>
@@ -380,6 +496,61 @@ export default function ClassBlackboard({
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function ShortResponseBox({
+  disabled,
+  submitted,
+  isCorrect,
+  onSubmit,
+  placeholder = "Write your complete response here…",
+}: {
+  disabled: boolean;
+  submitted: boolean;
+  isCorrect: boolean | null | undefined;
+  onSubmit: (text: string) => void;
+  placeholder?: string;
+}) {
+  const [text, setText] = useState("");
+  const ready = text.trim().split(/\s+/).filter(Boolean).length >= 8;
+
+  return (
+    <div className="space-y-2">
+      <textarea
+        value={text}
+        disabled={disabled || submitted}
+        onChange={(event) => setText(event.target.value)}
+        rows={5}
+        placeholder={placeholder}
+        className="w-full rounded-xl px-3 py-2 text-[13px] outline-none"
+        style={{
+          ...inter,
+          color: "#E8F5E9",
+          backgroundColor: "rgba(0,0,0,0.28)",
+          border: "2px solid rgba(255,255,255,0.18)",
+          resize: "vertical",
+        }}
+      />
+      {!submitted ? (
+        <button
+          type="button"
+          disabled={disabled || !ready}
+          onClick={() => onSubmit(text.trim())}
+          className="w-full rounded-xl py-2.5 text-xs font-semibold disabled:opacity-50"
+          style={{ backgroundColor: "#00CED1", color: "#111023", ...inter }}
+        >
+          Submit my response
+        </button>
+      ) : (
+        <p
+          className="text-center text-xs"
+          style={{ ...inter, color: isCorrect ? "#00CED1" : "#FFC542" }}
+        >
+          {isCorrect ? "Strong independent response." : "Thanks — let's keep working this skill."}
+        </p>
+      )}
     </div>
   );
 }

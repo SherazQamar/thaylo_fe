@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import OptionHintButton from "@/components/child/class/OptionHintButton";
+import { shuffleArray } from "@/lib/shuffle";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
@@ -12,24 +13,10 @@ type WordLadderDragDropProps = {
   submitted?: boolean;
   isCorrect?: boolean | null;
   compact?: boolean;
+  orderHint?: string;
+  submitLabel?: string;
   onSubmit: (orderedIds: string[]) => void;
 };
-
-function shuffleWords(words: Array<{ id: string; label: string; hint?: string }>) {
-  const copy = [...words];
-  for (let attempt = 0; attempt < 8; attempt += 1) {
-    for (let i = copy.length - 1; i > 0; i -= 1) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [copy[i], copy[j]] = [copy[j], copy[i]];
-    }
-    const shuffledIds = copy.map((w) => w.id).join(",");
-    const originalIds = words.map((w) => w.id).join(",");
-    if (shuffledIds !== originalIds || words.length < 3) {
-      return copy;
-    }
-  }
-  return copy;
-}
 
 export default function WordLadderDragDrop({
   words,
@@ -38,12 +25,27 @@ export default function WordLadderDragDrop({
   submitted = false,
   isCorrect = null,
   compact = false,
+  orderHint,
+  submitLabel = "Check my order",
   onSubmit,
 }: WordLadderDragDropProps) {
-  const initialOrder = useMemo(() => shuffleWords(words), [words]);
-  const [order, setOrder] = useState(initialOrder);
+  // Curriculum/addenda often store options already weak→strong; always scramble for the child.
+  const wordsKey = useMemo(
+    () => words.map((w) => `${w.id}:${w.label}`).join("|"),
+    [words],
+  );
+  const [order, setOrder] = useState(() => shuffleArray(words));
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const lastWordsKey = useRef(wordsKey);
+
+  useEffect(() => {
+    if (lastWordsKey.current === wordsKey) return;
+    lastWordsKey.current = wordsKey;
+    setOrder(shuffleArray(words));
+    setDragIndex(null);
+    setDragOverIndex(null);
+  }, [wordsKey, words]);
 
   const moveItem = useCallback((from: number, to: number) => {
     if (from === to) return;
@@ -64,7 +66,7 @@ export default function WordLadderDragDrop({
     <div className={compact ? "space-y-1.5" : "space-y-3"}>
       {!compact && (
         <p className="text-xs text-white/45" style={inter}>
-          Drag words to order them from weakest (top) to strongest (bottom).
+          {orderHint ?? "Drag words to order them from weakest (top) to strongest (bottom)."}
         </p>
       )}
 
@@ -151,7 +153,7 @@ export default function WordLadderDragDrop({
             ...inter,
           }}
         >
-          Check my order
+          {submitLabel}
         </button>
       ) : (
         <p
