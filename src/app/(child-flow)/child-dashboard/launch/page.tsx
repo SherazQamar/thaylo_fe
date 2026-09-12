@@ -101,7 +101,7 @@ export default function ChildClassLaunchPage() {
         ) : (
           <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-[#313044]/80 px-5 py-3 text-white/70">
             <span className="inline-block h-2 w-2 rounded-full bg-[#00CED1] animate-pulse" />
-            <span className="text-sm">Getting your lesson ready…</span>
+            <span className="text-sm">Personalizing your lesson for your interests…</span>
           </div>
         )}
       </div>

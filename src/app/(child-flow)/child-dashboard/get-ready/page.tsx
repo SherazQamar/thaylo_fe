@@ -48,7 +48,7 @@ export default function GetReadyForLessonPage() {
         <div className="absolute inset-0 z-20 flex items-end justify-center pb-[env(safe-area-inset-bottom,16px)] px-4 sm:items-center sm:pb-0 pointer-events-none">
           <div className="flex items-center gap-2.5 rounded-2xl border border-white/10 bg-[#111023]/60 px-4 py-2.5 text-white/60 sm:gap-3 sm:px-5 sm:py-3">
             <span className="inline-block h-2 w-2 rounded-full bg-[#00CED1] animate-pulse" />
-            <span className="text-[13px] sm:text-sm">Preparing…</span>
+            <span className="text-[13px] sm:text-sm">Personalizing your lesson…</span>
           </div>
         </div>
       ) : null}

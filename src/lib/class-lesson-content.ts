@@ -26,6 +26,8 @@ export type BlackboardOption = {
   correct?: boolean;
   /** Scaffold clue shown during assessment — not the answer */
   hint?: string;
+  /** Dictionary meaning for hover (not relative strength on a ladder) */
+  definition?: string;
 };
 
 export type BlackboardInteraction = {

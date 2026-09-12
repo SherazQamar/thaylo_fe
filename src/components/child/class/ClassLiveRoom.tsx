@@ -44,6 +44,7 @@ import {
 } from "@/lib/curriculum-api";
 import { buildClassGreeting, buildRetakeClassGreeting } from "@/lib/calyx-class-chat";
 import { delay } from "@/lib/tts-word-sync";
+import { normalizeInstructorFeedbackTone } from "@/lib/instructor-feedback-tone";
 import { navigateToChildClass, navigateAfterChildClass } from "@/lib/start-child-class";
 import { computeTeachUntilMinute } from "@/lib/class-duration";
 import { FACE_MONITOR_DEFAULTS, type FaceMonitorStatus } from "@/lib/face-monitor/types";
@@ -164,8 +165,9 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
     const baseLessonScript = session.lessonScript ?? null;
     const baseSegmentsLen =
       session.lessonScript?.runtimePlan?.segments?.length ?? 0;
-    const shouldWaitForInterests =
-      session.interestPersonalizationPending === true || !alreadyPersonalized;
+    const shouldWaitForInterests = session.interestPersonalizationPending === true;
+    // Match BE personalization timeout headroom (up to 120s).
+    const waitMs = shouldWaitForInterests ? 120_000 : 30_000;
 
     async function tick() {
       if (cancelled || stopPolling) return;
@@ -180,22 +182,24 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
         )?.interestPersonalized;
         const stillPending = data.interestPersonalizationPending === true;
 
-        if (interestPersonalized || (!stillPending && segmentsLen > 0)) {
+        if (interestPersonalized) {
           setLessonTitleState(data.lessonTitle ?? baseLessonTitle);
           setLessonScriptState(data.lessonScript ?? null);
           setLessonContentReady(segmentsLen > 0);
-          if (interestPersonalized || !stillPending) {
-            stopPolling = true;
-          }
+          stopPolling = true;
           return;
         }
 
-        if (segmentsLen > 0 && !shouldWaitForInterests) {
+        if (!shouldWaitForInterests && !stillPending && segmentsLen > 0) {
+          setLessonTitleState(data.lessonTitle ?? baseLessonTitle);
+          setLessonScriptState(data.lessonScript ?? null);
           setLessonContentReady(true);
+          stopPolling = true;
+          return;
         }
 
         // Give interest AI time; then allow join with best available plan.
-        if (Date.now() - startMs > 75_000) {
+        if (Date.now() - startMs > waitMs) {
           if (segmentsLen > 0 || baseSegmentsLen > 0) {
             setLessonTitleState(data.lessonTitle ?? baseLessonTitle);
             setLessonScriptState(data.lessonScript ?? baseLessonScript);
@@ -669,6 +673,49 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
     }
   }, [answerFlowMode, currentStep, forceShowHints, pushCalyxMessage, speak]);
 
+  const handleListenAgain = useCallback(async () => {
+    const step = currentStep;
+    const interaction = step?.interaction;
+    if (
+      !interaction ||
+      answerFlowMode === "reteaching" ||
+      answerLocked ||
+      summativeLocked
+    ) {
+      return;
+    }
+
+    // Prefer the spoken scenario/script when present; otherwise rebuild from board copy.
+    const script = step.narrationScript?.trim();
+    const boardBits = [
+      ...(step.lines ?? []),
+      ...(step.bulletPoints ?? []),
+      interaction.prompt,
+      interaction.stimulus,
+    ]
+      .map((part) => part?.trim())
+      .filter(Boolean);
+    const body = (script || boardBits.join(" ")).trim();
+    if (!body) return;
+
+    const line = `Listen again. ${body}`;
+    pushCalyxMessage(line, { speak: false });
+    // Match Need a hint: do not stop() immediately before speak — interrupt can
+    // cancel the new utterance before LiveAvatar starts it.
+    try {
+      await speak(line);
+    } catch {
+      // ignore TTS failures
+    }
+  }, [
+    answerFlowMode,
+    answerLocked,
+    currentStep,
+    pushCalyxMessage,
+    speak,
+    summativeLocked,
+  ]);
+
   const handlePushToTalkStart = useCallback(async () => {
     if (!classJoined || pttBusyRef.current || isTyping || isGreeting) return;
     const micOk = await beginPushToTalk();
@@ -837,9 +884,12 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
 
   const advanceAfterFeedback = useCallback(
     async (feedback: string, answeredStepIndex: number, isCorrect: boolean) => {
-      pushCalyxMessage(feedback, { speak: false });
-      await speak(feedback);
-      await delay(600);
+      const spokenFeedback = normalizeInstructorFeedbackTone(feedback);
+      pushCalyxMessage(spokenFeedback, { speak: false });
+      await speak(spokenFeedback);
+      // Breath between praise and next calm teach line — avoids abrupt tone whiplash.
+      const breathMs = Math.max(aiSettings.pacing?.pauseMs ?? 800, 800) * 2;
+      await delay(Math.min(Math.max(breathMs, 1400), 2200));
       await maybeOfferMidSessionCheckIn(isCorrect);
 
       if (stepIndexRef.current !== answeredStepIndex) {
@@ -856,6 +906,7 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
     },
     [
       advanceStep,
+      aiSettings.pacing?.pauseMs,
       blackboardSteps.length,
       finishClass,
       maybeOfferMidSessionCheckIn,
@@ -885,9 +936,10 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
         );
       }
       setAnswerFlowMode("reteaching");
-      pushCalyxMessage(feedback, { speak: false });
-      await speak(feedback);
-      await delay(400);
+      const spokenFeedback = normalizeInstructorFeedbackTone(feedback);
+      pushCalyxMessage(spokenFeedback, { speak: false });
+      await speak(spokenFeedback);
+      await delay(Math.max(aiSettings.pacing?.pauseMs ?? 800, 900));
       await maybeOfferMidSessionCheckIn(false);
 
       if (stepIndexRef.current !== answeredStepIndex) {
@@ -1368,14 +1420,24 @@ export default function ClassLiveRoom({ session, isLoading, loadError }: ClassLi
                 )}
 
                 {interactionActive && answerFlowMode !== "reteaching" && !answerLocked && !summativeLocked ? (
-                  <button
-                    type="button"
-                    onClick={() => void handleNeedHint()}
-                    className="absolute left-3 bottom-3 z-30 rounded-full border border-[#F59E0B]/50 bg-[rgba(17,16,35,0.92)] px-3.5 py-2 text-xs font-semibold text-[#F59E0B] shadow-lg hover:bg-[rgba(245,158,11,0.12)] cursor-pointer"
-                    style={inter}
-                  >
-                    Need a hint?
-                  </button>
+                  <div className="absolute left-3 bottom-3 z-30 flex flex-col gap-2">
+                    <button
+                      type="button"
+                      onClick={() => void handleListenAgain()}
+                      className="rounded-full border border-[#00CED1]/45 bg-[rgba(17,16,35,0.92)] px-3.5 py-2 text-xs font-semibold text-[#00CED1] shadow-lg hover:bg-[rgba(0,206,209,0.12)] cursor-pointer"
+                      style={inter}
+                    >
+                      Listen again
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void handleNeedHint()}
+                      className="rounded-full border border-[#F59E0B]/50 bg-[rgba(17,16,35,0.92)] px-3.5 py-2 text-xs font-semibold text-[#F59E0B] shadow-lg hover:bg-[rgba(245,158,11,0.12)] cursor-pointer"
+                      style={inter}
+                    >
+                      Need a hint?
+                    </button>
+                  </div>
                 ) : null}
 
                 {summativeLocked ? (

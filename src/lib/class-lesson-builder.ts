@@ -10,6 +10,7 @@ import {
   tagBlackboardCheckKinds,
 } from "@/lib/class-runtime-plan";
 import { shuffleArray } from "@/lib/shuffle";
+import { withVocabDefinition } from "@/lib/vocab-definitions";
 
 export type ParsedPracticeExample = {
   category: string;
@@ -94,10 +95,12 @@ function buildPracticeSteps(examples: string[]): BlackboardStep[] {
 }
 
 function buildWordLadderInteraction(parsed: ParsedPracticeExample): BlackboardInteraction {
-  const ordered = parsed.words.map((word) => ({
-    id: slug(word),
-    label: word,
-  }));
+  const ordered = parsed.words.map((word) =>
+    withVocabDefinition({
+      id: slug(word),
+      label: word,
+    }),
+  );
   return {
     id: `word-ladder-${slug(parsed.category)}`,
     prompt: "Drag the words into order from weakest to strongest:",

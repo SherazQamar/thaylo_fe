@@ -2,12 +2,14 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import OptionHintButton from "@/components/child/class/OptionHintButton";
+import LadderWordDefinition from "@/components/child/class/LadderWordDefinition";
 import { shuffleArray } from "@/lib/shuffle";
+import { withVocabDefinition } from "@/lib/vocab-definitions";
 
 const inter = { fontFamily: "Inter, sans-serif" } as const;
 
 type WordLadderDragDropProps = {
-  words: Array<{ id: string; label: string; hint?: string }>;
+  words: Array<{ id: string; label: string; hint?: string; definition?: string }>;
   showHints?: boolean;
   disabled?: boolean;
   submitted?: boolean;
@@ -29,12 +31,20 @@ export default function WordLadderDragDrop({
   submitLabel = "Check my order",
   onSubmit,
 }: WordLadderDragDropProps) {
-  // Curriculum/addenda often store options already weak→strong; always scramble for the child.
-  const wordsKey = useMemo(
-    () => words.map((w) => `${w.id}:${w.label}`).join("|"),
+  const enrichedWords = useMemo(
+    () => words.map((word) => withVocabDefinition(word)),
     [words],
   );
-  const [order, setOrder] = useState(() => shuffleArray(words));
+
+  // Curriculum/addenda often store options already weak→strong; always scramble for the child.
+  const wordsKey = useMemo(
+    () =>
+      enrichedWords
+        .map((w) => `${w.id}:${w.label}:${w.definition ?? ""}`)
+        .join("|"),
+    [enrichedWords],
+  );
+  const [order, setOrder] = useState(() => shuffleArray(enrichedWords));
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const lastWordsKey = useRef(wordsKey);
@@ -42,10 +52,10 @@ export default function WordLadderDragDrop({
   useEffect(() => {
     if (lastWordsKey.current === wordsKey) return;
     lastWordsKey.current = wordsKey;
-    setOrder(shuffleArray(words));
+    setOrder(shuffleArray(enrichedWords));
     setDragIndex(null);
     setDragOverIndex(null);
-  }, [wordsKey, words]);
+  }, [wordsKey, enrichedWords]);
 
   const moveItem = useCallback((from: number, to: number) => {
     if (from === to) return;
@@ -112,9 +122,26 @@ export default function WordLadderDragDrop({
               >
                 {index + 1}
               </span>
-              <span className="flex-1 min-w-0" style={{ fontWeight: 600, fontSize: compact ? "clamp(11px, 1.8vh, 13px)" : "14px", color: "#E8F5E9" }}>
+              <span
+                className="flex-1 min-w-0"
+                style={{
+                  fontWeight: 600,
+                  fontSize: compact ? "clamp(11px, 1.8vh, 13px)" : "14px",
+                  color: "#E8F5E9",
+                  textDecoration: "underline",
+                  textDecorationStyle: "dotted",
+                  textUnderlineOffset: "3px",
+                  textDecorationColor: "rgba(0,206,209,0.55)",
+                }}
+                title={word.definition?.trim() || undefined}
+              >
                 {word.label}
               </span>
+              <LadderWordDefinition
+                label={word.label}
+                definition={word.definition}
+                compact={compact}
+              />
               {showHints && word.hint?.trim() && (
                 <OptionHintButton hint={word.hint.trim()} compact={compact} placement="above" />
               )}

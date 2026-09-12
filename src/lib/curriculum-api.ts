@@ -65,7 +65,13 @@ export interface ChildClassLessonScript {
           | "diagnose"
           | "repair"
           | "short_response";
-        options: Array<{ id: string; label: string; correct?: boolean; hint?: string }>;
+        options: Array<{
+          id: string;
+          label: string;
+          correct?: boolean;
+          hint?: string;
+          definition?: string;
+        }>;
         correctOrder?: string[];
         correctFeedback?: string;
         incorrectFeedback?: string;

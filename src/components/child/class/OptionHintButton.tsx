@@ -9,34 +9,47 @@ type OptionHintButtonProps = {
   label?: string;
   compact?: boolean;
   placement?: "above" | "below";
+  /** Dictionary meaning vs scaffold clue */
+  variant?: "hint" | "definition";
 };
 
 /**
- * Hint "i" icon — shows clue on hover / keyboard focus (not click).
+ * Hint / definition "i" icon — shows text on hover / keyboard focus (not click).
  */
 export default function OptionHintButton({
   hint,
-  label = "See a clue to help you think",
+  label,
   compact = false,
   placement = compact ? "above" : "below",
+  variant = "hint",
 }: OptionHintButtonProps) {
   const popoverId = useId();
+  const isDefinition = variant === "definition";
+  const ariaLabel =
+    label ?? (isDefinition ? "See the definition" : "See a clue to help you think");
+  const heading = isDefinition ? "Definition" : "Think about this";
 
   return (
     <span className="group/hint relative inline-flex shrink-0">
       <button
         type="button"
-        aria-label={label}
+        aria-label={ariaLabel}
         aria-describedby={popoverId}
         title={hint}
-        className={`inline-flex items-center justify-center rounded-full border border-white/30 text-white/60 transition-colors hover:border-[#00CED1]/60 hover:text-[#00CED1] focus-visible:border-[#00CED1] focus-visible:text-[#00CED1] ${
-          compact ? "h-6 w-6 text-[11px]" : "h-7 w-7 text-xs"
-        }`}
+        className={`inline-flex items-center justify-center rounded-full border transition-colors focus-visible:border-[#00CED1] focus-visible:text-[#00CED1] ${
+          isDefinition
+            ? "border-[#00CED1]/35 text-[#00CED1]/90 hover:border-[#00CED1]/70 hover:text-[#00CED1]"
+            : "border-white/30 text-white/60 hover:border-[#00CED1]/60 hover:text-[#00CED1]"
+        } ${compact ? "h-6 w-6 text-[11px]" : "h-7 w-7 text-xs"}`}
         style={{ ...inter, fontWeight: 700 }}
         onClick={(event) => {
           // Keep click from selecting the quiz option; hint opens on hover/focus only.
           event.stopPropagation();
           event.preventDefault();
+        }}
+        onMouseDown={(event) => {
+          // Avoid starting a drag when pressing the definition control.
+          event.stopPropagation();
         }}
       >
         <svg
@@ -67,7 +80,7 @@ export default function OptionHintButton({
           className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-[#00CED1]/80"
           style={inter}
         >
-          Think about this
+          {heading}
         </p>
         <p
           className={compact ? "text-[11px] leading-snug" : "text-xs leading-relaxed"}
