@@ -39,7 +39,7 @@ export default function LadderWordDefinition({
     setLoading(true);
     void resolveVocabDefinition(label).then((resolved) => {
       if (cancelled) return;
-      setText(resolved);
+      setText(resolved ?? "");
       setLoading(false);
     });
     return () => {
